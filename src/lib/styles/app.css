@@ -1,0 +1,119 @@
+/* App chrome. Colors come from the theme variables set on :root (see appearance.svelte.ts). */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.4 var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+  overscroll-behavior: none;
+}
+body.resizing { cursor: col-resize; }
+body.resizing * { pointer-events: none; }
+::selection { background: var(--sel); }
+button { font-family: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+input, select, textarea { -webkit-user-select: text; user-select: text; }
+
+input:not([type=checkbox]):not([type=range]):not([type=color]), select, textarea {
+  font: 13px var(--font-ui);
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+input[type=checkbox], input[type=radio], input[type=range] { accent-color: var(--accent); }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--fg) 18%, transparent); border-radius: 10px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background-color: color-mix(in srgb, var(--fg) 32%, transparent); }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+
+.tb {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: 0; border-radius: 6px; padding: 0;
+  background: none; color: var(--fg-muted); cursor: default; flex-shrink: 0;
+}
+.tb:hover { background: var(--bg-hover); color: var(--fg); }
+.tb.on, .tb:active { background: var(--bg-active); color: var(--fg); }
+
+.btn {
+  font: 13px var(--font-ui); color: var(--fg); background: var(--bg-elev);
+  border: 1px solid var(--border); border-radius: 7px; padding: 5px 12px; cursor: default;
+}
+.btn:hover { background: var(--bg-hover); }
+.btn.primary { background: var(--accent); color: var(--accent-fg); border-color: transparent; }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn:disabled { opacity: 0.5; }
+
+.menu-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  border: 0; background: none; color: var(--fg); font: 13px var(--font-ui);
+  padding: 6px 10px; border-radius: 6px; text-align: left; cursor: default; white-space: nowrap;
+}
+.menu-item:hover { background: var(--accent); color: var(--accent-fg); }
+.menu-item kbd { margin-left: auto; font: 11px var(--font-ui); opacity: 0.6; }
+.chip { border: 1px solid var(--border); background: var(--bg); color: var(--fg); font: 12px var(--font-code); border-radius: 6px; padding: 4px 6px; cursor: default; }
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+kbd { font: 11px var(--font-ui); color: var(--fg-muted); }
+
+.backdrop {
+  position: fixed; inset: 0; z-index: 100; display: grid; place-items: center;
+  background: rgba(0, 0, 0, 0.28); animation: fade 0.12s ease-out;
+}
+.dialog {
+  background: var(--bg); color: var(--fg); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: var(--shadow); animation: rise 0.16s ease-out;
+}
+@keyframes fade { from { opacity: 0; } }
+@keyframes rise { from { opacity: 0; transform: translateY(8px) scale(0.985); } }
+
+/* ---- Typewriter theme: paper grain, slightly uneven ink ---- */
+html.paper body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(120, 90, 40, 0.06) 0, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(120, 90, 40, 0.05) 0, transparent 45%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+html.paper .main, html.paper .toolbar, html.paper .statusbar { background: transparent !important; }
+html.ink .markdown-body, html.ink .cm-content {
+  text-shadow: 0.25px 0.2px 0 color-mix(in srgb, var(--fg) 55%, transparent), -0.2px 0 0.8px color-mix(in srgb, var(--fg) 25%, transparent);
+}
+html.theme-typewriter .cm-cursor { border-left-width: 0.55em !important; opacity: 0.35; }
+
+/* ---- CRT theme: scanlines, glow, flicker, tube vignette ---- */
+html.glow body { text-shadow: 0 0 2px var(--glow), 0 0 8px color-mix(in srgb, var(--glow) 40%, transparent); }
+html.glow .markdown-body, html.glow .cm-content { text-shadow: 0 0 3px var(--glow), 0 0 12px color-mix(in srgb, var(--glow) 45%, transparent); }
+html.theme-crt body { font-size: 15px; }
+html.theme-crt .cm-content { font-size: 1.2em; }
+html.theme-crt .cm-cursor { border-left: 0.6em solid var(--fg) !important; opacity: 0.8; animation: crt-blink 1s steps(1) infinite; }
+@keyframes crt-blink { 50% { opacity: 0; } }
+html.scanlines body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1000;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 2px, rgba(0, 0, 0, 0.28) 3px, rgba(0, 0, 0, 0) 4px);
+  mix-blend-mode: multiply;
+}
+html.curvature body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1001;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.55) 100%);
+}
+html.flicker .app { animation: crt-flicker 6s infinite; }
+@keyframes crt-flicker {
+  0%, 100% { opacity: 1; } 3% { opacity: 0.93; } 6% { opacity: 1; } 42% { opacity: 0.97; } 43% { opacity: 1; } 77% { opacity: 0.95; } 78% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { html.flicker .app { animation: none; } }
+
+/* ---- Printing (fallback when no PDF engine is installed) ---- */
+@media print {
+  html, body { overflow: visible !important; height: auto !important; background: #fff !important; }
+  body::before, body::after { display: none !important; }
+  .chrome, .sidebar, .toolbar, .statusbar, .topbar { display: none !important; }
+  .app, .main, .content, .preview-scroll { display: block !important; height: auto !important; overflow: visible !important; }
+  .preview { padding: 0 !important; max-width: none !important; }
+}

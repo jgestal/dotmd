@@ -1,0 +1,67 @@
+import { invoke } from '@tauri-apps/api/core';
+import { Menu } from '@tauri-apps/api/menu';
+import { revealItemInDir } from '@tauri-apps/plugin-opener';
+import { app, toast } from './state.svelte';
+import { t } from './i18n';
+import { askFields } from './prompt.svelte';
+import { dirname, join } from './path';
+import { openFolder, openPath } from './actions';
+import { exportRequest } from './exportRequest.svelte';
+
+interface Entry { name: string; path: string; is_dir: boolean }
+
+async function newFileIn(dir: string) {
+  const v = await askFields(t('ctx.newFile'), [{ key: 'name', label: t('common.name'), value: 'note.md' }]);
+  if (!v?.name) return;
+  const name = /\.[a-z0-9]+$/i.test(v.name) ? v.name : v.name + '.md';
+  const path = join(dir, name);
+  try {
+    await invoke('create_file', { path });
+    app.treeVersion++;
+    await openPath(path);
+  } catch (e) {
+    toast(t('toast.error', { msg: String(e) }));
+  }
+}
+
+async function rename(entry: Entry) {
+  const v = await askFields(t('ctx.rename'), [{ key: 'name', label: t('common.name'), value: entry.name }]);
+  if (!v?.name || v.name === entry.name) return;
+  const to = join(dirname(entry.path), v.name);
+  try {
+    await invoke('rename_path', { from: entry.path, to });
+    if (app.path === entry.path) app.path = to;
+    app.treeVersion++;
+  } catch (e) {
+    toast(t('toast.error', { msg: String(e) }));
+  }
+}
+
+/** Native context menu for a file tree row. */
+export async function treeContextMenu(entry: Entry) {
+  const dir = entry.is_dir ? entry.path : dirname(entry.path);
+  const items = [
+    ...(entry.is_dir
+      ? [{ id: 'root', text: t('ctx.openFolder'), action: () => openFolder(entry.path) }]
+      : [{ id: 'open', text: t('ctx.open'), action: () => openPath(entry.path) }]),
+    { id: 'new', text: t('ctx.newFile'), action: () => newFileIn(dir) },
+    { id: 'rename', text: t('ctx.rename'), action: () => rename(entry) },
+    { id: 'sep1', item: 'Separator' as const },
+    ...(!entry.is_dir
+      ? [
+          { id: 'pdf', text: t('ctx.exportPdf'), action: () => exportRequest.quick(entry.path, 'pdf') },
+          { id: 'html', text: t('ctx.exportHtml'), action: () => exportRequest.quick(entry.path, 'html') },
+          { id: 'sep2', item: 'Separator' as const },
+        ]
+      : []),
+    { id: 'reveal', text: t('ctx.reveal'), action: () => revealItemInDir(entry.path) },
+    {
+      id: 'copy', text: t('ctx.copyPath'),
+      action: async () => { await navigator.clipboard.writeText(entry.path); toast(t('toast.copied'), 1000); },
+    },
+  ];
+  const menu = await Menu.new({
+    items: items.map((i) => ('item' in i ? { item: i.item } : { id: i.id, text: i.text, action: () => void i.action() })) as any,
+  });
+  await menu.popup();
+}

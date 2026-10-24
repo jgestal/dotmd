@@ -1,0 +1,375 @@
+import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection, dropCursor, highlightSpecialChars, Decoration, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
+import { EditorState, Compartment, EditorSelection, RangeSetBuilder, type Extension } from '@codemirror/state';
+import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { languages } from '@codemirror/language-data';
+import { yamlFrontmatter } from '@codemirror/lang-yaml';
+import { syntaxHighlighting, HighlightStyle, bracketMatching, indentOnInput } from '@codemirror/language';
+import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+import { tags as t } from '@lezer/highlight';
+import { blockMarkdown, formatTable, today, type FormatAction } from '../snippets';
+import type { FocusMode } from '../state.svelte';
+
+const mdHighlight = HighlightStyle.define([
+  { tag: t.heading1, fontSize: '1.6em', fontWeight: '700', fontFamily: 'var(--font-heading)' },
+  { tag: t.heading2, fontSize: '1.35em', fontWeight: '700', fontFamily: 'var(--font-heading)' },
+  { tag: t.heading3, fontSize: '1.15em', fontWeight: '650', fontFamily: 'var(--font-heading)' },
+  { tag: [t.heading4, t.heading5, t.heading6], fontWeight: '650', fontFamily: 'var(--font-heading)' },
+  { tag: t.strong, fontWeight: '700' },
+  { tag: t.emphasis, fontStyle: 'italic' },
+  { tag: t.strikethrough, textDecoration: 'line-through' },
+  { tag: [t.link, t.url], color: 'var(--link)' },
+  { tag: t.monospace, fontFamily: 'var(--font-code)', color: 'var(--code-fg)' },
+  { tag: t.quote, color: 'var(--fg-muted)', fontStyle: 'italic' },
+  { tag: [t.processingInstruction, t.meta, t.contentSeparator, t.labelName], color: 'var(--fg-muted)' },
+  { tag: t.list, color: 'var(--accent)' },
+  { tag: t.keyword, color: 'var(--syn-keyword)' },
+  { tag: [t.string, t.special(t.string)], color: 'var(--syn-string)' },
+  { tag: [t.number, t.bool, t.null], color: 'var(--syn-number)' },
+  { tag: t.comment, color: 'var(--syn-comment)', fontStyle: 'italic' },
+  { tag: [t.function(t.variableName), t.function(t.propertyName)], color: 'var(--syn-func)' },
+  { tag: [t.typeName, t.className, t.propertyName, t.attributeName], color: 'var(--syn-type)' },
+]);
+
+const baseTheme = EditorView.theme({
+  '&': { height: '100%', background: 'transparent', color: 'var(--fg)', fontSize: 'var(--doc-size)' },
+  '.cm-scroller': { fontFamily: 'var(--font-editor, var(--font-code))', lineHeight: 'var(--line-height)', overflow: 'auto' },
+  '.cm-content': { maxWidth: 'var(--doc-width)', margin: '0 auto', padding: '32px 28px 40vh', caretColor: 'var(--accent)' },
+  '.cm-line': { padding: '0' },
+  '.cm-gutters': { background: 'transparent', border: 'none', color: 'var(--fg-dim)' },
+  '.cm-activeLine': { background: 'color-mix(in srgb, var(--bg-hover) 60%, transparent)' },
+  '.cm-activeLineGutter': { background: 'transparent', color: 'var(--fg-muted)' },
+  '&.cm-focused .cm-cursor': { borderLeftColor: 'var(--accent)', borderLeftWidth: '2px' },
+  '.cm-selectionBackground, &.cm-focused .cm-selectionBackground, ::selection': { background: 'var(--sel) !important' },
+  '.cm-searchMatch': { background: 'var(--mark)' },
+  '.cm-panels': { background: 'var(--bg-elev)', color: 'var(--fg)', borderColor: 'var(--border)' },
+  '.cm-panels input, .cm-panels button': { fontFamily: 'var(--font-ui)' },
+  '&.cm-focused': { outline: 'none' },
+});
+
+// ---- Focus highlighting (iA Writer style): dims everything but the current line/sentence/paragraph.
+
+const dimMark = Decoration.mark({ class: 'cm-dim' });
+const dimLine = Decoration.line({ class: 'cm-dim-line' });
+
+const segmenter = typeof Intl !== 'undefined' && 'Segmenter' in Intl ? new Intl.Segmenter(undefined, { granularity: 'sentence' }) : null;
+
+function focusDecorations(view: EditorView, mode: FocusMode): DecorationSet {
+  const { state } = view;
+  const head = state.selection.main.head;
+  const doc = state.doc;
+  const cur = doc.lineAt(head);
+  let first = cur.number, last = cur.number;
+  if (mode !== 'line') {
+    while (first > 1 && doc.line(first - 1).text.trim() !== '') first--;
+    while (last < doc.lines && doc.line(last + 1).text.trim() !== '') last++;
+  }
+  let sentFrom = -1, sentTo = -1;
+  if (mode === 'sentence' && segmenter) {
+    const from = doc.line(first).from, to = doc.line(last).to;
+    const text = doc.sliceString(from, to);
+    const rel = head - from;
+    for (const s of segmenter.segment(text)) {
+      if (rel >= s.index && rel <= s.index + s.segment.length) {
+        sentFrom = from + s.index;
+        sentTo = from + s.index + s.segment.trimEnd().length;
+        break;
+      }
+    }
+  }
+  const b = new RangeSetBuilder<Decoration>();
+  for (const { from, to } of view.visibleRanges) {
+    let pos = from;
+    while (pos <= to) {
+      const line = doc.lineAt(pos);
+      const inFocus = line.number >= first && line.number <= last;
+      if (!inFocus) b.add(line.from, line.from, dimLine);
+      else if (sentFrom >= 0) {
+        const end = Math.min(line.to, sentFrom);
+        if (line.from < end) b.add(line.from, end, dimMark);
+        const start = Math.max(line.from, sentTo);
+        if (start < line.to) b.add(start, line.to, dimMark);
+      }
+      pos = line.to + 1;
+    }
+  }
+  return b.finish();
+}
+
+function focusPlugin(mode: FocusMode): Extension {
+  if (mode === 'off') return [];
+  return [
+    ViewPlugin.fromClass(
+      class {
+        decorations: DecorationSet;
+        constructor(view: EditorView) { this.decorations = focusDecorations(view, mode); }
+        update(u: ViewUpdate) {
+          if (u.docChanged || u.selectionSet || u.viewportChanged) this.decorations = focusDecorations(u.view, mode);
+        }
+      },
+      { decorations: (v) => v.decorations },
+    ),
+    EditorView.editorAttributes.of({ class: 'cm-focus-mode' }),
+  ];
+}
+
+function typewriterPlugin(on: boolean): Extension {
+  if (!on) return [];
+  return [
+    EditorView.editorAttributes.of({ class: 'cm-typewriter' }),
+    EditorView.updateListener.of((u) => {
+      if (!(u.selectionSet || u.docChanged) || !u.view.hasFocus) return;
+      const head = u.state.selection.main.head;
+      requestAnimationFrame(() => u.view.dispatch({ effects: EditorView.scrollIntoView(head, { y: 'center' }) }));
+    }),
+  ];
+}
+
+// ---- Formatting commands
+
+function wrap(view: EditorView, mark: string, placeholder = 'text') {
+  const { state } = view;
+  view.dispatch(
+    state.changeByRange((range) => {
+      const sel = state.sliceDoc(range.from, range.to);
+      const before = state.sliceDoc(range.from - mark.length, range.from);
+      const after = state.sliceDoc(range.to, range.to + mark.length);
+      if (before === mark && after === mark) {
+        return {
+          changes: [{ from: range.from - mark.length, to: range.from }, { from: range.to, to: range.to + mark.length }],
+          range: EditorSelection.range(range.from - mark.length, range.to - mark.length),
+        };
+      }
+      if (sel.startsWith(mark) && sel.endsWith(mark) && sel.length >= mark.length * 2) {
+        const inner = sel.slice(mark.length, sel.length - mark.length);
+        return { changes: { from: range.from, to: range.to, insert: inner }, range: EditorSelection.range(range.from, range.from + inner.length) };
+      }
+      const text = sel || placeholder;
+      return {
+        changes: { from: range.from, to: range.to, insert: mark + text + mark },
+        range: EditorSelection.range(range.from + mark.length, range.from + mark.length + text.length),
+      };
+    }),
+  );
+}
+
+const PREFIX_RE = /^(\s*)(#{1,6}\s+|>\s?|[-*+]\s+\[[ xX]\]\s+|[-*+]\s+|\d+[.)]\s+)?/;
+
+function linePrefix(view: EditorView, kind: 'h' | 'quote' | 'ul' | 'ol' | 'task' | 'p', level = 1) {
+  const { state } = view;
+  const changes: { from: number; to: number; insert: string }[] = [];
+  const seen = new Set<number>();
+  let n = 0;
+  const lines: { from: number; text: string }[] = [];
+  for (const r of state.selection.ranges) {
+    for (let l = state.doc.lineAt(r.from).number; l <= state.doc.lineAt(r.to).number; l++) {
+      if (seen.has(l)) continue;
+      seen.add(l);
+      const line = state.doc.line(l);
+      lines.push({ from: line.from, text: line.text });
+    }
+  }
+  const want = (i: number) =>
+    kind === 'h' ? '#'.repeat(level) + ' ' : kind === 'quote' ? '> ' : kind === 'ul' ? '- ' : kind === 'task' ? '- [ ] ' : kind === 'ol' ? `${i + 1}. ` : '';
+  const allHave = lines.every((l) => {
+    const m = l.text.match(PREFIX_RE)!;
+    return (m[2] ?? '') !== '' && (m[2] ?? '').replace(/\d+/, '1') === want(0).replace(/\d+/, '1');
+  });
+  for (const l of lines) {
+    const m = l.text.match(PREFIX_RE)!;
+    const indent = m[1];
+    const existing = m[2] ?? '';
+    const insert = allHave ? '' : want(n++);
+    changes.push({ from: l.from + indent.length, to: l.from + indent.length + existing.length, insert });
+  }
+  view.dispatch({ changes });
+}
+
+function insertBlock(view: EditorView, text: string) {
+  const { state } = view;
+  const r = state.selection.main;
+  const line = state.doc.lineAt(r.from);
+  const atLineStart = r.from === line.from;
+  const prevBlank = line.number === 1 || state.doc.line(Math.max(1, line.number - 1)).text.trim() === '';
+  let prefix = '';
+  if (!atLineStart || line.text.trim() !== '') prefix = '\n\n';
+  else if (!prevBlank) prefix = '\n';
+  const insert = prefix + text + '\n';
+  const at = atLineStart && line.text.trim() === '' ? r.from : line.to;
+  // Put the cursor inside the new block: first empty line, or after "] " for callouts.
+  const emptyLine = text.indexOf('\n\n');
+  const cursor = at + prefix.length + (emptyLine >= 0 ? emptyLine + 1 : text.length);
+  view.dispatch({ changes: { from: at, to: r.from === at ? r.to : at, insert }, selection: { anchor: cursor } });
+}
+
+function formatTableAtCursor(view: EditorView) {
+  const { state } = view;
+  const cur = state.doc.lineAt(state.selection.main.head);
+  if (!cur.text.trim().startsWith('|')) return;
+  let a = cur.number, b = cur.number;
+  while (a > 1 && state.doc.line(a - 1).text.trim().startsWith('|')) a--;
+  while (b < state.doc.lines && state.doc.line(b + 1).text.trim().startsWith('|')) b++;
+  const lines: string[] = [];
+  for (let i = a; i <= b; i++) lines.push(state.doc.line(i).text);
+  const out = formatTable(lines).join('\n');
+  view.dispatch({ changes: { from: state.doc.line(a).from, to: state.doc.line(b).to, insert: out } });
+}
+
+export function execSource(view: EditorView, a: FormatAction) {
+  switch (a.type) {
+    case 'bold': wrap(view, '**'); break;
+    case 'italic': wrap(view, '*'); break;
+    case 'strike': wrap(view, '~~'); break;
+    case 'code': wrap(view, '`', 'code'); break;
+    case 'highlight': wrap(view, '=='); break;
+    case 'heading': linePrefix(view, 'h', a.level); break;
+    case 'paragraph': linePrefix(view, 'p'); break;
+    case 'quote': linePrefix(view, 'quote'); break;
+    case 'ul': linePrefix(view, 'ul'); break;
+    case 'ol': linePrefix(view, 'ol'); break;
+    case 'task': linePrefix(view, 'task'); break;
+    case 'link': {
+      const r = view.state.selection.main;
+      const text = a.text || view.state.sliceDoc(r.from, r.to) || 'link';
+      const insert = `[${text}](${a.url})`;
+      view.dispatch({ changes: { from: r.from, to: r.to, insert }, selection: { anchor: r.from + insert.length } });
+      break;
+    }
+    case 'image': {
+      const r = view.state.selection.main;
+      const insert = blockMarkdown(a)!;
+      view.dispatch({ changes: { from: r.from, to: r.to, insert }, selection: { anchor: r.from + insert.length } });
+      break;
+    }
+    case 'footnote': {
+      const doc = view.state.doc.toString();
+      let n = 1;
+      while (doc.includes(`[^${n}]`)) n++;
+      const r = view.state.selection.main;
+      const end = view.state.doc.length;
+      const def = `${doc.endsWith('\n') ? '' : '\n'}\n[^${n}]: `;
+      view.dispatch({
+        changes: [{ from: r.to, insert: `[^${n}]` }, { from: end, insert: def }],
+        selection: { anchor: end + `[^${n}]`.length + def.length },
+        scrollIntoView: true,
+      });
+      break;
+    }
+    case 'date': {
+      const r = view.state.selection.main;
+      view.dispatch({ changes: { from: r.from, to: r.to, insert: today() }, selection: { anchor: r.from + 10 } });
+      break;
+    }
+    case 'formatTable': formatTableAtCursor(view); break;
+    default: {
+      const md = blockMarkdown(a);
+      if (md) insertBlock(view, md);
+    }
+  }
+  view.focus();
+}
+
+const fmt = (a: FormatAction) => (v: EditorView) => (execSource(v, a), true);
+
+export interface SourceOptions {
+  doc: string;
+  markdown: boolean;
+  lineNumbers: boolean;
+  wrap: boolean;
+  spellcheck: boolean;
+  focus: FocusMode;
+  typewriter: boolean;
+  onChange: (text: string) => void;
+  onSelection: (text: string) => void;
+  onKey: (key: string) => void;
+  onScroll: (topLine: number) => void;
+}
+
+export function createSource(parent: HTMLElement, o: SourceOptions) {
+  const cLines = new Compartment(), cWrap = new Compartment(), cSpell = new Compartment();
+  const cFocus = new Compartment(), cType = new Compartment(), cLang = new Compartment();
+
+  const langExt = (md: boolean) => (md ? yamlFrontmatter({ content: markdown({ base: markdownLanguage, codeLanguages: languages }) }) : []);
+  const spellExt = (on: boolean) => EditorView.contentAttributes.of({ spellcheck: on ? 'true' : 'false', autocorrect: 'off', autocapitalize: 'off' });
+
+  const view = new EditorView({
+    parent,
+    state: EditorState.create({
+      doc: o.doc,
+      extensions: [
+        highlightSpecialChars(),
+        history(),
+        drawSelection(),
+        dropCursor(),
+        indentOnInput(),
+        bracketMatching(),
+        highlightActiveLine(),
+        highlightSelectionMatches(),
+        search({ top: true }),
+        syntaxHighlighting(mdHighlight),
+        baseTheme,
+        cLang.of(langExt(o.markdown)),
+        cLines.of(o.lineNumbers ? lineNumbers() : []),
+        cWrap.of(o.wrap ? EditorView.lineWrapping : []),
+        cSpell.of(spellExt(o.spellcheck)),
+        cFocus.of(focusPlugin(o.focus)),
+        cType.of(typewriterPlugin(o.typewriter)),
+        keymap.of([
+          { key: 'Mod-b', run: fmt({ type: 'bold' }) },
+          { key: 'Mod-i', run: fmt({ type: 'italic' }) },
+          { key: 'Mod-Shift-x', run: fmt({ type: 'strike' }) },
+          { key: 'Mod-Shift-h', run: fmt({ type: 'highlight' }) },
+          { key: 'Mod-Shift-c', run: fmt({ type: 'code' }) },
+          ...[1, 2, 3, 4, 5, 6].map((level) => ({ key: `Mod-Alt-${level}`, run: fmt({ type: 'heading', level }) })),
+          { key: 'Mod-Alt-0', run: fmt({ type: 'paragraph' }) },
+          { key: 'Mod-Shift-t', run: fmt({ type: 'formatTable' }) },
+          ...searchKeymap,
+          ...historyKeymap,
+          indentWithTab,
+          ...defaultKeymap,
+        ]),
+        EditorView.updateListener.of((u) => {
+          if (u.docChanged) o.onChange(u.state.doc.toString());
+          if (u.selectionSet || u.docChanged) {
+            const r = u.state.selection.main;
+            o.onSelection(r.empty ? '' : u.state.sliceDoc(r.from, r.to));
+          }
+        }),
+        EditorView.domEventHandlers({
+          keydown: (e) => {
+            if (!e.metaKey && !e.ctrlKey && (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) o.onKey(e.key);
+          },
+          scroll: (_e, view) => {
+            const block = view.lineBlockAtHeight(view.scrollDOM.getBoundingClientRect().top - view.documentTop);
+            o.onScroll(view.state.doc.lineAt(block.from).number);
+          },
+        }),
+      ],
+    }),
+  });
+
+  return {
+    view,
+    setDoc(text: string) {
+      if (text === view.state.doc.toString()) return;
+      const head = Math.min(view.state.selection.main.head, text.length);
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: text }, selection: { anchor: head } });
+    },
+    reconfigure(p: Partial<SourceOptions>) {
+      const effects = [];
+      if (p.lineNumbers !== undefined) effects.push(cLines.reconfigure(p.lineNumbers ? lineNumbers() : []));
+      if (p.wrap !== undefined) effects.push(cWrap.reconfigure(p.wrap ? EditorView.lineWrapping : []));
+      if (p.spellcheck !== undefined) effects.push(cSpell.reconfigure(spellExt(p.spellcheck)));
+      if (p.focus !== undefined) effects.push(cFocus.reconfigure(focusPlugin(p.focus)));
+      if (p.typewriter !== undefined) effects.push(cType.reconfigure(typewriterPlugin(p.typewriter)));
+      if (p.markdown !== undefined) effects.push(cLang.reconfigure(langExt(p.markdown)));
+      view.dispatch({ effects });
+    },
+    revealLine(line: number) {
+      const l = view.state.doc.line(Math.min(Math.max(1, line), view.state.doc.lines));
+      view.dispatch({ selection: { anchor: l.from }, effects: EditorView.scrollIntoView(l.from, { y: 'start', yMargin: 40 }) });
+      view.focus();
+    },
+    destroy: () => view.destroy(),
+  };
+}
