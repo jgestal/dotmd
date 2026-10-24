@@ -52,6 +52,10 @@ check('exports one file to PDF', () => {
   const out = path.join(work, 'long.pdf');
   assert(r.status === 0 && isPdf(out), r.stderr);
   assert(pages(out) >= 3, `expected ≥3 pages, got ${pages(out)}`);
+  // macOS and Linux print with the system WebKit; falling back to Chromium would be a regression.
+  if (process.platform !== 'win32') {
+    assert(!(r.stdout + r.stderr).includes('Native PDF export failed'), `native PDF failed:\n${(r.stdout + r.stderr).slice(-600)}`);
+  }
 });
 check('exports a folder to HTML, keeping sub-folders', () => {
   const r = run('--export', 'html', 'docs', '-o', 'site');
