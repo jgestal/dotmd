@@ -1,0 +1,11 @@
+{
+  "open": "$FIX/notes/second.md",
+  "actions": [
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')" },
+    { "eval": "{ const c = document.querySelector('.cm-content'); c.focus(); const dt = new DataTransfer(); dt.items.add(new File([new Uint8Array([137,80,78,71])], 'image.png', { type: 'image/png' })); c.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })) }", "wait": 800 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => /!\\[pasted-\\d+\\]\\(assets\\/pasted-\\d+\\.png\\)/.test(m.app.content))" },
+    { "chord": ["Mod", "Digit4"], "waitFor": "document.querySelector('.milkdown .ProseMirror')", "wait": 800 },
+    { "eval": "{ const c = document.querySelector('.ProseMirror'); c.focus(); const dt = new DataTransfer(); dt.items.add(new File([new Uint8Array([1,2,3])], 'diagram.png', { type: 'image/png' })); c.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })) }", "wait": 1200 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => m.app.content.includes('assets/diagram.png'))" }
+  ]
+}

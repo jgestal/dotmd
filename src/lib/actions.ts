@@ -329,6 +329,63 @@ export async function insertLink() {
   if (v?.url) getEditorApi()?.exec({ type: 'link', url: v.url.trim(), text: v.text.trim() });
 }
 
+const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i;
+export const isImagePath = (p: string) => IMAGE_EXT.test(p);
+
+/** Folder whose assets/ receives pasted or dropped images: the document's, else the open folder. */
+function assetDir(): string | null {
+  const dir = app.path ? dirname(app.path) : app.root;
+  if (!dir) toast(t('toast.saveFirst'), 3500);
+  return dir;
+}
+
+async function toBase64(file: Blob): Promise<string> {
+  const url: string = await new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result as string);
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(file);
+  });
+  return url.slice(url.indexOf(',') + 1);
+}
+
+/** Saves a pasted image into assets/ and returns its path relative to the document. */
+export async function storeImage(file: File): Promise<string | null> {
+  const dir = assetDir();
+  if (!dir) return null;
+  const ext = (file.type.split('/')[1] ?? 'png').replace('jpeg', 'jpg').replace('svg+xml', 'svg');
+  const stamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '');
+  const name = file.name && !/^image\.\w+$/.test(file.name) ? file.name : `pasted-${stamp}.${ext}`;
+  try {
+    return await invoke<string>('save_asset', { dir, name, data: await toBase64(file) });
+  } catch (e) {
+    toast(t('toast.error', { msg: String(e) }));
+    return null;
+  }
+}
+
+/** Inserts pasted images at the cursor. */
+export async function insertImageFiles(files: File[]) {
+  for (const f of files) {
+    const src = await storeImage(f);
+    if (src) getEditorApi()?.exec({ type: 'image', src, alt: stem(src) });
+  }
+}
+
+/** Copies image files dropped on the window into assets/ and links them at the cursor. */
+export async function insertImagePaths(paths: string[]) {
+  const dir = assetDir();
+  if (!dir) return;
+  for (const p of paths) {
+    try {
+      const src = await invoke<string>('copy_asset', { dir, src: p });
+      getEditorApi()?.exec({ type: 'image', src, alt: stem(p) });
+    } catch (e) {
+      toast(t('toast.error', { msg: String(e) }));
+    }
+  }
+}
+
 export async function insertImage() {
   const p = await open({ multiple: false, filters: [{ name: t('dlg.images'), extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'avif'] }] });
   if (typeof p !== 'string') return;

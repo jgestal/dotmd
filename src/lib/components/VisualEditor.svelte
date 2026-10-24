@@ -5,7 +5,7 @@
   import { currentTheme } from '../appearance.svelte';
   import { dirname } from '../path';
   import { keySound } from '../sound';
-  import { insertLink } from '../actions';
+  import { insertLink, storeImage } from '../actions';
   import { t } from '../i18n';
 
   let host: HTMLElement;
@@ -26,6 +26,7 @@
         if (!warned) { warned = true; toast(t('toast.visualNote'), 4000); }
       },
       onKey: (key, col) => soundActive() && keySound(key, col),
+      onImage: storeImage,
     }).then((e) => {
       if (disposed) { e.destroy(); return; }
       ed = e;

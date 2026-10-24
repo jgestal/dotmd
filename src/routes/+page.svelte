@@ -24,6 +24,7 @@
   import { forwardConsole } from '$lib/log';
   import { t, type Key } from '$lib/i18n';
   import { isMac, isPlainText, modKey } from '$lib/path';
+  import { insertImagePaths, isImagePath } from '$lib/actions';
   import { anyDirty, confirmCloseAll, docName, handleDroppedPaths, onExternalChange, restoreTabs, saveDoc, toggleZen } from '$lib/actions';
   import TabBar from '$lib/components/TabBar.svelte';
 
@@ -88,7 +89,13 @@
         const p = e.payload;
         if (p.type === 'enter' || p.type === 'over') app.dragOver = true;
         else if (p.type === 'leave') app.dragOver = false;
-        else if (p.type === 'drop') { app.dragOver = false; handleDroppedPaths(p.paths); }
+        else if (p.type === 'drop') {
+          app.dragOver = false;
+          const images = p.paths.filter(isImagePath);
+          // Images dropped while editing are copied into assets/ and linked at the cursor.
+          if (images.length && app.docOpen && app.mode !== 'preview') insertImagePaths(images);
+          else handleDroppedPaths(p.paths);
+        }
       }),
     );
     unlisten.push(

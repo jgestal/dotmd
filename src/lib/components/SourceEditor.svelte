@@ -4,7 +4,7 @@
   import { app, settings, setEditorApi, focusActive, typewriterActive, soundActive } from '../state.svelte';
   import { isMarkdown } from '../path';
   import { keySound } from '../sound';
-  import { insertLink } from '../actions';
+  import { insertLink, insertImageFiles } from '../actions';
 
   let { onScrollLine, syncLine = 0 }: { onScrollLine?: (line: number) => void; syncLine?: number } = $props();
   let quietUntil = 0;
@@ -26,6 +26,7 @@
       onSelection: (text) => (app.selection = text),
       onKey: (key, col) => soundActive() && keySound(key, col),
       onScroll: (line) => performance.now() > quietUntil && onScrollLine?.(line),
+      onImages: (files) => void insertImageFiles(files),
     });
     const view = ed.view;
     setEditorApi({

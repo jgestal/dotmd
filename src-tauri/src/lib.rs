@@ -45,6 +45,8 @@ pub fn run() {
             fs::create_file,
             fs::list_tree,
             fs::read_data_url,
+            fs::save_asset,
+            fs::copy_asset,
             watch::watch_files,
             search::fuzzy_find,
             search::search_folder,

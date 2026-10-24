@@ -283,6 +283,7 @@ export interface SourceOptions {
   onSelection: (text: string) => void;
   onKey: (key: string, column: number) => void;
   onScroll: (topLine: number) => void;
+  onImages: (files: File[]) => void;
 }
 
 export function createSource(parent: HTMLElement, o: SourceOptions) {
@@ -336,6 +337,13 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
           }
         }),
         EditorView.domEventHandlers({
+          paste: (e) => {
+            const files = [...(e.clipboardData?.files ?? [])].filter((f) => f.type.startsWith('image/'));
+            if (!files.length) return false;
+            e.preventDefault();
+            o.onImages(files);
+            return true;
+          },
           keydown: (e, view) => {
             if (e.metaKey || e.ctrlKey || !(e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) return;
             const head = view.state.selection.main.head;

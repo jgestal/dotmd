@@ -142,3 +142,58 @@ pub fn read_data_url(path: String) -> Result<String, String> {
     };
     Ok(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
 }
+
+/// Picks `assets/<stem>.<ext>` inside `dir`, adding -2, -3… if the name is taken. Returns (absolute, relative).
+fn unique_asset(dir: &Path, name: &str) -> (PathBuf, String) {
+    let clean: String = name
+        .chars()
+        .map(|c| if c.is_alphanumeric() || matches!(c, '.' | '-' | '_') { c } else { '-' })
+        .collect();
+    let p = Path::new(&clean);
+    let stem = p.file_stem().and_then(|s| s.to_str()).filter(|s| !s.is_empty()).unwrap_or("image").to_string();
+    let ext = p.extension().and_then(|s| s.to_str()).unwrap_or("png").to_ascii_lowercase();
+    let assets = dir.join("assets");
+    let mut n = 1;
+    loop {
+        let file = if n == 1 { format!("{stem}.{ext}") } else { format!("{stem}-{n}.{ext}") };
+        let abs = assets.join(&file);
+        if !abs.exists() {
+            return (abs, format!("assets/{file}"));
+        }
+        n += 1;
+    }
+}
+
+/// Saves a pasted image (base64) next to the document; returns the relative path to put in the Markdown.
+#[tauri::command]
+pub fn save_asset(dir: String, name: String, data: String) -> Result<String, String> {
+    use base64::Engine;
+    let bytes = base64::engine::general_purpose::STANDARD.decode(data).map_err(|e| e.to_string())?;
+    let (abs, rel) = unique_asset(Path::new(&dir), &name);
+    std::fs::create_dir_all(abs.parent().unwrap()).map_err(|e| e.to_string())?;
+    std::fs::write(&abs, bytes).map_err(|e| e.to_string())?;
+    Ok(rel)
+}
+
+/// Copies a dropped image file into the document's assets folder; returns the relative path.
+#[tauri::command]
+pub fn copy_asset(dir: String, src: String) -> Result<String, String> {
+    let name = Path::new(&src).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "image.png".into());
+    let (abs, rel) = unique_asset(Path::new(&dir), &name);
+    std::fs::create_dir_all(abs.parent().unwrap()).map_err(|e| e.to_string())?;
+    std::fs::copy(&src, &abs).map_err(|e| e.to_string())?;
+    Ok(rel)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn assets_get_unique_names() {
+        let dir = std::env::temp_dir().join(format!("dotmd-assets-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let d = dir.to_string_lossy().into_owned();
+        assert_eq!(super::save_asset(d.clone(), "Screen Shot.png".into(), "AQ==".into()).unwrap(), "assets/Screen-Shot.png");
+        assert_eq!(super::save_asset(d.clone(), "Screen Shot.png".into(), "Ag==".into()).unwrap(), "assets/Screen-Shot-2.png");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+}

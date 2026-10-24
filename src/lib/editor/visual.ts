@@ -22,6 +22,8 @@ export interface VisualOptions {
   placeholder: string;
   onChange: (md: string) => void;
   onKey: (key: string, column: number) => void;
+  /** Stores an image file and returns the path to link (block upload button and paste). */
+  onImage: (file: File) => Promise<string | null>;
 }
 
 /** WYSIWYG editor (Milkdown/ProseMirror). Edits the formatted document and serializes back to Markdown. */
@@ -67,6 +69,7 @@ export async function createVisual(root: HTMLElement, o: VisualOptions) {
     featureConfigs: {
       [Crepe.Feature.Placeholder]: { text: o.placeholder, mode: 'doc' },
       [Crepe.Feature.ImageBlock]: {
+        onUpload: async (file: File) => (await o.onImage(file)) ?? '',
         proxyDomURL: (url: string) => {
           if (/^(https?:|data:|blob:|asset:)/.test(url)) return url;
           const dir = o.dir();
@@ -100,6 +103,16 @@ export async function createVisual(root: HTMLElement, o: VisualOptions) {
   await crepe.create();
   baseline = crepe.getMarkdown();
   suppress = false;
+  root.addEventListener('paste', async (e) => {
+    const files = [...(e.clipboardData?.files ?? [])].filter((f) => f.type.startsWith('image/'));
+    if (!files.length) return;
+    e.preventDefault();
+    e.stopPropagation();
+    for (const f of files) {
+      const src = await o.onImage(f);
+      if (src) exec({ type: 'image', src, alt: src.split('/').pop()!.replace(/\.[^.]+$/, '') });
+    }
+  }, true);
   root.addEventListener('keydown', (e) => {
     if (e.metaKey || e.ctrlKey || !(e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) return;
     const col = caretColumn(root);

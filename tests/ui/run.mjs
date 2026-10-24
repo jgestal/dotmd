@@ -87,11 +87,17 @@ const handlers = {
     events.push({ kind: 'done', files: events.length, matches: total, truncated: false });
     return events;
   },
-  save_asset: ({ dir, name, bytes }) => {
+  save_asset: ({ dir, name, data }) => {
     const d = path.join(dir, 'assets');
     fs.mkdirSync(d, { recursive: true });
-    fs.writeFileSync(path.join(d, name), Buffer.from(bytes));
+    fs.writeFileSync(path.join(d, name), Buffer.from(data, 'base64'));
     return 'assets/' + name;
+  },
+  copy_asset: ({ dir, src }) => {
+    const d = path.join(dir, 'assets');
+    fs.mkdirSync(d, { recursive: true });
+    fs.copyFileSync(src, path.join(d, path.basename(src)));
+    return 'assets/' + path.basename(src);
   },
 };
 
