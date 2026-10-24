@@ -4,7 +4,7 @@ import { renderHtml, postProcess, frontMatterHtml, escapeHtml } from './render';
 import { THEMES, type Theme } from './themes';
 import { dirname, isMarkdown, stem } from './path';
 import { settings } from './state.svelte';
-import { cssVars } from './appearance.svelte';
+import { cssVars, fontsFor } from './appearance.svelte';
 
 export interface ExportOptions {
   theme: Theme;
@@ -20,6 +20,69 @@ export function exportTheme(current: Theme): Theme {
 
 function themeCss(theme: Theme): string {
   return ':root{' + Object.entries(cssVars(theme)).map(([k, v]) => `${k}:${v};`).join('') + '}';
+}
+
+const fontCache = new Map<string, Promise<string>>();
+
+function dataUrl(url: string): Promise<string> {
+  let p = fontCache.get(url);
+  if (!p) {
+    p = fetch(url)
+      .then((r) => r.blob())
+      .then((b) => new Promise<string>((res, rej) => {
+        const fr = new FileReader();
+        fr.onload = () => res(fr.result as string);
+        fr.onerror = () => rej(fr.error);
+        fr.readAsDataURL(b);
+      }));
+    fontCache.set(url, p);
+  }
+  return p;
+}
+
+/** True if a CSS unicode-range covers basic Latin or Latin Extended (other scripts fall back to system fonts). */
+export function coversLatin(range: string): boolean {
+  if (!range.trim()) return true;
+  return range.split(',').some((part) => {
+    const m = part.trim().match(/^U\+([0-9A-F?]+)(?:-([0-9A-F]+))?$/i);
+    if (!m) return false;
+    const lo = parseInt(m[1].replace(/\?/g, '0'), 16);
+    const hi = m[2] ? parseInt(m[2], 16) : parseInt(m[1].replace(/\?/g, 'F'), 16);
+    return (lo <= 0x41 && hi >= 0x41) || (lo <= 0x101 && hi >= 0x101);
+  });
+}
+
+/**
+ * @font-face rules for the fonts the export theme uses, with the files inlined as data: URLs,
+ * so a typewriter or CRT export looks the same on a machine without those fonts.
+ */
+async function embeddedFonts(theme: Theme): Promise<string> {
+  const f = fontsFor(theme);
+  const families = new Set(
+    [f.doc, f.heading, f.code].flatMap((stack) => [...stack.matchAll(/"([^"]+)"|^\s*([A-Za-z0-9 ]+?)\s*(?:,|$)/g)].map((m) => (m[1] ?? m[2]).trim())),
+  );
+  const out: string[] = [];
+  for (const sheet of [...document.styleSheets]) {
+    let rules: CSSRuleList;
+    try { rules = sheet.cssRules; } catch { continue; }
+    for (const rule of [...rules]) {
+      if (!(rule instanceof CSSFontFaceRule)) continue;
+      const st = rule.style;
+      const family = st.getPropertyValue('font-family').replace(/["']/g, '').trim();
+      if (!families.has(family)) continue;
+      const range = st.getPropertyValue('unicode-range');
+      if (!coversLatin(range)) continue;
+      const url = st.getPropertyValue('src').match(/url\(["']?([^"')]+\.woff2[^"')]*)["']?\)/)?.[1];
+      if (!url) continue;
+      try {
+        const data = await dataUrl(new URL(url, sheet.href ?? location.href).href);
+        out.push(`@font-face{font-family:"${family}";font-style:${st.getPropertyValue('font-style') || 'normal'};` +
+          `font-weight:${st.getPropertyValue('font-weight') || '400'};font-display:swap;src:url(${data}) format("woff2");` +
+          (range ? `unicode-range:${range};` : '') + '}');
+      } catch {}
+    }
+  }
+  return out.join('\n');
 }
 
 function printCss(o: ExportOptions): string {
@@ -76,7 +139,8 @@ export async function buildDocument(docs: { md: string; path: string | null }[],
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="generator" content="DotMD">
 <title>${escapeHtml(title)}</title>
-<style>${themeCss(o.theme)}
+<style>${settings.exportEmbedFonts ? await embeddedFonts(o.theme) : ''}
+${themeCss(o.theme)}
 ${documentCss}
 ${printCss(o)}</style>
 </head>

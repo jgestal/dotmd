@@ -81,6 +81,7 @@
         </div>
         <label class="check"><input type="checkbox" bind:checked={merge} /> {t('export.merge')}</label>
         <label class="check"><input type="checkbox" bind:checked={toc} /> {t('export.toc')}</label>
+        <label class="check"><input type="checkbox" bind:checked={settings.exportEmbedFonts} /> {t('export.embedFonts')}</label>
 
         <h3>{t('export.outDir')}</h3>
         <div class="out">

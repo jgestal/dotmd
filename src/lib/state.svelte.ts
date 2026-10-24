@@ -66,6 +66,8 @@ export interface Settings {
   pdfPageSize: 'A4' | 'Letter' | 'A5' | 'Legal';
   pdfMargin: number;
   exportTheme: 'current' | 'modern' | 'github' | 'paper' | 'typewriter';
+  /** Inline the theme's font files in exported HTML/PDF. */
+  exportEmbedFonts: boolean;
   customCss: string;
 }
 
@@ -120,6 +122,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pdfPageSize: 'A4',
   pdfMargin: 18,
   exportTheme: 'current',
+  exportEmbedFonts: true,
   customCss: '',
 };
 

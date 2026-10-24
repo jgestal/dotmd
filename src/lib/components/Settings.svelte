@@ -201,6 +201,7 @@
           <span>{t('export.page')}</span>
           <select bind:value={settings.pdfPageSize}>{#each ['A4', 'Letter', 'A5', 'Legal'] as p}<option>{p}</option>{/each}</select>
         </div>
+        <label class="check"><input type="checkbox" bind:checked={settings.exportEmbedFonts} /> {t('export.embedFonts')}</label>
         <div class="row"><span>{t('export.margin')} <b>{settings.pdfMargin}</b></span><input type="range" min="0" max="40" bind:value={settings.pdfMargin} /></div>
 
       {:else}

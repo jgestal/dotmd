@@ -1,0 +1,10 @@
+{
+  "open": "$FIX/README.md",
+  "settings": { "theme": "typewriter", "exportTheme": "current" },
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body .mermaid-diagram svg')" },
+    { "eval": "{ import('/src/lib/export.ts').then(async (m) => { const s = await import('/src/lib/state.svelte.ts'); const a = await import('/src/lib/appearance.svelte.ts'); window.__html = await m.buildDocument([{ md: s.app.content, path: s.app.path }], { theme: a.currentTheme(), pageSize: 'A4', margin: 18, toc: false }, 'x'); }) }", "waitFor": "window.__html", "timeout": 20000 },
+    { "assert": "window.__html.includes('@font-face{font-family:\"Courier Prime\"') && window.__html.includes('@font-face{font-family:\"Special Elite\"') && /src:url\\(data:(font\\/woff2|application\\/octet-stream)/.test(window.__html)" },
+    { "assert": "window.__html.length < 1500000" }
+  ]
+}
