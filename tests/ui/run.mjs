@@ -138,6 +138,19 @@ const browser = await puppeteer.launch({
   defaultViewport: { width: 1280, height: 860, deviceScaleFactor: 1 },
 });
 
+// Warm-up: a fresh Vite optimizes dependencies on first request, which can take longer than a
+// scenario's waitFor on slow CI machines. Load the heavy, lazily imported modules once up front.
+{
+  const page = await browser.newPage();
+  await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle0', timeout: 120000 }).catch(() => {});
+  await page.evaluate(() => Promise.all([
+    import('/src/lib/components/VisualEditor.svelte'),
+    import('/src/lib/editor/visual.ts'),
+    import('mermaid').catch(() => {}),
+  ])).catch((e) => console.log('warm-up:', e.message));
+  await page.close();
+}
+
 const wanted = process.argv.slice(2);
 const files = fs.readdirSync(path.join(HERE, 'scenarios')).filter((f) => f.endsWith('.json'))
   .filter((f) => !wanted.length || wanted.includes(f.replace(/\.json$/, '')));

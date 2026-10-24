@@ -1029,6 +1029,7 @@ dependencies = [
  "grep-matcher",
  "grep-regex",
  "grep-searcher",
+ "gtk",
  "ignore",
  "log",
  "notify",
@@ -1045,6 +1046,7 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-opener",
  "trash",
+ "webkit2gtk",
 ]
 
 [[package]]

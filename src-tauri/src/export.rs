@@ -119,9 +119,10 @@ fn paper_points(size: &str) -> (f64, f64) {
     }
 }
 
-/// Prints HTML to a paginated PDF with the system WebKit (no browser needed).
-/// A hidden window loads the document, then an NSPrintOperation saves straight to `out`.
-#[cfg(target_os = "macos")]
+/// Prints HTML to a paginated PDF with the system WebKit (no browser needed): a hidden window loads
+/// the document, then the platform print operation saves straight to `out` (NSPrintOperation on
+/// macOS, WebKitGTK's PrintOperation on Linux).
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 #[tauri::command]
 pub async fn export_pdf_native(app: tauri::AppHandle, html: String, out: String, page_size: String, margin_mm: f64) -> Result<(), String> {
     use std::sync::mpsc;
@@ -132,6 +133,7 @@ pub async fn export_pdf_native(app: tauri::AppHandle, html: String, out: String,
     let label = format!("pdf-{}", SEQ.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
     let (pw, ph) = paper_points(&page_size);
     let margin = margin_mm * 72.0 / 25.4;
+    let base_dir = std::env::temp_dir().to_string_lossy().into_owned();
     let _ = std::fs::remove_file(&out);
 
     let win = WebviewWindowBuilder::new(&app, &label, WebviewUrl::External("about:blank".parse().unwrap()))
@@ -141,21 +143,15 @@ pub async fn export_pdf_native(app: tauri::AppHandle, html: String, out: String,
         .map_err(|e| e.to_string())?;
 
     let result = async {
-        win.with_webview(move |w| unsafe {
-            let wk = &*(w.inner() as *const objc2_web_kit::WKWebView);
-            let base = objc2_foundation::NSURL::fileURLWithPath(&objc2_foundation::NSString::from_str(&std::env::temp_dir().to_string_lossy()));
-            wk.loadHTMLString_baseURL(&objc2_foundation::NSString::from_str(&html), Some(&base));
-        })
-        .map_err(|e| e.to_string())?;
+        win.with_webview(move |w| platform::load(&w, &html, &base_dir)).map_err(|e| e.to_string())?;
 
         // Wait for the document (and its inlined fonts/images) to finish loading.
         let start = Instant::now();
         loop {
-            tokio_sleep(Duration::from_millis(100)).await;
+            sleep(Duration::from_millis(100)).await;
             let (tx, rx) = mpsc::channel();
-            win.with_webview(move |w| unsafe {
-                let wk = &*(w.inner() as *const objc2_web_kit::WKWebView);
-                let _ = tx.send(wk.isLoading());
+            win.with_webview(move |w| {
+                let _ = tx.send(platform::is_loading(&w));
             })
             .map_err(|e| e.to_string())?;
             let loading = rx.recv_timeout(Duration::from_secs(2)).unwrap_or(true);
@@ -163,50 +159,16 @@ pub async fn export_pdf_native(app: tauri::AppHandle, html: String, out: String,
                 break;
             }
         }
-        tokio_sleep(Duration::from_millis(400)).await; // let layout settle
+        sleep(Duration::from_millis(400)).await; // let layout settle
 
         let target = out.clone();
-        win.with_webview(move |w| unsafe {
-            use objc2::runtime::AnyObject;
-            use objc2_app_kit::{NSPrintInfo, NSPrintJobSavingURL, NSPrintSaveJob, NSPrintingPaginationMode, NSWindow};
-            use objc2_foundation::{NSSize, NSString, NSURL};
+        win.with_webview(move |w| platform::print(&w, &target, pw, ph, margin)).map_err(|e| e.to_string())?;
 
-            let wk = &*(w.inner() as *const objc2_web_kit::WKWebView);
-            let window = &*(w.ns_window() as *const NSWindow);
-            let info = NSPrintInfo::new();
-            info.setJobDisposition(NSPrintSaveJob);
-            let url = NSURL::fileURLWithPath(&NSString::from_str(&target));
-            let dict = info.dictionary();
-            let key: &AnyObject = &*(NSPrintJobSavingURL as *const NSString as *const AnyObject);
-            let _: () = objc2::msg_send![&*dict, setObject: &*url, forKey: key];
-            info.setPaperSize(NSSize::new(pw, ph));
-            info.setTopMargin(margin);
-            info.setBottomMargin(margin);
-            info.setLeftMargin(margin);
-            info.setRightMargin(margin);
-            info.setHorizontalPagination(NSPrintingPaginationMode::Fit);
-            info.setVerticalPagination(NSPrintingPaginationMode::Automatic);
-            info.setHorizontallyCentered(false);
-            info.setVerticallyCentered(false);
-            let op = wk.printOperationWithPrintInfo(&info);
-            op.setShowsPrintPanel(false);
-            op.setShowsProgressPanel(false);
-            // WKWebView prints blank pages unless its print view has a real frame.
-            if let Some(view) = op.view() {
-                view.setFrame(objc2_foundation::NSRect::new(
-                    objc2_foundation::NSPoint::new(0.0, 0.0),
-                    NSSize::new(pw - 2.0 * margin, ph - 2.0 * margin),
-                ));
-            }
-            op.runOperationModalForWindow_delegate_didRunSelector_contextInfo(window, None, None, std::ptr::null_mut());
-        })
-        .map_err(|e| e.to_string())?;
-
-        // The operation runs asynchronously: wait until the file exists and stops growing.
+        // The print operation runs asynchronously: wait until the file exists and stops growing.
         let start = Instant::now();
         let mut last = 0u64;
         loop {
-            tokio_sleep(Duration::from_millis(250)).await;
+            sleep(Duration::from_millis(250)).await;
             let size = std::fs::metadata(&out).map(|m| m.len()).unwrap_or(0);
             if size > 0 && size == last {
                 return Ok(());
@@ -222,13 +184,96 @@ pub async fn export_pdf_native(app: tauri::AppHandle, html: String, out: String,
     result
 }
 
-#[cfg(target_os = "macos")]
-async fn tokio_sleep(d: std::time::Duration) {
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+async fn sleep(d: std::time::Duration) {
     let _ = tauri::async_runtime::spawn_blocking(move || std::thread::sleep(d)).await;
 }
 
-/// Native PDF is only implemented on macOS for now; elsewhere the caller uses Chromium.
-#[cfg(not(target_os = "macos"))]
+#[cfg(target_os = "macos")]
+mod platform {
+    use objc2::runtime::AnyObject;
+    use objc2_app_kit::{NSPrintInfo, NSPrintJobSavingURL, NSPrintSaveJob, NSPrintingPaginationMode, NSWindow};
+    use objc2_foundation::{NSPoint, NSRect, NSSize, NSString, NSURL};
+    use objc2_web_kit::WKWebView;
+    use tauri::webview::PlatformWebview;
+
+    fn webview(w: &PlatformWebview) -> &WKWebView {
+        unsafe { &*(w.inner() as *const WKWebView) }
+    }
+
+    pub fn load(w: &PlatformWebview, html: &str, base_dir: &str) {
+        let base = NSURL::fileURLWithPath(&NSString::from_str(base_dir));
+        unsafe { webview(w).loadHTMLString_baseURL(&NSString::from_str(html), Some(&base)) };
+    }
+
+    pub fn is_loading(w: &PlatformWebview) -> bool {
+        unsafe { webview(w).isLoading() }
+    }
+
+    pub fn print(w: &PlatformWebview, target: &str, pw: f64, ph: f64, margin: f64) {
+        unsafe {
+            let window = &*(w.ns_window() as *const NSWindow);
+            let info = NSPrintInfo::new();
+            info.setJobDisposition(NSPrintSaveJob);
+            let url = NSURL::fileURLWithPath(&NSString::from_str(target));
+            let dict = info.dictionary();
+            let key: &AnyObject = &*(NSPrintJobSavingURL as *const NSString as *const AnyObject);
+            let _: () = objc2::msg_send![&*dict, setObject: &*url, forKey: key];
+            info.setPaperSize(NSSize::new(pw, ph));
+            info.setTopMargin(margin);
+            info.setBottomMargin(margin);
+            info.setLeftMargin(margin);
+            info.setRightMargin(margin);
+            info.setHorizontalPagination(NSPrintingPaginationMode::Fit);
+            info.setVerticalPagination(NSPrintingPaginationMode::Automatic);
+            info.setHorizontallyCentered(false);
+            info.setVerticallyCentered(false);
+            let op = webview(w).printOperationWithPrintInfo(&info);
+            op.setShowsPrintPanel(false);
+            op.setShowsProgressPanel(false);
+            // WKWebView prints blank pages unless its print view has a real frame.
+            if let Some(view) = op.view() {
+                view.setFrame(NSRect::new(NSPoint::new(0.0, 0.0), NSSize::new(pw - 2.0 * margin, ph - 2.0 * margin)));
+            }
+            op.runOperationModalForWindow_delegate_didRunSelector_contextInfo(window, None, None, std::ptr::null_mut());
+        }
+    }
+}
+
+#[cfg(target_os = "linux")]
+mod platform {
+    use gtk::{PageSetup, PaperSize, PrintSettings, Unit};
+    use tauri::webview::PlatformWebview;
+    use webkit2gtk::{PrintOperation, PrintOperationExt, WebViewExt};
+
+    pub fn load(w: &PlatformWebview, html: &str, base_dir: &str) {
+        w.inner().load_html(html, Some(&format!("file://{base_dir}/")));
+    }
+
+    pub fn is_loading(w: &PlatformWebview) -> bool {
+        w.inner().is_loading()
+    }
+
+    pub fn print(w: &PlatformWebview, target: &str, pw: f64, ph: f64, margin: f64) {
+        let settings = PrintSettings::new();
+        settings.set_printer("Print to File");
+        settings.set("output-file-format", Some("pdf"));
+        settings.set("output-uri", Some(&format!("file://{target}")));
+        let setup = PageSetup::new();
+        setup.set_paper_size(&PaperSize::new_custom("dotmd", "DotMD", pw, ph, Unit::Points));
+        setup.set_top_margin(margin, Unit::Points);
+        setup.set_bottom_margin(margin, Unit::Points);
+        setup.set_left_margin(margin, Unit::Points);
+        setup.set_right_margin(margin, Unit::Points);
+        let op = PrintOperation::new(&w.inner());
+        op.set_print_settings(&settings);
+        op.set_page_setup(&setup);
+        op.print();
+    }
+}
+
+/// No native engine here yet (Windows always has Edge, which the Chromium path uses).
+#[cfg(not(any(target_os = "macos", target_os = "linux")))]
 #[tauri::command]
 pub async fn export_pdf_native(html: String, out: String, page_size: String, margin_mm: f64) -> Result<(), String> {
     let _ = (html, out, page_size, margin_mm);
