@@ -115,6 +115,11 @@
 .markdown-body sup a { text-decoration: none; }
 .markdown-body dt { font-weight: 650; }
 .markdown-body dd { margin: 0 0 0.6em 1.4em; }
+.markdown-body table.csv { font-size: 0.86em; display: table; width: auto; }
+.markdown-body table.csv th { position: sticky; top: 0; }
+.markdown-body table.csv td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.markdown-body .csv-more { color: var(--fg-muted); font-size: 0.85em; }
+.markdown-body pre.code-file { font-size: 0.82em; line-height: 1.55; }
 .markdown-body pre.plain-text { background: none; padding: 0; font-family: var(--font-doc); font-size: 1em; white-space: pre-wrap; }
 
 /* Syntax highlighting (highlight.js classes) */

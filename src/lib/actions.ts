@@ -5,15 +5,23 @@ import { app, isDirty, session, settings, setContent, pushRecent, toast, getEdit
 import { askFields } from './prompt.svelte';
 import { preloadSounds } from './sound';
 import { t } from './i18n';
-import { basename, dirname, isMarkdown, isPlainText, join, relative, stem } from './path';
+import { basename, dirname, isPlainText, isTextPath, join, relative, stem } from './path';
 
 const MD_FILTERS = () => [
-  { name: t('dlg.markdown'), extensions: ['md', 'markdown', 'mdown', 'mkd'] },
-  { name: t('dlg.text'), extensions: ['txt', 'text'] },
+  { name: t('dlg.markdown'), extensions: ['md', 'markdown', 'mdown', 'mkd', 'mdx'] },
+  { name: t('dlg.text'), extensions: ['txt', 'text', 'log', 'csv', 'tsv', 'json', 'yaml', 'yml', 'toml', 'xml', 'html', 'rst', 'org'] },
+  { name: t('dlg.all'), extensions: ['*'] },
 ];
 
 export function docName(path = app.path): string {
   return path ? basename(path) : t('top.untitled');
+}
+
+export const APP_TITLE = 'DotMD — Markdown Viewer & Editor';
+
+/** "notes.md — DotMD" with a document, the full product name without one. */
+export function windowTitle(): string {
+  return app.docOpen ? `${docName()} — DotMD` : APP_TITLE;
 }
 
 // ---- Tabs. The active document lives in app.path/content/saved/mode (what the editors bind to);
@@ -52,7 +60,7 @@ export function activateTab(i: number) {
   app.sessionStartWords = -1;
   app.extVersion++;
   persistTabs();
-  void getCurrentWindow().setTitle(docName()).catch(() => {});
+  void getCurrentWindow().setTitle(windowTitle()).catch(() => {});
 }
 
 function addTab(tab: Omit<Tab, 'id'>, reuseActive: boolean) {
@@ -86,7 +94,7 @@ export async function closeTab(i = app.activeTab): Promise<boolean> {
     app.content = app.saved = '';
     app.extVersion++;
     persistTabs();
-    void getCurrentWindow().setTitle('DotMD').catch(() => {});
+    void getCurrentWindow().setTitle(windowTitle()).catch(() => {});
   }
   rewatch();
   return true;
@@ -172,16 +180,14 @@ export async function openPath(path: string, opts: { fromHistory?: boolean; back
     const text = await invoke<string>('read_text', { path });
     const prev = app.path;
     let mode = app.mode;
-    if (isPlainText(path)) {
-      if (mode === 'preview' || mode === 'visual') mode = 'source';
-    } else if (!app.docOpen || !prev || isPlainText(prev)) {
-      mode = settings.defaultMode;
-    }
+    if (!app.docOpen || !prev || isPlainText(prev) !== isPlainText(path)) mode = settings.defaultMode;
+    // Visual (WYSIWYG) editing only exists for Markdown; other text opens in its source.
+    if (isPlainText(path) && mode === 'visual') mode = 'source';
     addTab({ path, content: text, saved: text, mode }, true);
     if (!app.root) app.root = dirname(path);
     pushRecent(path);
   } catch (e) {
-    toast(t('toast.error', { msg: String(e) }));
+    toast(String(e) === 'binary' ? t('toast.binary', { name: basename(path) }) : t('toast.error', { msg: String(e) }));
   }
 }
 
@@ -221,7 +227,7 @@ export async function saveDoc(as = false): Promise<boolean> {
     if (path !== app.path) {
       app.path = path;
       pushRecent(path);
-      await getCurrentWindow().setTitle(basename(path)).catch(() => {});
+      await getCurrentWindow().setTitle(windowTitle()).catch(() => {});
       app.treeVersion++;
     }
     snapshot();
@@ -268,7 +274,7 @@ export async function restoreTabs() {
 export async function handleDroppedPaths(paths: string[]) {
   const dir = await firstOfKind(paths, 'dir');
   if (dir) await openFolder(dir);
-  for (const file of paths.filter((p) => isMarkdown(p) || isPlainText(p))) await openPath(file);
+  for (const file of paths.filter(isTextPath)) await openPath(file);
 }
 
 async function firstOfKind(paths: string[], kind: string) {

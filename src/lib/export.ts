@@ -1,8 +1,8 @@
 import { invoke } from '@tauri-apps/api/core';
 import documentCss from './styles/document.css?raw';
-import { renderHtml, postProcess, frontMatterHtml, escapeHtml } from './render';
+import { postProcess, renderDocument, escapeHtml } from './render';
 import { THEMES, type Theme } from './themes';
-import { dirname, isMarkdown, stem } from './path';
+import { dirname, stem } from './path';
 import { settings } from './state.svelte';
 import { cssVars, fontsFor } from './appearance.svelte';
 
@@ -113,8 +113,7 @@ async function renderFragment(md: string, path: string | null, theme: Theme): Pr
   const host = document.createElement('div');
   host.className = 'markdown-body export-staging';
   host.style.cssText = 'position:fixed;left:-20000px;top:0;width:800px;visibility:hidden';
-  const body = !path || isMarkdown(path) ? await renderHtml(md) : `<pre class="plain-text">${escapeHtml(md)}</pre>`;
-  host.innerHTML = frontMatterHtml(md) + body;
+  host.innerHTML = await renderDocument(md, path);
   document.body.appendChild(host);
   try {
     await postProcess(host, { dir: path ? dirname(path) : null, theme, forExport: true });

@@ -1,6 +1,6 @@
-# DotMD
+# DotMD — Markdown Viewer & Editor
 
-**A fast, native-feeling Markdown viewer and editor for macOS, Windows and Linux.**
+**A fast, native-feeling Markdown and text viewer and editor for macOS, Windows and Linux.**
 Read, write and export Markdown, from a quick look at a README to a long distraction-free writing session.
 
 Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev). The app bundle is about 10 MB.

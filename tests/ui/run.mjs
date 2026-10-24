@@ -46,7 +46,7 @@ if (!fs.existsSync(RENDER)) {
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'dotmd-ui-'));
 fs.mkdirSync(OUT, { recursive: true });
 
-const TEXT = /\.(md|markdown|txt)$/i;
+const TEXT = /\.(md|markdown|txt|csv|tsv|json|ya?ml|py|js|ts|rs|log)$/i;
 let pendingOpen = [];
 const handlers = {
   render_markdown: ({ text }) => execFileSync(RENDER, { input: text }).toString(),

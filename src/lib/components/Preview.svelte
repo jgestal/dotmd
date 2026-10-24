@@ -1,9 +1,9 @@
 <script lang="ts">
   import { openUrl } from '@tauri-apps/plugin-opener';
   import { app, settings, toast } from '../state.svelte';
-  import { renderHtml, postProcess, frontMatterHtml, escapeHtml } from '../render';
+  import { postProcess, renderDocument } from '../render';
   import { currentTheme } from '../appearance.svelte';
-  import { dirname, isAbsolute, isMarkdown, join } from '../path';
+  import { dirname, isAbsolute, join } from '../path';
   import { openPath, toggleTaskLine } from '../actions';
   import { t } from '../i18n';
 
@@ -16,8 +16,7 @@
 
   async function render(md: string, path: string | null) {
     const my = ++seq;
-    const markdown = !path || isMarkdown(path);
-    const html = markdown ? frontMatterHtml(md) + (await renderHtml(md)) : `<pre class="plain-text">${escapeHtml(md)}</pre>`;
+    const html = await renderDocument(md, path);
     if (my !== seq) return;
     // Render off-DOM first so the visible document swaps in one step (no flicker on re-render).
     const next = document.createElement('div');

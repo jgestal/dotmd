@@ -5,6 +5,10 @@
   import { app, session, settings } from '../state.svelte';
   import { movePath, openPath } from '../actions';
   import { pointerDrag } from '../drag';
+  import { docKind, isTextPath } from '../path';
+
+  const fileIcon = (p: string) =>
+    !isTextPath(p) ? 'file' : ({ markdown: 'filetext', text: 'filetext', code: 'code', csv: 'table' } as const)[docKind(p)];
   import { treeContextMenu } from '../treeMenu';
 
   interface Entry { name: string; path: string; is_dir: boolean }
@@ -68,7 +72,7 @@
     <Icon name="folder" size={15} />
   {:else}
     <span class="chev"></span>
-    <Icon name={/\.(md|markdown|mdown|mkd|txt|text)$/i.test(entry.name) ? 'filetext' : 'file'} size={15} />
+    <Icon name={fileIcon(entry.path)} size={15} />
   {/if}
   <span class="name">{entry.name}</span>
 </button>

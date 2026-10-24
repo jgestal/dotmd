@@ -156,7 +156,7 @@
     <main class="main">
       {#if app.tabs.length > 1 && !app.zen}<TabBar />{/if}
       {#if app.docOpen}
-        {#if editing && settings.showToolbar && !app.zen}<Toolbar />{/if}
+        {#if editing && !plain && settings.showToolbar && !app.zen}<Toolbar />{/if}
         <div class="content mode-{app.mode}" bind:this={contentEl} style:--split="{settings.splitRatio * 100}%">
           {#if app.mode === 'source'}
             <SourceEditor />

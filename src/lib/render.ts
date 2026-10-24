@@ -2,7 +2,7 @@ import { invoke, convertFileSrc } from '@tauri-apps/api/core';
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js/lib/common';
 import katex from 'katex';
-import { isAbsolute, join } from './path';
+import { codeLang, docKind, isAbsolute, join } from './path';
 import type { Theme } from './themes';
 
 export async function renderHtml(md: string): Promise<string> {
@@ -25,6 +25,51 @@ export function frontMatterHtml(md: string): string {
     .map((r) => `<tr><th>${escapeHtml(r![1])}</th><td>${escapeHtml(r![2].replace(/^["']|["']$/g, ''))}</td></tr>`)
     .join('');
   return rows ? `<table class="front-matter">${rows}</table>` : '';
+}
+
+/** Parses CSV/TSV (quoted fields, doubled quotes, embedded newlines); the delimiter is detected. */
+export function parseCsv(text: string, tsv = false): string[][] {
+  const head = text.slice(0, 2000);
+  const delim = tsv ? '\t' : [',', ';', '\t'].sort((a, b) => head.split(b).length - head.split(a).length)[0];
+  const rows: string[][] = [];
+  let row: string[] = [], cell = '', quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
+      else if (c === '"') quoted = false;
+      else cell += c;
+    } else if (c === '"' && cell === '') quoted = true;
+    else if (c === delim) { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(cell); rows.push(row); row = []; cell = '';
+    } else cell += c;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+
+function csvTable(text: string, tsv: boolean): string {
+  const rows = parseCsv(text, tsv);
+  if (!rows.length) return '';
+  const MAX = 5000;
+  const numeric = (s: string) => /^\s*-?[\d.,]+%?\s*$/.test(s);
+  const cell = (tag: string, v: string) => `<${tag}${tag === 'td' && numeric(v) ? ' class="num"' : ''}>${escapeHtml(v)}</${tag}>`;
+  const [header, ...body] = rows;
+  return `<table class="csv"><thead><tr>${header.map((v) => cell('th', v)).join('')}</tr></thead><tbody>` +
+    body.slice(0, MAX).map((r) => `<tr>${r.map((v) => cell('td', v)).join('')}</tr>`).join('') + '</tbody></table>' +
+    (body.length > MAX ? `<p class="csv-more">… ${body.length - MAX} more rows</p>` : '');
+}
+
+/** HTML for any supported document: Markdown, CSV/TSV as a table, code highlighted, plain text as-is. */
+export async function renderDocument(text: string, path: string | null): Promise<string> {
+  switch (docKind(path)) {
+    case 'markdown': return frontMatterHtml(text) + (await renderHtml(text));
+    case 'csv': return csvTable(text, path!.toLowerCase().endsWith('.tsv'));
+    case 'code': return `<pre class="code-file"><code class="language-${codeLang(path!)}">${escapeHtml(text)}</code></pre>`;
+    default: return `<pre class="plain-text">${escapeHtml(text)}</pre>`;
+  }
 }
 
 let mermaidMod: typeof import('mermaid').default | null = null;

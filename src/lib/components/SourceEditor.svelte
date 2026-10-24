@@ -2,7 +2,7 @@
   import { onMount, untrack } from 'svelte';
   import { createSource, execSource } from '../editor/source';
   import { app, settings, setEditorApi, focusActive, typewriterActive, soundActive } from '../state.svelte';
-  import { isMarkdown } from '../path';
+  import { docKind } from '../path';
   import { keySound } from '../sound';
   import { insertLink, insertImageFiles } from '../actions';
 
@@ -11,13 +11,16 @@
 
   let host: HTMLElement;
   let ed: ReturnType<typeof createSource> | null = null;
-  const md = () => !app.path || isMarkdown(app.path);
+  // Prose (Markdown, plain text) uses the document font; code and data use the code font.
+  const md = () => ['markdown', 'text'].includes(docKind(app.path));
+  /** Code and data files always get line numbers. */
+  const lineNumbers = () => settings.lineNumbers || !md();
 
   onMount(() => {
     ed = createSource(host, {
       doc: app.content,
-      markdown: md(),
-      lineNumbers: settings.lineNumbers,
+      filename: app.path,
+      lineNumbers: lineNumbers(),
       wrap: settings.lineWrap,
       spellcheck: settings.spellcheck,
       focus: focusActive() ? settings.focusMode : 'off',
@@ -51,7 +54,7 @@
     untrack(() => ed?.setDoc(app.content));
   });
   $effect(() => {
-    const p = { lineNumbers: settings.lineNumbers, wrap: settings.lineWrap, spellcheck: settings.spellcheck };
+    const p = { lineNumbers: lineNumbers(), wrap: settings.lineWrap, spellcheck: settings.spellcheck && md() };
     untrack(() => ed?.reconfigure(p));
   });
   $effect(() => {
@@ -59,7 +62,7 @@
     untrack(() => ed?.reconfigure(p));
   });
   $effect(() => {
-    const p = { markdown: md() };
+    const p = { filename: app.path };
     untrack(() => ed?.reconfigure(p));
   });
   // Follow the preview while scrolling it in split mode.

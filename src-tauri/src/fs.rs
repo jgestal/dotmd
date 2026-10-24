@@ -1,8 +1,6 @@
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 
-const TEXT_EXTS: &[&str] = &["md", "markdown", "mdown", "mkd", "txt", "text"];
-
 #[derive(Serialize)]
 pub struct Entry {
     name: String,
@@ -10,18 +8,61 @@ pub struct Entry {
     is_dir: bool,
 }
 
+/// Extensions DotMD opens as documents: Markdown, plain text, data and source code.
+const TEXT_EXTS: &[&str] = &[
+    "md", "markdown", "mdown", "mkd", "mdx", "txt", "text", "log", "rst", "adoc", "asciidoc", "org", "tex", "bib",
+    "csv", "tsv", "json", "jsonc", "json5", "yaml", "yml", "toml", "ini", "cfg", "conf", "properties", "env", "xml",
+    "html", "htm", "css", "scss", "less", "svg", "js", "mjs", "cjs", "ts", "jsx", "tsx", "vue", "svelte", "py", "rb",
+    "rs", "go", "java", "kt", "kts", "swift", "c", "h", "cpp", "cc", "hpp", "cs", "php", "pl", "lua", "r", "sql", "sh",
+    "bash", "zsh", "fish", "ps1", "bat", "dart", "scala", "clj", "ex", "exs", "erl", "hs", "ml", "nim", "zig", "srt",
+    "vtt", "diff", "patch", "gradle", "cmake", "dockerfile", "gitignore", "editorconfig",
+];
+
+/// Common text files that have no extension.
+const TEXT_NAMES: &[&str] = &["readme", "license", "licence", "changelog", "authors", "contributing", "makefile", "dockerfile", "procfile", "gemfile", "notes", "todo"];
+
 pub(crate) fn is_text_file(p: &Path) -> bool {
-    p.extension()
-        .and_then(|e| e.to_str())
-        .map(|e| TEXT_EXTS.contains(&e.to_ascii_lowercase().as_str()))
-        .unwrap_or(false)
+    match p.extension().and_then(|e| e.to_str()) {
+        Some(e) => TEXT_EXTS.contains(&e.to_ascii_lowercase().as_str()),
+        None => p
+            .file_name()
+            .and_then(|n| n.to_str())
+            .is_some_and(|n| TEXT_NAMES.contains(&n.to_ascii_lowercase().as_str())),
+    }
+}
+
+/// Decodes UTF-8 (with or without BOM) and UTF-16 (with BOM); anything else that is not valid UTF-8
+/// is read as Windows-1252/Latin-1, the usual encoding of older text files. Binary files are refused.
+pub(crate) fn decode_text(bytes: &[u8]) -> Result<String, String> {
+    if let Some(rest) = bytes.strip_prefix(b"\xEF\xBB\xBF") {
+        return Ok(String::from_utf8_lossy(rest).into_owned());
+    }
+    let utf16 = |rest: &[u8], le: bool| {
+        let units: Vec<u16> = rest
+            .chunks_exact(2)
+            .map(|c| if le { u16::from_le_bytes([c[0], c[1]]) } else { u16::from_be_bytes([c[0], c[1]]) })
+            .collect();
+        String::from_utf16_lossy(&units)
+    };
+    if let Some(rest) = bytes.strip_prefix(b"\xFF\xFE") {
+        return Ok(utf16(rest, true));
+    }
+    if let Some(rest) = bytes.strip_prefix(b"\xFE\xFF") {
+        return Ok(utf16(rest, false));
+    }
+    if bytes.iter().take(8000).any(|&b| b == 0) {
+        return Err("binary".into());
+    }
+    match std::str::from_utf8(bytes) {
+        Ok(s) => Ok(s.to_string()),
+        Err(_) => Ok(bytes.iter().map(|&b| b as char).collect()),
+    }
 }
 
 #[tauri::command]
 pub fn read_text(path: String) -> Result<String, String> {
     let bytes = std::fs::read(&path).map_err(|e| e.to_string())?;
-    let bytes = bytes.strip_prefix(b"\xEF\xBB\xBF").unwrap_or(&bytes);
-    Ok(String::from_utf8_lossy(bytes).into_owned())
+    decode_text(&bytes)
 }
 
 #[tauri::command]
@@ -187,6 +228,24 @@ pub fn copy_asset(dir: String, src: String) -> Result<String, String> {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn decodes_common_encodings() {
+        use super::decode_text;
+        assert_eq!(decode_text(b"\xEF\xBB\xBFhola").unwrap(), "hola");
+        assert_eq!(decode_text(b"\xFF\xFEh\0i\0").unwrap(), "hi");
+        assert_eq!(decode_text(b"caf\xE9").unwrap(), "café");
+        assert_eq!(decode_text(b"\x89PNG\0\0").unwrap_err(), "binary");
+    }
+
+    #[test]
+    fn recognises_text_files() {
+        use std::path::Path;
+        assert!(super::is_text_file(Path::new("a/notes.MD")));
+        assert!(super::is_text_file(Path::new("data.csv")));
+        assert!(super::is_text_file(Path::new("Makefile")));
+        assert!(!super::is_text_file(Path::new("photo.jpg")));
+    }
+
     #[test]
     fn assets_get_unique_names() {
         let dir = std::env::temp_dir().join(format!("dotmd-assets-{}", std::process::id()));

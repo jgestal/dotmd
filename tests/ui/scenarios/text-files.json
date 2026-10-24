@@ -1,0 +1,35 @@
+{
+  "open": "$FIX/data/people.csv",
+  "actions": [
+    {
+      "waitFor": "document.querySelector('.markdown-body table.csv')"
+    },
+    {
+      "assert": "document.querySelectorAll('table.csv tbody tr').length === 3 && document.querySelector('table.csv tbody tr td').textContent === 'Ada, Countess' && document.querySelectorAll('table.csv tbody tr')[2].children[0].textContent === 'Grace \"Amazing\" Hopper'",
+      "shot": "csv"
+    },
+    {
+      "assert": "document.querySelectorAll('.mode')[3].disabled"
+    },
+    {
+      "assert": "true"
+    },
+    {
+      "eval": "{ const p = [...document.querySelectorAll('.tree-row')].find(r => r.textContent.trim() === 'hello.py'); p && p.click() }",
+      "waitFor": "document.querySelector('pre.code-file code.hljs .hljs-keyword')",
+      "shot": "python"
+    },
+    {
+      "chord": [
+        "Mod",
+        "Digit2"
+      ],
+      "waitFor": "document.querySelector('.cm-content')",
+      "wait": 1500
+    },
+    {
+      "assert": "document.querySelectorAll('.cm-line span').length > 5",
+      "shot": "python-source"
+    }
+  ]
+}

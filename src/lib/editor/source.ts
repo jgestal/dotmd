@@ -3,6 +3,8 @@ import { EditorState, Compartment, EditorSelection, RangeSetBuilder, type Extens
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
+import { LanguageDescription } from '@codemirror/language';
+import { basename, isMarkdown } from '../path';
 import { yamlFrontmatter } from '@codemirror/lang-yaml';
 import { syntaxHighlighting, HighlightStyle, bracketMatching, indentOnInput } from '@codemirror/language';
 import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
@@ -273,7 +275,8 @@ const fmt = (a: FormatAction) => (v: EditorView) => (execSource(v, a), true);
 
 export interface SourceOptions {
   doc: string;
-  markdown: boolean;
+  /** Document path; picks Markdown or the code language to highlight (null = untitled Markdown). */
+  filename: string | null;
   lineNumbers: boolean;
   wrap: boolean;
   spellcheck: boolean;
@@ -290,7 +293,16 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
   const cLines = new Compartment(), cWrap = new Compartment(), cSpell = new Compartment();
   const cFocus = new Compartment(), cType = new Compartment(), cLang = new Compartment();
 
-  const langExt = (md: boolean) => (md ? yamlFrontmatter({ content: markdown({ base: markdownLanguage, codeLanguages: languages }) }) : []);
+  const mdExt = () => yamlFrontmatter({ content: markdown({ base: markdownLanguage, codeLanguages: languages }) });
+  // Code languages load lazily, so the first paint is never blocked by a parser download.
+  let langSeq = 0;
+  const setLanguage = (filename: string | null) => {
+    const my = ++langSeq;
+    if (isMarkdown(filename)) return view.dispatch({ effects: cLang.reconfigure(mdExt()) });
+    const desc = filename ? LanguageDescription.matchFilename(languages, basename(filename)) : null;
+    if (!desc) return view.dispatch({ effects: cLang.reconfigure([]) });
+    desc.load().then((support) => my === langSeq && view.dispatch({ effects: cLang.reconfigure(support) }));
+  };
   const spellExt = (on: boolean) => EditorView.contentAttributes.of({ spellcheck: on ? 'true' : 'false', autocorrect: 'off', autocapitalize: 'off' });
 
   const view = new EditorView({
@@ -309,7 +321,7 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
         search({ top: true }),
         syntaxHighlighting(mdHighlight),
         baseTheme,
-        cLang.of(langExt(o.markdown)),
+        cLang.of(isMarkdown(o.filename) ? mdExt() : []),
         cLines.of(o.lineNumbers ? lineNumbers() : []),
         cWrap.of(o.wrap ? EditorView.lineWrapping : []),
         cSpell.of(spellExt(o.spellcheck)),
@@ -359,6 +371,8 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
     }),
   });
 
+  if (!isMarkdown(o.filename)) setLanguage(o.filename);
+
   return {
     view,
     setDoc(text: string) {
@@ -373,7 +387,7 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
       if (p.spellcheck !== undefined) effects.push(cSpell.reconfigure(spellExt(p.spellcheck)));
       if (p.focus !== undefined) effects.push(cFocus.reconfigure(focusPlugin(p.focus)));
       if (p.typewriter !== undefined) effects.push(cType.reconfigure(typewriterPlugin(p.typewriter)));
-      if (p.markdown !== undefined) effects.push(cLang.reconfigure(langExt(p.markdown)));
+      if (p.filename !== undefined) setLanguage(p.filename);
       view.dispatch({ effects });
     },
     /** Puts `line` at the top of the viewport without moving the cursor (scroll sync). */
