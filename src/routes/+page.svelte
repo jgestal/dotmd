@@ -23,6 +23,7 @@
   import { preloadSounds } from '$lib/sound';
   import { forwardConsole } from '$lib/log';
   import { runCliExport } from '$lib/cli';
+  import { scheduleUpdateCheck } from '$lib/updates';
   import { t, type Key } from '$lib/i18n';
   import { isMac, isPlainText, modKey } from '$lib/path';
   import { insertImagePaths, isImagePath } from '$lib/actions';
@@ -117,6 +118,7 @@
         await restoreTabs();
       }
       requestAnimationFrame(() => win.show());
+      scheduleUpdateCheck();
     })();
 
     return () => unlisten.forEach((u) => u.then((f) => f()));

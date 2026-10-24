@@ -1,0 +1,50 @@
+{
+  "open": "$FIX/notes/second.md",
+  "settings": {
+    "typingSound": "typewriter",
+    "bellColumn": 20,
+    "soundVolume": 0.1
+  },
+  "actions": [
+    {
+      "eval": "{ window.__played = []; const orig = AudioBufferSourceNode.prototype.start; AudioBufferSourceNode.prototype.start = function (...a) { window.__played.push(Math.round((this.buffer?.duration ?? 0) * 100) / 100); return orig.apply(this, a); }; }"
+    },
+    {
+      "eval": "{ import('/src/lib/sound.ts').then(m => m.preloadSounds()).then(() => (window.__loaded = true)) }",
+      "waitFor": "window.__loaded"
+    },
+    {
+      "chord": [
+        "Mod",
+        "Digit2"
+      ],
+      "waitFor": "document.querySelector('.cm-content')"
+    },
+    {
+      "eval": "{ document.querySelector('.cm-content').focus() }"
+    },
+    {
+      "chord": [
+        "Mod",
+        "ArrowDown"
+      ]
+    },
+    {
+      "keys": "Enter",
+      "wait": 100
+    },
+    {
+      "eval": "{ window.__played = [] }"
+    },
+    {
+      "type": "abcdefghij klmnopqrstuvwxyz",
+      "wait": 400
+    },
+    {
+      "assert": "window.__played.filter(d => d > 0 && d < 0.5).length >= 27 || window.__played"
+    },
+    {
+      "assert": "window.__played.filter(d => d > 1.2).length === 1 || window.__played"
+    }
+  ]
+}

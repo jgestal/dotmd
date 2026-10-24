@@ -72,6 +72,7 @@ export interface Settings {
   exportEmbedFonts: boolean;
   /** Read/Split preview laid out on paper sheets (export paper size and margins). */
   pageView: boolean;
+  autoUpdate: boolean;
   /** "auto" uses the system WebKit where available (macOS) and falls back to Chromium. */
   pdfEngine: 'auto' | 'chromium';
   customCss: string;
@@ -130,6 +131,7 @@ export const DEFAULT_SETTINGS: Settings = {
   exportTheme: 'current',
   exportEmbedFonts: true,
   pageView: false,
+  autoUpdate: true,
   pdfEngine: 'auto',
   customCss: '',
 };

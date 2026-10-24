@@ -206,13 +206,26 @@ async function runScenario(file, name) {
     localStorage.clear();
     if (settings) localStorage.setItem('dotmd.settings', JSON.stringify(settings));
     let cb = 0;
+    window.__callbacks = {};
+    window.__listeners = [];
+    // Fake Tauri events: scenarios call window.__emit('tauri://drag-drop', { paths, position }) etc.
+    window.__emit = (event, payload) => {
+      for (const l of window.__listeners) if (l.event === event) window.__callbacks[l.handler]?.({ event, id: l.id, payload });
+    };
     window.__TAURI_INTERNALS__ = {
       metadata: { currentWindow: { label: 'main' }, currentWebview: { windowLabel: 'main', label: 'main' } },
-      transformCallback: () => ++cb,
+      transformCallback: (fn) => { ++cb; window.__callbacks[cb] = fn; return cb; },
       unregisterCallback: () => {},
       convertFileSrc: (p) => 'http://127.0.0.1:1431/file?path=' + encodeURIComponent(p),
       invoke: async (cmd, args) => {
         // Native dialogs: answer with window.__dialogAnswer (set by a scenario step), default "cancel".
+        if (cmd === 'plugin:event|listen') {
+          window.__listeners.push({ event: args.event, handler: args.handler, id: window.__listeners.length + 1 });
+          return window.__listeners.length;
+        }
+        // Native file dialogs answer with what a scenario put in window.__savePath / __openPath.
+        if (cmd === 'plugin:dialog|save') return window.__savePath ?? null;
+        if (cmd === 'plugin:dialog|open') return window.__openPath ?? null;
         if (cmd === 'plugin:dialog|message') {
           const b = args?.buttons;
           const [ok, cancel] = b?.OkCancelCustom ?? (b === 'YesNo' ? ['Yes', 'No'] : ['Ok', 'Cancel']);

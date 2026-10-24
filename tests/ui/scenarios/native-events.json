@@ -1,0 +1,21 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1') && window.__listeners.some(l => l.event === 'tauri://drag-drop')" },
+    { "eval": "{ window.__emit('tauri://drag-enter', { paths: [window.__FIX + '/long.md'], position: { x: 10, y: 10 } }) }", "wait": 200, "assert": "!!document.querySelector('.drop')", "shot": "drag-over" },
+    { "eval": "{ window.__emit('tauri://drag-drop', { paths: [window.__FIX + '/long.md', window.__FIX + '/data/people.csv'], position: { x: 10, y: 10 } }) }", "waitFor": "document.querySelectorAll('.tabbar .tab').length === 3", "wait": 300 },
+    { "assert": "!document.querySelector('.drop') && document.querySelector('.tabbar .tab.on').textContent.includes('people.csv')" },
+    { "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/README.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'README.md'" },
+    { "eval": "{ import('/node_modules/@tauri-apps/api/core.js').then(c => c.invoke('write_text', { path: window.__FIX + '/README.md', content: '# Changed outside\\n\\nBy another program.' })).then(() => window.__emit('file-changed', window.__FIX + '/README.md')) }", "waitFor": "document.querySelector('.markdown-body h1')?.textContent.includes('Changed outside')", "wait": 300 },
+    { "assert": "!document.querySelector('.topbar .dirty')", "shot": "reloaded" },
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')" },
+    { "eval": "{ document.querySelector('.cm-content').focus() }" }, { "chord": ["Mod", "ArrowDown"] },
+    { "type": "\\nEdited in DotMD.", "wait": 300, "assert": "!!document.querySelector('.topbar .dirty')" },
+    { "chord": ["Mod", "KeyS"], "wait": 500 },
+    { "assert": "!document.querySelector('.topbar .dirty') && fetch('http://127.0.0.1:1431/file?path=' + encodeURIComponent(window.__FIX + '/README.md')).then(r => r.text()).then(t => t.includes('Edited in DotMD.'))" },
+    { "eval": "{ window.__savePath = window.__FIX + '/copy.md' }" },
+    { "chord": ["Mod", "Shift", "KeyS"], "waitFor": "document.querySelector('.topbar .name')?.textContent === 'copy.md'", "wait": 300 },
+    { "assert": "fetch('http://127.0.0.1:1431/file?path=' + encodeURIComponent(window.__FIX + '/copy.md')).then(r => r.text()).then(t => t.includes('Edited in DotMD.'))" },
+    { "eval": "{ window.__emit('file-changed', window.__FIX + '/copy.md') }", "wait": 300, "assert": "!document.querySelector('.topbar .dirty')" }
+  ]
+}

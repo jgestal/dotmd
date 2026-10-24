@@ -137,6 +137,7 @@ function base(): Command[] {
       id: 'help.installCli', label: L('cmd.installCli'), menu: 'help',
       run: () => invoke<string>('install_cli').then((path) => toast(t('toast.cliInstalled', { path }), 6000), (e) => toast(t('toast.error', { msg: String(e) }))),
     },
+    { id: 'help.updates', label: L('cmd.checkUpdates'), menu: 'help', run: () => import('./updates').then((m) => m.checkForUpdates(true)) },
     { id: 'help.website', label: L('cmd.website'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd') },
     { id: 'help.issue', label: L('cmd.reportIssue'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd/issues/new') },
   ];

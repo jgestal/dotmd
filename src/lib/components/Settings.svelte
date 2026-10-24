@@ -136,6 +136,7 @@
         <label class="check"><input type="checkbox" bind:checked={settings.lineWrap} /> {t('set.lineWrap')}</label>
         <label class="check"><input type="checkbox" bind:checked={settings.spellcheck} /> {t('set.spellcheck')}</label>
         <label class="check"><input type="checkbox" bind:checked={settings.autosave} /> {t('set.autosave')}</label>
+        <label class="check"><input type="checkbox" bind:checked={settings.autoUpdate} /> {t('set.autoUpdate')}</label>
 
       {:else if section === 'zen'}
         <button class="tw-card" class:on={typewriterModeOn()} onclick={toggleTypewriterMode}>
