@@ -139,32 +139,32 @@ Cada tarea tiene su issue en GitHub (número entre paréntesis), agrupadas por m
 Cada tarea está pensada para una sesión corta (½–2 h) y deja algo verificable.
 
 ### Sonidos — Modo máquina de escribir
-- [ ] S-01 Pack de sonidos CC0 (Freesound): teclas, espaciadora, retroceso, retorno de carro y campana, recortados y normalizados. (#1)
-- [ ] S-02 Motor de muestras: variantes aleatorias, tono y volumen variables, panorama estéreo según la tecla. (#2)
-- [ ] S-03 Campana al llegar a la columna configurada y sonido de retorno de carro con Enter. (#3)
-- [ ] S-04 Preset "Modo máquina de escribir" de un clic (tema, sonido, scroll, cursor, campana). (#4)
-- [ ] S-05 Créditos de los sonidos en el README y en Ajustes. (#5)
+- [x] S-01 Pack de sonidos CC0 (Freesound): teclas, espaciadora, retroceso, retorno de carro y campana, recortados y normalizados. (#1)
+- [x] S-02 Motor de muestras: variantes aleatorias, tono y volumen variables, panorama estéreo según la tecla. (#2)
+- [x] S-03 Campana al llegar a la columna configurada y sonido de retorno de carro con Enter. (#3)
+- [x] S-04 Preset "Modo máquina de escribir" de un clic (tema, sonido, scroll, cursor, campana). (#4)
+- [x] S-05 Créditos de los sonidos en el README y en Ajustes. (#5)
 
 ### Fase 7 — Robustez de la 0.1
 - [ ] F7-01 Probar a mano en la app real: arrastrar y soltar, recarga en vivo, cierre con cambios, menú contextual, diálogos nativos, sonidos y PDF desde el diálogo. (#6)
 - [ ] F7-02 Compilar y probar en Windows (WebView2) y Linux (WebKitGTK); ajustar fuentes y barra de título. (#7)
-- [ ] F7-03 Modo Visual: mantener `==resaltado==` y los avisos `[!NOTE]` sin perderlos al guardar. (#8)
-- [ ] F7-04 Scroll sincronizado en ambos sentidos (vista previa → editor). (#9)
-- [ ] F7-05 Divisor arrastrable en el modo dividido. (#10)
-- [ ] F7-06 PDF nativo: macOS `WKWebView.createPDF`, Windows `PrintToPdf`, Linux `WebKitPrintOperation`. (#11)
-- [ ] F7-07 Incrustar en el HTML exportado las fuentes del tema elegido. (#12)
-- [ ] F7-08 Icono propio de la app. (#13)
-- [ ] F7-09 Pruebas automáticas: pruebas de Rust para el renderizado y Playwright para la interfaz en CI. (#14)
+- [x] F7-03 Modo Visual: mantener `==resaltado==` y los avisos `[!NOTE]` sin perderlos al guardar. (#8)
+- [x] F7-04 Scroll sincronizado en ambos sentidos (vista previa → editor). (#9)
+- [x] F7-05 Divisor arrastrable en el modo dividido. (#10)
+- [ ] F7-06 PDF nativo: ✅ macOS (NSPrintOperation) y Linux (WebKitGTK); Windows usa Edge, siempre instalado. (#11)
+- [x] F7-07 Incrustar en el HTML exportado las fuentes del tema elegido. (#12)
+- [x] F7-08 Icono propio de la app. (#13)
+- [ ] F7-09 Pruebas automáticas: ✅ pruebas de Rust y harness de interfaz (`npm run test:ui`) en CI; falta verde en Windows/macOS. (#14)
 
 ### Fase 8 — Productividad
-- [ ] F8-01 Pestañas (abrir, cerrar, reordenar, ⌘W, ⌃Tab). (#15)
-- [ ] F8-02 Apertura rápida ⌘P (búsqueda difusa con `nucleo` en Rust). (#16)
-- [ ] F8-03 Paleta de comandos ⌘⇧P. (#17)
-- [ ] F8-04 Búsqueda en la carpeta (`grep-searcher`) con resultados en streaming. (#18)
-- [ ] F8-05 Pegar o arrastrar una imagen al editor → `assets/` + enlace. (#19)
-- [ ] F8-06 Historial atrás/adelante (⌘[ / ⌘]). (#20)
-- [ ] F8-07 Mover archivos arrastrando en el árbol y borrar a la papelera (`trash`). (#21)
-- [ ] F8-08 Barra de menús nativa con todos los comandos. (#22)
+- [x] F8-01 Pestañas (abrir, cerrar, reordenar, ⌘W, ⌃Tab). (#15)
+- [x] F8-02 Apertura rápida ⌘P (búsqueda difusa con `nucleo` en Rust). (#16)
+- [x] F8-03 Paleta de comandos ⌘⇧P. (#17)
+- [x] F8-04 Búsqueda en la carpeta (`grep-searcher`) con resultados en streaming. (#18)
+- [x] F8-05 Pegar o arrastrar una imagen al editor → `assets/` + enlace. (#19)
+- [x] F8-06 Historial atrás/adelante (⌘[ / ⌘]). (#20)
+- [x] F8-07 Mover archivos arrastrando en el árbol y borrar a la papelera (`trash`). (#21)
+- [x] F8-08 Barra de menús nativa con todos los comandos. (#22)
 
 ### Fase 9 — Escritura avanzada
 - [ ] F9-01 Modo "Live" (ocultar la sintaxis fuera de la línea del cursor). (#23)
@@ -211,7 +211,7 @@ Cada tarea está pensada para una sesión corta (½–2 h) y deja algo verificab
 - [ ] F14-01 Instaladores: `.dmg` universal, `.msi`, `.AppImage`/`.deb`/`.rpm` (CI en GitHub Actions). (#54)
 - [ ] F14-02 Firma y notarización (macOS), firma (Windows). (#55)
 - [ ] F14-03 Actualizaciones automáticas. (#56)
-- [ ] F14-04 CLI `dotmd`. (#57)
+- [ ] F14-04 CLI `dotmd`: ✅ `dotmd --export pdf|html entrada salida`; falta exportar en lote y abrir desde la terminal. (#57)
 - [ ] F14-05 Extensión de Quick Look. (#58)
 - [ ] F14-06 Más idiomas. (#59)
 

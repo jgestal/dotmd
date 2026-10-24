@@ -10,8 +10,9 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
 ## Features
 
 - **Four modes**: *Read*, *Source* (raw Markdown or plain text), *Split* (source and preview, with synced scrolling) and *Visual* (WYSIWYG, edit on the formatted document). Switch with ⌘1–4.
-- **Folder sidebar** you can hide (⌘\\), resize or move to the right, with a filter, an outline tab and a native context menu.
-- **Drag & drop** files and folders. Open from the command line or the OS "Open with…".
+- **Folder sidebar** you can hide (⌘\\), resize or move to the right, with a filter, an outline tab, folder-wide search (⌘⇧F) and a native context menu (new, rename, move by dragging, Move to Trash).
+- **Tabs**, back/forward history (⌘[ / ⌘]), **quick open** (⌘P) and a **command palette** (⌘⇧P), plus a full native menu bar.
+- **Drag & drop** files and folders. Open from the command line or the OS "Open with…". Paste or drop images into the editor and they are saved to `assets/`.
 - **Formatting toolbar**:
   - Headings, emphasis, lists, tasks, links and images.
   - A grid picker for tables and one-click table alignment.
@@ -23,10 +24,12 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
 - **Zen mode**:
   - Full screen, with focus highlighting on the current line, sentence or paragraph.
   - Typewriter scrolling, which keeps the cursor centered.
-  - Optional typing sounds.
+  - Optional typing sounds, including **real typewriter recordings** (CC0) panned by key position, with a margin bell and carriage return.
+  - One-click **Typewriter mode**.
 - **11 themes**, including **Typewriter** (paper texture, uneven ink) and **CRT** green and amber (scanlines, glow, flicker).
   - Customize the accent color, fonts, size, line height, text width and paragraph spacing, or add your own CSS.
-- **Export** to self-contained HTML and to PDF, one file or **in batch**, with an option to merge everything into a single document and a table of contents.
+- **Export** to self-contained HTML (fonts embedded) and to PDF, one file or **in batch**, with an option to merge everything into a single document and a table of contents. PDFs are printed natively on macOS and Linux.
+- **Command line**: `dotmd --export pdf notes.md notes.pdf` exports without opening a window.
 - **Languages**: English (default) and Spanish.
 
 | Split mode | Typewriter theme | CRT + Zen |
@@ -45,7 +48,9 @@ npm run check         # type-check the frontend
 cd src-tauri && cargo test
 ```
 
-PDF export prefers the system webview. When that is unavailable, it uses Chrome, Edge, Brave or Chromium if one is installed, and otherwise opens the print dialog.
+PDF export uses the system WebKit on macOS and Linux. Elsewhere, or if that fails, it uses Chrome, Edge, Brave or Chromium if one is installed, and otherwise opens the print dialog.
+
+UI tests (`npm run test:ui`) drive the frontend in headless Chrome with a fake Tauri bridge backed by the real Rust renderer; set `CHROME_PATH` if Chrome is not in a standard location.
 
 ## Roadmap
 
