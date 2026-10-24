@@ -8,7 +8,9 @@ import { THEMES } from './themes';
 import type { FormatAction } from './snippets';
 import {
   newDoc, openFileDialog, openFolder, saveDoc, toggleZen, toggleTypewriterMode, insertLink, insertImage,
+  closeTab, cycleTab, goBack, goForward, canGoBack, canGoForward,
 } from './actions';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { exportRequest } from './exportRequest.svelte';
 
 export type MenuId = 'file' | 'edit' | 'format' | 'view' | 'go' | 'help';
@@ -56,6 +58,8 @@ function base(): Command[] {
     { id: 'file.new', label: L('cmd.new'), shortcut: 'CmdOrCtrl+N', menu: 'file', run: newDoc },
     { id: 'file.open', label: L('cmd.open'), shortcut: 'CmdOrCtrl+O', menu: 'file', run: openFileDialog },
     { id: 'file.openFolder', label: L('cmd.openFolder'), shortcut: 'CmdOrCtrl+Shift+O', menu: 'file', run: () => openFolder() },
+    { id: 'tab.close', label: L('tabs.close'), shortcut: 'CmdOrCtrl+W', menu: 'file', separator: true, enabled: hasDoc, run: () => closeTab() },
+    { id: 'window.close', label: L('cmd.closeWindow'), shortcut: 'CmdOrCtrl+Shift+W', menu: 'file', run: () => getCurrentWindow().close() },
     { id: 'file.save', label: L('cmd.save'), shortcut: 'CmdOrCtrl+S', menu: 'file', separator: true, enabled: hasDoc, run: () => saveDoc() },
     { id: 'file.saveAs', label: L('cmd.saveAs'), shortcut: 'CmdOrCtrl+Shift+S', menu: 'file', enabled: hasDoc, run: () => saveDoc(true) },
     { id: 'file.export', label: L('cmd.export'), shortcut: 'CmdOrCtrl+Shift+E', menu: 'file', separator: true, run: () => (app.exportOpen = true) },
@@ -103,6 +107,13 @@ function base(): Command[] {
     { id: 'view.zoomOut', label: L('cmd.zoomOut'), shortcut: 'CmdOrCtrl+-', menu: 'view', run: () => (settings.fontSize = Math.max(10, settings.fontSize - 1)) },
     { id: 'view.zoomReset', label: L('cmd.zoomReset'), shortcut: 'CmdOrCtrl+0', menu: 'view', run: () => (settings.fontSize = 16) },
     { id: 'view.palette', label: L('cmd.palette'), shortcut: 'CmdOrCtrl+Shift+P', menu: 'view', separator: true, run: () => (app.paletteOpen = true) },
+    // Go
+    { id: 'go.back', label: L('go.back'), shortcut: 'CmdOrCtrl+[', menu: 'go', enabled: canGoBack, run: goBack },
+    { id: 'go.forward', label: L('go.forward'), shortcut: 'CmdOrCtrl+]', menu: 'go', enabled: canGoForward, run: goForward },
+    { id: 'tab.next', label: L('tabs.next'), shortcut: 'Ctrl+Tab', menu: 'go', separator: true, enabled: () => app.tabs.length > 1, run: () => cycleTab(1) },
+    { id: 'tab.prev', label: L('tabs.prev'), shortcut: 'Ctrl+Shift+Tab', menu: 'go', enabled: () => app.tabs.length > 1, run: () => cycleTab(-1) },
+    { id: 'tab.nextAlt', label: L('tabs.next'), shortcut: 'CmdOrCtrl+Alt+Right', enabled: () => app.tabs.length > 1, run: () => cycleTab(1) },
+    { id: 'tab.prevAlt', label: L('tabs.prev'), shortcut: 'CmdOrCtrl+Alt+Left', enabled: () => app.tabs.length > 1, run: () => cycleTab(-1) },
     { id: 'app.settings', label: L('top.settings'), shortcut: 'CmdOrCtrl+,', run: () => (app.settingsOpen = !app.settingsOpen) },
 
     // Themes and language are palette-only.
@@ -152,11 +163,11 @@ function matches(acc: string, e: KeyboardEvent): boolean {
   const parts = acc.split('+');
   const key = parts.pop()!;
   const want = new Set(parts);
-  const mod = isMac ? e.metaKey : e.ctrlKey;
-  if (want.has('CmdOrCtrl') !== mod) return false;
+  if (isMac) {
+    if (want.has('CmdOrCtrl') !== e.metaKey || want.has('Ctrl') !== e.ctrlKey) return false;
+  } else if ((want.has('CmdOrCtrl') || want.has('Ctrl')) !== e.ctrlKey || e.metaKey) return false;
   if (want.has('Shift') !== e.shiftKey) return false;
   if (want.has('Alt') !== e.altKey) return false;
-  if (isMac && want.has('Ctrl') !== e.ctrlKey) return false;
   const code = e.code;
   if (/^[0-9]$/.test(key)) return code === `Digit${key}` || code === `Numpad${key}`;
   if (/^[A-Z]$/i.test(key)) return code === `Key${key.toUpperCase()}`;

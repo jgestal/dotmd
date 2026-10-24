@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { open, save, ask, message } from '@tauri-apps/plugin-dialog';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { app, isDirty, session, settings, setContent, pushRecent, toast, getEditorApi } from './state.svelte';
+import { app, isDirty, session, settings, setContent, pushRecent, toast, getEditorApi, type Tab } from './state.svelte';
 import { askFields } from './prompt.svelte';
 import { preloadSounds } from './sound';
 import { t } from './i18n';
@@ -12,11 +12,119 @@ const MD_FILTERS = () => [
   { name: t('dlg.text'), extensions: ['txt', 'text'] },
 ];
 
-export function docName(): string {
-  return app.path ? basename(app.path) : t('top.untitled');
+export function docName(path = app.path): string {
+  return path ? basename(path) : t('top.untitled');
 }
 
-/** Asks what to do with unsaved changes. Returns false if the user cancelled. */
+// ---- Tabs. The active document lives in app.path/content/saved/mode (what the editors bind to);
+// app.tabs keeps a snapshot of every open document.
+
+let tabSeq = 0;
+
+/** Copies the active document into its tab entry. */
+function snapshot() {
+  const tb = app.tabs[app.activeTab];
+  if (tb) Object.assign(tb, { path: app.path, content: app.content, saved: app.saved, mode: app.mode });
+}
+
+function persistTabs() {
+  session.tabs = app.tabs.map((x) => x.path).filter((p): p is string => !!p);
+  session.lastFile = app.path;
+}
+
+/** Re-arms the file watcher on every open document. */
+function rewatch() {
+  const paths = [...new Set(app.tabs.map((x) => x.path).filter((p): p is string => !!p))];
+  void invoke('watch_files', { paths }).catch(() => {});
+}
+
+export function activateTab(i: number) {
+  const tb = app.tabs[i];
+  if (!tb) return;
+  if (i !== app.activeTab) snapshot();
+  app.activeTab = i;
+  app.path = tb.path;
+  app.saved = tb.saved;
+  app.content = tb.content;
+  app.mode = tb.mode;
+  app.docOpen = true;
+  app.selection = '';
+  app.sessionStartWords = -1;
+  app.extVersion++;
+  persistTabs();
+  void getCurrentWindow().setTitle(docName()).catch(() => {});
+}
+
+function addTab(tab: Omit<Tab, 'id'>, reuseActive: boolean) {
+  const cur = app.tabs[app.activeTab];
+  const pristine = cur && !cur.path && app.content === '' && app.saved === '';
+  if (reuseActive && pristine) {
+    Object.assign(cur, tab);
+    app.activeTab = -1; // force a full load of the reused tab
+    activateTab(app.tabs.indexOf(cur));
+  } else {
+    snapshot();
+    const at = app.activeTab + 1;
+    app.tabs.splice(at, 0, { id: ++tabSeq, ...tab });
+    app.activeTab = -1;
+    activateTab(at);
+  }
+  rewatch();
+}
+
+/** Closes a tab, asking to save it first if needed. Returns false if it stayed open. */
+export async function closeTab(i = app.activeTab): Promise<boolean> {
+  if (!app.tabs[i]) return true;
+  if (i !== app.activeTab) activateTab(i);
+  if (!(await confirmDiscard())) return false;
+  app.tabs.splice(i, 1);
+  app.activeTab = -1;
+  if (app.tabs.length) activateTab(Math.min(i, app.tabs.length - 1));
+  else {
+    app.docOpen = false;
+    app.path = null;
+    app.content = app.saved = '';
+    app.extVersion++;
+    persistTabs();
+    void getCurrentWindow().setTitle('DotMD').catch(() => {});
+  }
+  rewatch();
+  return true;
+}
+
+export function cycleTab(delta: number) {
+  if (app.tabs.length < 2) return;
+  activateTab((app.activeTab + delta + app.tabs.length) % app.tabs.length);
+}
+
+export function moveTab(from: number, to: number) {
+  if (from === to || !app.tabs[from]) return;
+  snapshot();
+  const activeId = app.tabs[app.activeTab]?.id;
+  const [tb] = app.tabs.splice(from, 1);
+  app.tabs.splice(to, 0, tb);
+  app.activeTab = app.tabs.findIndex((x) => x.id === activeId);
+  persistTabs();
+}
+
+export function anyDirty(): boolean {
+  snapshot();
+  return app.tabs.some((x) => x.content !== x.saved);
+}
+
+/** Before quitting: offers to save every modified tab. */
+export async function confirmCloseAll(): Promise<boolean> {
+  snapshot();
+  for (let i = 0; i < app.tabs.length; i++) {
+    const tb = app.tabs[i];
+    if (tb.content === tb.saved) continue;
+    activateTab(i);
+    if (!(await confirmDiscard())) return false;
+  }
+  return true;
+}
+
+/** Asks what to do with unsaved changes in the active tab. Returns false if saving failed or was cancelled. */
 export async function confirmDiscard(): Promise<boolean> {
   if (!isDirty()) return true;
   const saveIt = await ask(t('dlg.unsavedBody', { name: docName() }), {
@@ -29,29 +137,49 @@ export async function confirmDiscard(): Promise<boolean> {
   return true;
 }
 
-export async function openPath(path: string, opts: { skipConfirm?: boolean } = {}) {
+// ---- Navigation history (⌘[ / ⌘])
+
+const nav = { back: [] as string[], forward: [] as string[] };
+export const canGoBack = () => nav.back.length > 0;
+export const canGoForward = () => nav.forward.length > 0;
+
+export async function goBack() {
+  const p = nav.back.pop();
+  if (!p) return;
+  if (app.path) nav.forward.push(app.path);
+  await openPath(p, { fromHistory: true });
+}
+
+export async function goForward() {
+  const p = nav.forward.pop();
+  if (!p) return;
+  if (app.path) nav.back.push(app.path);
+  await openPath(p, { fromHistory: true });
+}
+
+export async function openPath(path: string, opts: { fromHistory?: boolean; background?: boolean } = {}) {
   const kind = await invoke<string>('path_kind', { path });
   if (kind === 'dir') return openFolder(path);
   if (kind !== 'file') return;
   if (path === app.path) return;
-  if (!opts.skipConfirm && !(await confirmDiscard())) return;
+  if (!opts.fromHistory && app.path) {
+    nav.back.push(app.path);
+    nav.forward = [];
+  }
+  const existing = app.tabs.findIndex((x) => x.path === path);
+  if (existing >= 0) return activateTab(existing);
   try {
     const text = await invoke<string>('read_text', { path });
     const prev = app.path;
-    app.path = path;
-    app.docOpen = true;
-    setContent(text);
-    app.sessionStartWords = -1;
+    let mode = app.mode;
     if (isPlainText(path)) {
-      if (app.mode === 'preview' || app.mode === 'visual') app.mode = 'source';
-    } else if (!prev || isPlainText(prev)) {
-      app.mode = settings.defaultMode;
+      if (mode === 'preview' || mode === 'visual') mode = 'source';
+    } else if (!app.docOpen || !prev || isPlainText(prev)) {
+      mode = settings.defaultMode;
     }
+    addTab({ path, content: text, saved: text, mode }, true);
     if (!app.root) app.root = dirname(path);
-    session.lastFile = path;
     pushRecent(path);
-    await invoke('watch_file', { path });
-    await getCurrentWindow().setTitle(basename(path));
   } catch (e) {
     toast(t('toast.error', { msg: String(e) }));
   }
@@ -68,18 +196,12 @@ export async function openFolder(path?: string) {
 }
 
 export async function openFileDialog() {
-  const p = await open({ multiple: false, filters: MD_FILTERS() });
-  if (typeof p === 'string') await openPath(p);
+  const p = await open({ multiple: true, filters: MD_FILTERS() });
+  for (const f of Array.isArray(p) ? p : p ? [p] : []) await openPath(f);
 }
 
 export async function newDoc() {
-  if (!(await confirmDiscard())) return;
-  app.path = null;
-  app.docOpen = true;
-  setContent('');
-  app.mode = settings.defaultMode === 'preview' ? 'source' : settings.defaultMode;
-  await invoke('watch_file', { path: null });
-  await getCurrentWindow().setTitle(t('top.untitled'));
+  addTab({ path: null, content: '', saved: '', mode: settings.defaultMode === 'preview' ? 'source' : settings.defaultMode }, false);
 }
 
 export async function saveDoc(as = false): Promise<boolean> {
@@ -99,11 +221,12 @@ export async function saveDoc(as = false): Promise<boolean> {
     if (path !== app.path) {
       app.path = path;
       pushRecent(path);
-      session.lastFile = path;
-      await invoke('watch_file', { path });
-      await getCurrentWindow().setTitle(basename(path));
+      await getCurrentWindow().setTitle(basename(path)).catch(() => {});
       app.treeVersion++;
     }
+    snapshot();
+    persistTabs();
+    rewatch();
     toast(t('toast.saved'), 1200);
     return true;
   } catch (e) {
@@ -112,10 +235,15 @@ export async function saveDoc(as = false): Promise<boolean> {
   }
 }
 
-/** Called when another program changes the open file. */
+/** Called when another program changes an open file. */
 export async function onExternalChange(path: string) {
-  if (path !== app.path) return;
   const text = await invoke<string>('read_text', { path });
+  if (path !== app.path) {
+    // Background tab: follow the disk silently unless it has unsaved edits.
+    const tb = app.tabs.find((x) => x.path === path);
+    if (tb && tb.content === tb.saved) tb.content = tb.saved = text;
+    return;
+  }
   if (text === app.content || text === app.saved) return;
   if (isDirty()) {
     const reload = await ask(t('dlg.changedBody', { name: docName() }), {
@@ -127,11 +255,20 @@ export async function onExternalChange(path: string) {
   toast(t('toast.reloaded'), 1400);
 }
 
+/** Reopens the tabs of the previous session. */
+export async function restoreTabs() {
+  const last = session.lastFile;
+  for (const p of session.tabs ?? []) {
+    if ((await invoke<string>('path_kind', { path: p })) === 'file') await openPath(p, { fromHistory: true });
+  }
+  if (last && (await invoke<string>('path_kind', { path: last })) === 'file') await openPath(last, { fromHistory: true });
+  nav.back = [];
+}
+
 export async function handleDroppedPaths(paths: string[]) {
   const dir = await firstOfKind(paths, 'dir');
   if (dir) await openFolder(dir);
-  const file = paths.find((p) => isMarkdown(p) || isPlainText(p));
-  if (file) await openPath(file);
+  for (const file of paths.filter((p) => isMarkdown(p) || isPlainText(p))) await openPath(file);
 }
 
 async function firstOfKind(paths: string[], kind: string) {

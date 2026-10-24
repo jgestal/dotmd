@@ -43,7 +43,7 @@ pub fn run() {
             fs::create_file,
             fs::list_tree,
             fs::read_data_url,
-            watch::watch_file,
+            watch::watch_files,
             export::write_export,
             export::export_pdf,
             export::pdf_engine,

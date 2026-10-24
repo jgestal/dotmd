@@ -232,6 +232,13 @@ const en = {
   'menu.go': 'Go',
   'menu.window': 'Window',
   'menu.help': 'Help',
+  'tabs.close': 'Close tab',
+  'tabs.closeOthers': 'Close other tabs',
+  'tabs.next': 'Next tab',
+  'tabs.prev': 'Previous tab',
+  'go.back': 'Back',
+  'go.forward': 'Forward',
+  'cmd.closeWindow': 'Close window',
 };
 
 export type Key = keyof typeof en;
@@ -468,6 +475,13 @@ const es: Record<Key, string> = {
   'menu.go': 'Ir',
   'menu.window': 'Ventana',
   'menu.help': 'Ayuda',
+  'tabs.close': 'Cerrar pestaña',
+  'tabs.closeOthers': 'Cerrar las demás pestañas',
+  'tabs.next': 'Pestaña siguiente',
+  'tabs.prev': 'Pestaña anterior',
+  'go.back': 'Atrás',
+  'go.forward': 'Adelante',
+  'cmd.closeWindow': 'Cerrar ventana',
 };
 
 const dicts = { en, es } as const;

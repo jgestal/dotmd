@@ -23,7 +23,8 @@
   import { forwardConsole } from '$lib/log';
   import { t, type Key } from '$lib/i18n';
   import { isMac, isPlainText, modKey } from '$lib/path';
-  import { confirmDiscard, docName, handleDroppedPaths, onExternalChange, openPath, saveDoc, toggleZen } from '$lib/actions';
+  import { anyDirty, confirmCloseAll, docName, handleDroppedPaths, onExternalChange, restoreTabs, saveDoc, toggleZen } from '$lib/actions';
+  import TabBar from '$lib/components/TabBar.svelte';
 
   forwardConsole();
   startAppearance();
@@ -91,9 +92,9 @@
     );
     unlisten.push(
       win.onCloseRequested(async (e) => {
-        if (!isDirty()) return;
+        if (!anyDirty()) return;
         e.preventDefault();
-        if (await confirmDiscard()) await win.destroy();
+        if (await confirmCloseAll()) await win.destroy();
       }),
     );
 
@@ -102,7 +103,7 @@
       if (pending.length) await handleDroppedPaths(pending);
       else {
         if (session.lastFolder && (await invoke('path_kind', { path: session.lastFolder })) === 'dir') app.root = session.lastFolder;
-        if (session.lastFile && (await invoke('path_kind', { path: session.lastFile })) === 'file') await openPath(session.lastFile, { skipConfirm: true });
+        await restoreTabs();
       }
       requestAnimationFrame(() => win.show());
     })();
@@ -143,6 +144,7 @@
   <div class="body">
     {#if app.sidebar && !app.zen}<Sidebar />{/if}
     <main class="main">
+      {#if app.tabs.length > 1 && !app.zen}<TabBar />{/if}
       {#if app.docOpen}
         {#if editing && settings.showToolbar && !app.zen}<Toolbar />{/if}
         <div class="content mode-{app.mode}" bind:this={contentEl} style:--split="{settings.splitRatio * 100}%">

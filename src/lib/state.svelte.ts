@@ -1,6 +1,14 @@
 import type { FormatAction } from './snippets';
 
 export type Mode = 'preview' | 'source' | 'split' | 'visual';
+
+export interface Tab {
+  id: number;
+  path: string | null;
+  content: string;
+  saved: string;
+  mode: Mode;
+}
 export type FocusMode = 'off' | 'line' | 'sentence' | 'paragraph';
 export type StatKey =
   | 'words' | 'chars' | 'charsNoSpaces' | 'letters' | 'sentences'
@@ -134,13 +142,15 @@ function initialLang(): 'en' | 'es' {
 export const settings: Settings = $state(load('dotmd.settings', { ...DEFAULT_SETTINGS, lang: initialLang() }));
 
 export const session = $state(
-  load('dotmd.session', { lastFolder: null as string | null, lastFile: null as string | null, recent: [] as string[], expanded: [] as string[] }),
+  load('dotmd.session', { lastFolder: null as string | null, lastFile: null as string | null, recent: [] as string[], expanded: [] as string[], tabs: [] as string[] }),
 );
 
 export const app = $state({
   path: null as string | null,
   /** A document (saved or untitled) is open; false shows the welcome screen. */
   docOpen: false,
+  tabs: [] as Tab[],
+  activeTab: -1,
   content: '',
   saved: '',
   /** Bumped whenever content is replaced from outside the editors (open, reload, checkbox). */

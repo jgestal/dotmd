@@ -73,8 +73,6 @@ export async function installMenu() {
         await PredefinedMenuItem.new({ item: 'Minimize' }),
         await PredefinedMenuItem.new({ item: 'Maximize' }),
         await PredefinedMenuItem.new({ item: 'Fullscreen' }),
-        await sep(),
-        await PredefinedMenuItem.new({ item: 'CloseWindow' }),
       ],
     }),
   );

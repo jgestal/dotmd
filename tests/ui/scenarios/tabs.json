@@ -1,0 +1,23 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1')" },
+    { "eval": "{ [...document.querySelectorAll('.tree-row')].find(r => r.textContent.includes('notes')).click() }", "waitFor": "[...document.querySelectorAll('.tree-row')].some(r => r.textContent.includes('second.md'))" },
+    { "eval": "{ [...document.querySelectorAll('.tree-row')].find(r => r.textContent.includes('second.md')).click() }", "waitFor": "document.querySelectorAll('.tabbar .tab').length === 2" },
+    { "assert": "document.querySelector('.tabbar .tab.on').textContent.includes('second.md')" },
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')" },
+    { "eval": "{ document.querySelector('.cm-content').focus() }" },
+    { "keys": "End" }, { "type": " EDITED", "wait": 400 },
+    { "assert": "!!document.querySelector('.tabbar .tab.on .close.dirty')", "shot": "dirty" },
+    { "chord": ["Control", "Tab"], "wait": 600 },
+    { "assert": "document.querySelector('.tabbar .tab.on').textContent.includes('README.md') && document.querySelector('.topbar .name').textContent === 'README.md'" },
+    { "chord": ["Control", "Tab"], "wait": 600 },
+    { "assert": "document.querySelector('.cm-content').textContent.includes('EDITED')" },
+    { "chord": ["Mod", "BracketLeft"], "wait": 600 },
+    { "assert": "document.querySelector('.tabbar .tab.on').textContent.includes('README.md')" },
+    { "chord": ["Mod", "BracketRight"], "wait": 600 },
+    { "assert": "document.querySelector('.tabbar .tab.on').textContent.includes('second.md')" },
+    { "chord": ["Mod", "KeyW"], "wait": 800 },
+    { "assert": "!document.querySelector('.tabbar') && document.querySelector('.topbar .name').textContent === 'README.md'", "shot": "closed" }
+  ]
+}
