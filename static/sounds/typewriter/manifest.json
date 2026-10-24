@@ -1,0 +1,26 @@
+{
+  "keys": [
+    "key-01.mp3",
+    "key-02.mp3",
+    "key-03.mp3",
+    "key-04.mp3",
+    "key-05.mp3",
+    "key-06.mp3",
+    "key-07.mp3",
+    "key-08.mp3",
+    "key-09.mp3",
+    "key-10.mp3"
+  ],
+  "space": [
+    "space-1.mp3"
+  ],
+  "backspace": [
+    "backspace-1.mp3"
+  ],
+  "bell": [
+    "bell.mp3"
+  ],
+  "return": [
+    "return.mp3"
+  ]
+}
