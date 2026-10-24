@@ -1,0 +1,15 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1')" },
+    { "chord": ["Mod", "Shift", "KeyP"], "waitFor": "document.querySelector('.picker input')" },
+    { "type": "crt amb", "wait": 400, "shot": "search" },
+    { "assert": "document.querySelector('.picker .row.on')?.textContent.includes('CRT Amber')" },
+    { "keys": "Enter", "wait": 500 },
+    { "assert": "document.documentElement.dataset.theme === 'crt-amber' && !document.querySelector('.picker')" },
+    { "chord": ["Mod", "Digit2"], "wait": 800, "assert": "!!document.querySelector('.cm-editor')" },
+    { "chord": ["Mod", "Backslash"], "wait": 400, "assert": "!document.querySelector('.sidebar')" },
+    { "chord": ["Mod", "Shift", "KeyP"], "waitFor": "document.querySelector('.picker input')" },
+    { "type": "bold", "wait": 300, "assert": "document.querySelector('.picker .row.on kbd')?.textContent.length > 0", "shot": "bold" }
+  ]
+}

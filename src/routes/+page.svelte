@@ -14,19 +14,21 @@
   import ExportDialog from '$lib/components/ExportDialog.svelte';
   import PromptDialog from '$lib/components/PromptDialog.svelte';
   import Welcome from '$lib/components/Welcome.svelte';
+  import CommandPalette from '$lib/components/CommandPalette.svelte';
+  import { handleShortcut, setMode } from '$lib/commands';
+  import { installMenu } from '$lib/menu';
   import { app, settings, session, isDirty, type Mode } from '$lib/state.svelte';
   import { startAppearance } from '$lib/appearance.svelte';
   import { preloadSounds } from '$lib/sound';
+  import { forwardConsole } from '$lib/log';
   import { t, type Key } from '$lib/i18n';
   import { isMac, isPlainText, modKey } from '$lib/path';
-  import {
-    confirmDiscard, docName, handleDroppedPaths, newDoc, onExternalChange, openFileDialog, openFolder, openPath, saveDoc, toggleZen,
-  } from '$lib/actions';
+  import { confirmDiscard, docName, handleDroppedPaths, onExternalChange, openPath, saveDoc, toggleZen } from '$lib/actions';
 
+  forwardConsole();
   startAppearance();
 
   let syncLine = $state(0);
-  let lastEditMode: Mode = 'source';
   const plain = $derived(isPlainText(app.path));
   const editing = $derived(app.mode !== 'preview');
 
@@ -37,34 +39,17 @@
     ['visual', 'mode.visual', 'mode.visualTip', 'visual'],
   ];
 
-  function setMode(m: Mode) {
-    if (plain && m === 'visual') return;
-    if (m !== 'preview') lastEditMode = m;
-    app.mode = m;
+  function onKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && app.zen && !app.settingsOpen && !app.exportOpen && !app.paletteOpen) { toggleZen(); return; }
+    if (e.key === 'F11') { e.preventDefault(); toggleZen(); return; }
+    handleShortcut(e);
   }
 
-  function onKeydown(e: KeyboardEvent) {
-    const mod = isMac ? e.metaKey : e.ctrlKey;
-    if (e.key === 'Escape' && app.zen && !app.settingsOpen && !app.exportOpen) { toggleZen(); return; }
-    if (e.key === 'F11') { e.preventDefault(); toggleZen(); return; }
-    if (!mod) return;
-    const k = e.key.toLowerCase();
-    const run = (fn: () => unknown) => { e.preventDefault(); fn(); };
-    if (k === 'o' && e.shiftKey) run(() => openFolder());
-    else if (k === 'o') run(openFileDialog);
-    else if (k === 'n') run(newDoc);
-    else if (k === 's') run(() => saveDoc(e.shiftKey));
-    else if (k === '\\') run(() => (app.sidebar = !app.sidebar));
-    else if (k === 'e' && !e.shiftKey && app.docOpen) run(() => setMode(app.mode === 'preview' ? lastEditMode : 'preview'));
-    else if (k === 'e' && e.shiftKey) run(() => (app.exportOpen = true));
-    else if (k === ',') run(() => (app.settingsOpen = !app.settingsOpen));
-    else if (k === 'enter' && e.shiftKey) run(toggleZen);
-    else if (k === 'p' && e.shiftKey) run(() => window.print());
-    else if (['1', '2', '3', '4'].includes(e.key) && !e.altKey && app.docOpen) run(() => setMode(MODES[Number(e.key) - 1][0]));
-    else if (k === '=' || k === '+') run(() => (settings.fontSize = Math.min(32, settings.fontSize + 1)));
-    else if (k === '-') run(() => (settings.fontSize = Math.max(10, settings.fontSize - 1)));
-    else if (k === '0' && !e.altKey) run(() => (settings.fontSize = 16));
-  }
+  // Native menu, rebuilt when the UI language changes.
+  $effect(() => {
+    settings.lang;
+    installMenu().catch((err) => console.warn('menu', err));
+  });
 
   // Autosave a couple of seconds after typing stops.
   let autosaveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -180,6 +165,7 @@
   {#if app.toast}<div class="toast chrome" role="status">{app.toast}</div>{/if}
   {#if app.settingsOpen}<Settings />{/if}
   {#if app.exportOpen}<ExportDialog />{/if}
+  {#if app.paletteOpen}<CommandPalette />{/if}
   <PromptDialog />
 </div>
 

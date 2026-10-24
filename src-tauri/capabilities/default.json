@@ -14,6 +14,7 @@
     "core:webview:allow-print",
     "opener:default",
     "opener:allow-reveal-item-in-dir",
-    "dialog:default"
+    "dialog:default",
+    "log:default"
   ]
 }

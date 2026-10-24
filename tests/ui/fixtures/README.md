@@ -1,10 +1,10 @@
 ---
 title: Demo document
-author: MarkdownViewer
+author: DotMD
 tags: test
 ---
 
-# MarkdownViewer demo
+# DotMD demo
 
 This is a **demo** with *italic*, ~~strike~~, ==highlight== and `inline code`. Visit [the docs](https://tauri.app) or [another note](notes/second.md).
 

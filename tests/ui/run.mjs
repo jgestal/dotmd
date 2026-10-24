@@ -5,7 +5,7 @@
 //   node tests/ui/run.mjs                 # every scenario in tests/ui/scenarios
 //   node tests/ui/run.mjs sounds tabs     # only these
 //
-// Scenario steps: eval, click, keys, type, waitFor (JS condition), wait (ms), assert (must be true), shot.
+// Scenario steps: eval, click, keys, chord (["Mod","Shift","KeyP"]), type, waitFor (JS condition), wait (ms), assert (must be true), shot.
 //
 // Env: CHROME_PATH (browser binary), UI_PORT (Vite port, default 1420). Screenshots go to tests/ui/out.
 import http from 'node:http';
@@ -144,6 +144,12 @@ for (const file of files) {
   const failed = [];
   for (const s of sc.actions ?? []) {
     if (s.keys) await page.keyboard.press(s.keys);
+    if (s.chord) {
+      // "Mod" is ⌘ on macOS and Ctrl elsewhere, like the app's CmdOrCtrl.
+      const keys = s.chord.map((k) => (k === 'Mod' ? (process.platform === 'darwin' ? 'Meta' : 'Control') : k));
+      for (const k of keys) await page.keyboard.down(k);
+      for (const k of keys.reverse()) await page.keyboard.up(k);
+    }
     if (s.click) await page.click(s.click);
     if (s.type) await page.keyboard.type(s.type, { delay: 5 });
     if (s.eval) await page.evaluate(s.eval);

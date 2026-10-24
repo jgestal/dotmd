@@ -1,0 +1,181 @@
+// Single registry of user commands. Drives keyboard shortcuts, the command palette (⌘⇧P)
+// and the native menu bar, so a command is defined once and behaves the same everywhere.
+import { openUrl } from '@tauri-apps/plugin-opener';
+import { app, settings, getEditorApi, type Mode } from './state.svelte';
+import { t, type Key } from './i18n';
+import { isMac, isPlainText } from './path';
+import { THEMES } from './themes';
+import type { FormatAction } from './snippets';
+import {
+  newDoc, openFileDialog, openFolder, saveDoc, toggleZen, toggleTypewriterMode, insertLink, insertImage,
+} from './actions';
+import { exportRequest } from './exportRequest.svelte';
+
+export type MenuId = 'file' | 'edit' | 'format' | 'view' | 'go' | 'help';
+
+export interface Command {
+  id: string;
+  label: () => string;
+  /** Tauri accelerator syntax, e.g. "CmdOrCtrl+Shift+O". */
+  shortcut?: string;
+  /** Shortcut also handled inside the editors (CodeMirror keymap): only bound to the menu on macOS. */
+  editorKey?: boolean;
+  menu?: MenuId;
+  /** Starts a new group in its menu. */
+  separator?: boolean;
+  enabled?: () => boolean;
+  run: () => unknown;
+}
+
+const hasDoc = () => app.docOpen;
+const editing = () => app.docOpen && app.mode !== 'preview';
+const fmt = (a: FormatAction) => () => getEditorApi()?.exec(a);
+let lastEditMode: Mode = 'source';
+
+export function setMode(m: Mode) {
+  if (isPlainText(app.path) && m === 'visual') return;
+  if (m !== 'preview') lastEditMode = m;
+  app.mode = m;
+}
+
+/** Extra commands contributed by components (tabs, quick open, search…). */
+const extra: Command[] = [];
+export function registerCommands(cmds: Command[]) {
+  for (const c of cmds) {
+    const i = extra.findIndex((e) => e.id === c.id);
+    if (i >= 0) extra[i] = c;
+    else extra.push(c);
+  }
+}
+
+const L = (k: Key) => () => t(k);
+
+function base(): Command[] {
+  return [
+    // File
+    { id: 'file.new', label: L('cmd.new'), shortcut: 'CmdOrCtrl+N', menu: 'file', run: newDoc },
+    { id: 'file.open', label: L('cmd.open'), shortcut: 'CmdOrCtrl+O', menu: 'file', run: openFileDialog },
+    { id: 'file.openFolder', label: L('cmd.openFolder'), shortcut: 'CmdOrCtrl+Shift+O', menu: 'file', run: () => openFolder() },
+    { id: 'file.save', label: L('cmd.save'), shortcut: 'CmdOrCtrl+S', menu: 'file', separator: true, enabled: hasDoc, run: () => saveDoc() },
+    { id: 'file.saveAs', label: L('cmd.saveAs'), shortcut: 'CmdOrCtrl+Shift+S', menu: 'file', enabled: hasDoc, run: () => saveDoc(true) },
+    { id: 'file.export', label: L('cmd.export'), shortcut: 'CmdOrCtrl+Shift+E', menu: 'file', separator: true, run: () => (app.exportOpen = true) },
+    { id: 'file.exportPdf', label: L('cmd.exportPdf'), menu: 'file', enabled: hasDoc, run: () => exportRequest.quick(app.path, 'pdf') },
+    { id: 'file.exportHtml', label: L('cmd.exportHtml'), menu: 'file', enabled: hasDoc, run: () => exportRequest.quick(app.path, 'html') },
+    { id: 'file.print', label: L('cmd.print'), menu: 'file', enabled: hasDoc, run: () => window.print() },
+
+    // Format
+    { id: 'fmt.bold', label: L('tb.bold'), shortcut: 'CmdOrCtrl+B', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'bold' }) },
+    { id: 'fmt.italic', label: L('tb.italic'), shortcut: 'CmdOrCtrl+I', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'italic' }) },
+    { id: 'fmt.strike', label: L('tb.strike'), shortcut: 'CmdOrCtrl+Shift+X', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'strike' }) },
+    { id: 'fmt.highlight', label: L('tb.highlight'), shortcut: 'CmdOrCtrl+Shift+H', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'highlight' }) },
+    { id: 'fmt.code', label: L('tb.code'), shortcut: 'CmdOrCtrl+Shift+C', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'code' }) },
+    ...[1, 2, 3].map((level, i) => ({
+      id: `fmt.h${level}`, label: () => `${t('tb.heading')} ${level}`, shortcut: `CmdOrCtrl+Alt+${level}`, editorKey: true,
+      menu: 'format' as const, separator: i === 0, enabled: editing, run: fmt({ type: 'heading', level }),
+    })),
+    { id: 'fmt.paragraph', label: L('tb.paragraph'), shortcut: 'CmdOrCtrl+Alt+0', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'paragraph' }) },
+    { id: 'fmt.quote', label: L('tb.quote'), menu: 'format', separator: true, enabled: editing, run: fmt({ type: 'quote' }) },
+    { id: 'fmt.ul', label: L('tb.ul'), menu: 'format', enabled: editing, run: fmt({ type: 'ul' }) },
+    { id: 'fmt.ol', label: L('tb.ol'), menu: 'format', enabled: editing, run: fmt({ type: 'ol' }) },
+    { id: 'fmt.task', label: L('tb.task'), menu: 'format', enabled: editing, run: fmt({ type: 'task' }) },
+    { id: 'fmt.link', label: L('tb.link'), shortcut: 'CmdOrCtrl+K', editorKey: true, menu: 'format', separator: true, enabled: editing, run: insertLink },
+    { id: 'fmt.image', label: L('tb.image'), menu: 'format', enabled: editing, run: insertImage },
+    { id: 'fmt.table', label: L('tb.table'), menu: 'format', enabled: editing, run: fmt({ type: 'table', rows: 3, cols: 3 }) },
+    { id: 'fmt.formatTable', label: L('tb.tableFormat'), shortcut: 'CmdOrCtrl+Shift+T', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'formatTable' }) },
+    { id: 'fmt.codeblock', label: L('tb.codeblock'), menu: 'format', enabled: editing, run: fmt({ type: 'codeblock', lang: '' }) },
+    { id: 'fmt.mermaid', label: L('tb.mermaid'), menu: 'format', enabled: editing, run: fmt({ type: 'mermaid', template: 'flowchart' }) },
+    { id: 'fmt.math', label: L('tb.math'), menu: 'format', enabled: editing, run: fmt({ type: 'math' }) },
+    { id: 'fmt.footnote', label: L('tb.footnote'), menu: 'format', enabled: editing, run: fmt({ type: 'footnote' }) },
+    { id: 'fmt.hr', label: L('tb.hr'), menu: 'format', enabled: editing, run: fmt({ type: 'hr' }) },
+    { id: 'fmt.date', label: L('tb.date'), menu: 'format', enabled: editing, run: fmt({ type: 'date' }) },
+
+    // View
+    ...(['preview', 'source', 'split', 'visual'] as Mode[]).map((m, i) => ({
+      id: `view.${m}`, label: L(`mode.${m}` as Key), shortcut: `CmdOrCtrl+${i + 1}`, menu: 'view' as const,
+      enabled: () => hasDoc() && !(m === 'visual' && isPlainText(app.path)), run: () => setMode(m),
+    })),
+    { id: 'view.toggleEdit', label: L('cmd.toggleEdit'), shortcut: 'CmdOrCtrl+E', menu: 'view', enabled: hasDoc, run: () => setMode(app.mode === 'preview' ? lastEditMode : 'preview') },
+    { id: 'view.sidebar', label: L('sidebar.toggle'), shortcut: 'CmdOrCtrl+\\', menu: 'view', separator: true, run: () => (app.sidebar = !app.sidebar) },
+    { id: 'view.outline', label: L('cmd.outline'), menu: 'view', run: () => { app.sidebar = true; app.sidebarTab = 'outline'; } },
+    { id: 'view.zen', label: L('top.zen'), shortcut: 'CmdOrCtrl+Shift+Enter', menu: 'view', separator: true, run: toggleZen },
+    { id: 'view.typewriter', label: L('set.twMode'), menu: 'view', run: toggleTypewriterMode },
+    { id: 'view.zoomIn', label: L('cmd.zoomIn'), shortcut: 'CmdOrCtrl+=', menu: 'view', separator: true, run: () => (settings.fontSize = Math.min(32, settings.fontSize + 1)) },
+    { id: 'view.zoomOut', label: L('cmd.zoomOut'), shortcut: 'CmdOrCtrl+-', menu: 'view', run: () => (settings.fontSize = Math.max(10, settings.fontSize - 1)) },
+    { id: 'view.zoomReset', label: L('cmd.zoomReset'), shortcut: 'CmdOrCtrl+0', menu: 'view', run: () => (settings.fontSize = 16) },
+    { id: 'view.palette', label: L('cmd.palette'), shortcut: 'CmdOrCtrl+Shift+P', menu: 'view', separator: true, run: () => (app.paletteOpen = true) },
+    { id: 'app.settings', label: L('top.settings'), shortcut: 'CmdOrCtrl+,', run: () => (app.settingsOpen = !app.settingsOpen) },
+
+    // Themes and language are palette-only.
+    ...[{ id: 'auto', name: t('set.themeAuto') }, ...THEMES].map((th) => ({
+      id: `theme.${th.id}`, label: () => `${t('set.theme')}: ${th.id === 'auto' ? t('set.themeAuto') : th.name}`, run: () => (settings.theme = th.id),
+    })),
+    { id: 'lang.en', label: () => `${t('set.language')}: English`, run: () => (settings.lang = 'en') },
+    { id: 'lang.es', label: () => `${t('set.language')}: Español`, run: () => (settings.lang = 'es') },
+
+    // Help
+    { id: 'help.website', label: L('cmd.website'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd') },
+    { id: 'help.issue', label: L('cmd.reportIssue'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd/issues/new') },
+  ];
+}
+
+export function allCommands(): Command[] {
+  const list = base();
+  for (const e of extra) {
+    const i = list.findIndex((c) => c.id === e.id);
+    if (i >= 0) list[i] = e;
+    else list.push(e);
+  }
+  return list;
+}
+
+let lastRun = { id: '', at: 0 };
+
+/** Runs a command once even if both the menu accelerator and the webview keydown fire. */
+export function runCommand(c: Command) {
+  if (c.enabled && !c.enabled()) return;
+  const now = performance.now();
+  if (lastRun.id === c.id && now - lastRun.at < 150) return;
+  lastRun = { id: c.id, at: now };
+  void c.run();
+}
+
+/** "CmdOrCtrl+Shift+O" → "⌘⇧O" on macOS, "Ctrl+Shift+O" elsewhere. */
+export function formatShortcut(acc?: string): string {
+  if (!acc) return '';
+  const parts = acc.split('+').map((p) => p === '' ? '+' : p);
+  if (!isMac) return parts.map((p) => (p === 'CmdOrCtrl' ? 'Ctrl' : p)).join('+');
+  const sym: Record<string, string> = { CmdOrCtrl: '⌘', Shift: '⇧', Alt: '⌥', Ctrl: '⌃', Enter: '↩', Backspace: '⌫', Tab: '⇥' };
+  return parts.map((p) => sym[p] ?? p.toUpperCase()).join('');
+}
+
+function matches(acc: string, e: KeyboardEvent): boolean {
+  const parts = acc.split('+');
+  const key = parts.pop()!;
+  const want = new Set(parts);
+  const mod = isMac ? e.metaKey : e.ctrlKey;
+  if (want.has('CmdOrCtrl') !== mod) return false;
+  if (want.has('Shift') !== e.shiftKey) return false;
+  if (want.has('Alt') !== e.altKey) return false;
+  if (isMac && want.has('Ctrl') !== e.ctrlKey) return false;
+  const code = e.code;
+  if (/^[0-9]$/.test(key)) return code === `Digit${key}` || code === `Numpad${key}`;
+  if (/^[A-Z]$/i.test(key)) return code === `Key${key.toUpperCase()}`;
+  const special: Record<string, string[]> = {
+    Enter: ['Enter', 'NumpadEnter'], '\\': ['Backslash', 'IntlBackslash'], '[': ['BracketLeft'], ']': ['BracketRight'],
+    '=': ['Equal', 'NumpadAdd'], '-': ['Minus', 'NumpadSubtract'], ',': ['Comma'], Tab: ['Tab'], Left: ['ArrowLeft'], Right: ['ArrowRight'],
+  };
+  return (special[key] ?? [key]).includes(code);
+}
+
+/** Global keydown handler. Editor-owned shortcuts are left to the editors. */
+export function handleShortcut(e: KeyboardEvent): boolean {
+  for (const c of allCommands()) {
+    if (!c.shortcut || c.editorKey) continue;
+    if (matches(c.shortcut, e)) {
+      e.preventDefault();
+      runCommand(c);
+      return true;
+    }
+  }
+  return false;
+}

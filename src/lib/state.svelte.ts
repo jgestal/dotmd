@@ -149,6 +149,7 @@ export const app = $state({
   zen: false,
   selection: '',
   settingsOpen: false,
+  paletteOpen: false,
   exportOpen: false,
   dragOver: false,
   treeVersion: 0,

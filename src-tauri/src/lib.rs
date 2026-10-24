@@ -25,6 +25,11 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(if cfg!(debug_assertions) { log::LevelFilter::Info } else { log::LevelFilter::Warn })
+                .build(),
+        )
         .manage(PendingOpen(Mutex::new(cli_paths)))
         .manage(watch::WatchState::default())
         .invoke_handler(tauri::generate_handler![
