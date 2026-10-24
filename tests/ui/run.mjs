@@ -66,6 +66,27 @@ const handlers = {
   write_export: ({ path: p, html }) => (fs.writeFileSync(p, html), null),
   rename_path: ({ from, to }) => (fs.renameSync(from, to), null),
   create_file: ({ path: p }) => (fs.writeFileSync(p, '', { flag: 'wx' }), null),
+  fuzzy_find: ({ root, query }) => {
+    const q = query.toLowerCase();
+    return handlers.list_tree({ path: root })
+      .map((p) => path.relative(root, p).replaceAll('\\', '/'))
+      .filter((rel) => { let i = 0; for (const c of rel.toLowerCase()) if (c === q[i]) i++; return i === q.length; })
+      .map((rel) => ({ path: path.join(root, rel), rel, score: 1, indices: [] }));
+  },
+  // Returns the events; the fake bridge feeds them to the Channel (see invoke below).
+  search_folder: ({ root, query }) => {
+    const events = [];
+    let total = 0;
+    for (const p of handlers.list_tree({ path: root })) {
+      const matches = fs.readFileSync(p, 'utf8').split('\n').flatMap((text, i) => {
+        const at = text.toLowerCase().indexOf(query.toLowerCase());
+        return at < 0 ? [] : [{ line: i + 1, text, ranges: [[at, at + query.length]] }];
+      });
+      if (matches.length) { total += matches.length; events.push({ kind: 'file', path: p, rel: path.relative(root, p), matches }); }
+    }
+    events.push({ kind: 'done', files: events.length, matches: total, truncated: false });
+    return events;
+  },
   save_asset: ({ dir, name, bytes }) => {
     const d = path.join(dir, 'assets');
     fs.mkdirSync(d, { recursive: true });
@@ -136,6 +157,7 @@ for (const file of files) {
       invoke: async (cmd, args) => {
         const r = await fetch('http://127.0.0.1:1431/invoke', { method: 'POST', body: JSON.stringify({ cmd, args }) }).then((r) => r.json());
         if (r.error) throw r.error;
+        if (cmd === 'search_folder') { for (const ev of r.result) args.onEvent.onmessage(ev); return null; }
         return r.result;
       },
     };

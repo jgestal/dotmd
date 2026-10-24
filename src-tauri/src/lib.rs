@@ -1,5 +1,6 @@
 mod export;
 mod fs;
+mod search;
 pub mod markdown;
 mod watch;
 
@@ -32,6 +33,7 @@ pub fn run() {
         )
         .manage(PendingOpen(Mutex::new(cli_paths)))
         .manage(watch::WatchState::default())
+        .manage(search::FileCache::default())
         .invoke_handler(tauri::generate_handler![
             take_pending_open,
             markdown::render_markdown,
@@ -44,6 +46,8 @@ pub fn run() {
             fs::list_tree,
             fs::read_data_url,
             watch::watch_files,
+            search::fuzzy_find,
+            search::search_folder,
             export::write_export,
             export::export_pdf,
             export::pdf_engine,

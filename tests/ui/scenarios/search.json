@@ -1,0 +1,13 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1')" },
+    { "chord": ["Mod", "KeyP"], "waitFor": "document.querySelector('.picker input')" },
+    { "type": "secon", "wait": 500, "assert": "document.querySelector('.picker .row.on')?.textContent.includes('notes/second.md')", "shot": "quick-open" },
+    { "keys": "Enter", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'second.md'" },
+    { "chord": ["Mod", "Shift", "KeyF"], "waitFor": "document.querySelector('.search input')" },
+    { "type": "Callouts", "waitFor": "document.querySelector('.search .hit')", "assert": "document.querySelector('.search .hit mark')?.textContent === 'Callouts'", "shot": "panel" },
+    { "eval": "{ document.querySelector('.search .hit').click() }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'README.md'" },
+    { "wait": 800, "assert": "document.querySelector('.preview-scroll').scrollTop > 100" }
+  ]
+}

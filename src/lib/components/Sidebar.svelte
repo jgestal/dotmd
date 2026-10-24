@@ -2,6 +2,7 @@
   import { invoke } from '@tauri-apps/api/core';
   import Icon from './Icon.svelte';
   import TreeNode from './TreeNode.svelte';
+  import SearchPanel from './SearchPanel.svelte';
   import { app, settings } from '../state.svelte';
   import { t } from '../i18n';
   import { basename, isMarkdown } from '../path';
@@ -56,6 +57,7 @@
   <div class="tabs">
     <button class="tab" class:on={app.sidebarTab === 'files'} onclick={() => (app.sidebarTab = 'files')}><Icon name="folder" size={14} /> {t('sidebar.files')}</button>
     <button class="tab" class:on={app.sidebarTab === 'outline'} onclick={() => (app.sidebarTab = 'outline')}><Icon name="outline" size={14} /> {t('sidebar.outline')}</button>
+    <button class="tab" class:on={app.sidebarTab === 'search'} onclick={() => { app.sidebarTab = 'search'; app.searchFocus++; }} title={t('sidebar.search')}><Icon name="search" size={14} /></button>
   </div>
 
   {#if app.sidebarTab === 'files'}
@@ -79,6 +81,8 @@
         <button class="btn" onclick={() => openFolder()}>{t('welcome.openFolder')}</button>
       </div>
     {/if}
+  {:else if app.sidebarTab === 'search'}
+    <SearchPanel />
   {:else}
     <nav class="outline">
       {#each headings as h}
@@ -104,6 +108,7 @@
     border-radius: 6px; background: none; color: var(--fg-muted); font: 12px var(--font-ui); cursor: default;
   }
   .tab.on { background: var(--bg-active); color: var(--fg); }
+  .tab:last-child { flex: 0 0 30px; }
   .root-row { display: flex; align-items: center; gap: 2px; padding: 6px 8px 2px 12px; }
   .root-name {
     flex: 1; min-width: 0; text-align: left; border: 0; background: none; color: var(--fg-muted); padding: 0;

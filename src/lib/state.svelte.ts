@@ -158,7 +158,10 @@ export const app = $state({
   mode: 'preview' as Mode,
   root: null as string | null,
   sidebar: true,
-  sidebarTab: 'files' as 'files' | 'outline',
+  sidebarTab: 'files' as 'files' | 'outline' | 'search',
+  /** Bumped to focus the search box. */
+  searchFocus: 0,
+  quickOpen: false,
   zen: false,
   selection: '',
   settingsOpen: false,

@@ -10,7 +10,7 @@ pub struct Entry {
     is_dir: bool,
 }
 
-fn is_text_file(p: &Path) -> bool {
+pub(crate) fn is_text_file(p: &Path) -> bool {
     p.extension()
         .and_then(|e| e.to_str())
         .map(|e| TEXT_EXTS.contains(&e.to_ascii_lowercase().as_str()))

@@ -15,6 +15,7 @@
   import PromptDialog from '$lib/components/PromptDialog.svelte';
   import Welcome from '$lib/components/Welcome.svelte';
   import CommandPalette from '$lib/components/CommandPalette.svelte';
+  import QuickOpen from '$lib/components/QuickOpen.svelte';
   import { handleShortcut, setMode } from '$lib/commands';
   import { installMenu } from '$lib/menu';
   import { app, settings, session, isDirty, type Mode } from '$lib/state.svelte';
@@ -56,7 +57,7 @@
   }
 
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && app.zen && !app.settingsOpen && !app.exportOpen && !app.paletteOpen) { toggleZen(); return; }
+    if (e.key === 'Escape' && app.zen && !app.settingsOpen && !app.exportOpen && !app.paletteOpen && !app.quickOpen) { toggleZen(); return; }
     if (e.key === 'F11') { e.preventDefault(); toggleZen(); return; }
     handleShortcut(e);
   }
@@ -184,6 +185,7 @@
   {#if app.settingsOpen}<Settings />{/if}
   {#if app.exportOpen}<ExportDialog />{/if}
   {#if app.paletteOpen}<CommandPalette />{/if}
+  {#if app.quickOpen}<QuickOpen />{/if}
   <PromptDialog />
 </div>
 

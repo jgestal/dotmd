@@ -30,7 +30,14 @@
       scroller.scrollTop = 0;
       lastPath = path;
     } else scroller.scrollTop = keep;
+    if (pendingReveal) {
+      scrollToLine(pendingReveal, true);
+      pendingReveal = 0;
+    }
   }
+
+  /** A reveal requested before the document finished rendering (search result in another file). */
+  let pendingReveal = 0;
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   $effect(() => {
@@ -85,7 +92,10 @@
   });
   $effect(() => {
     const r = app.reveal;
-    if (r.n && app.mode === 'preview') scrollToLine(r.line, true);
+    if (r.n && app.mode === 'preview') {
+      pendingReveal = r.line;
+      scrollToLine(r.line, true);
+    }
   });
 
   async function onClick(e: MouseEvent) {
