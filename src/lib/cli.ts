@@ -1,11 +1,36 @@
-// `dotmd --export pdf|html <input> <output>`: renders the document with the user's settings,
-// writes the file and quits without ever showing the window.
+// `dotmd --export pdf|html <inputs…> [-o out] [--merge]`: renders with the user's settings, writes the
+// files and quits without ever showing the window. Folders are expanded to the documents inside.
 import { invoke } from '@tauri-apps/api/core';
 import { settings } from './state.svelte';
 import { currentTheme } from './appearance.svelte';
 import { exportHtmlFile, exportPdfFile, exportTheme } from './export';
+import { basename, dirname, extname, join, relative, stem } from './path';
 
-interface CliExport { format: string; input: string; output: string }
+export interface CliExport { format: 'pdf' | 'html'; inputs: string[]; output: string | null; merge: boolean }
+
+/** Expands folders, and maps each input to its output path. Pure, so it is unit-tested. */
+export function planOutputs(files: { path: string; root: string | null }[], job: CliExport, outIsDir: boolean): { input: string; output: string }[] {
+  const ext = job.format;
+  return files.map(({ path, root }) => {
+    if (job.output && !outIsDir) return { input: path, output: job.output };
+    const name = `${stem(path)}.${ext}`;
+    if (!job.output) return { input: path, output: join(dirname(path), name) };
+    // Inside an exported folder, keep the sub-folder structure.
+    const sub = root ? dirname(relative(root, path)) : '.';
+    return { input: path, output: join(job.output, sub === '.' || sub === '' ? name : `${sub}/${name}`) };
+  });
+}
+
+async function expand(inputs: string[]): Promise<{ path: string; root: string | null }[]> {
+  const out: { path: string; root: string | null }[] = [];
+  for (const p of inputs) {
+    const kind = await invoke<string>('path_kind', { path: p });
+    if (kind === 'dir') for (const f of await invoke<string[]>('list_tree', { path: p })) out.push({ path: f, root: p });
+    else if (kind === 'file') out.push({ path: p, root: null });
+    else throw new Error(`not found: ${p}`);
+  }
+  return out;
+}
 
 export async function runCliExport(): Promise<boolean> {
   const job = await invoke<CliExport | null>('take_cli_export');
@@ -13,12 +38,24 @@ export async function runCliExport(): Promise<boolean> {
   let code = 0;
   try {
     await document.fonts.ready;
-    const md = await invoke<string>('read_text', { path: job.input });
-    const o = { theme: exportTheme(currentTheme()), pageSize: settings.pdfPageSize, margin: settings.pdfMargin, toc: false };
-    const docs = [{ md, path: job.input }];
-    if (job.format === 'html') await exportHtmlFile(docs, job.output, o);
-    else if (!(await exportPdfFile(docs, job.output, o))) throw new Error('no PDF engine available');
-    console.warn(`exported ${job.output}`);
+    const files = await expand(job.inputs);
+    if (!files.length) throw new Error('no documents found');
+    const o = { theme: exportTheme(currentTheme()), pageSize: settings.pdfPageSize, margin: settings.pdfMargin, toc: job.merge };
+    const write = (docs: { md: string; path: string }[], out: string) =>
+      job.format === 'html' ? exportHtmlFile(docs, out, o) : exportPdfFile(docs, out, o).then((ok) => { if (!ok) throw new Error('no PDF engine available'); });
+    const read = async (path: string) => ({ md: await invoke<string>('read_text', { path }), path });
+
+    if (job.merge) {
+      await write(await Promise.all(files.map((f) => read(f.path))), job.output!);
+      console.warn(`exported ${files.length} documents into ${job.output}`);
+    } else {
+      // A single input with an output that has the right extension is a file; anything else a folder.
+      const outIsDir = !!job.output && !(files.length === 1 && extname(job.output) === job.format);
+      for (const { input, output } of planOutputs(files, job, outIsDir)) {
+        await write([await read(input)], output);
+        console.warn(`exported ${basename(input)} → ${output}`);
+      }
+    }
   } catch (e) {
     console.error('export failed:', e);
     code = 1;

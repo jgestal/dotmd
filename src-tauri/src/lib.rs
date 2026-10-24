@@ -1,3 +1,4 @@
+mod cli;
 mod export;
 mod fs;
 mod search;
@@ -11,34 +12,17 @@ use tauri::{Emitter, Manager};
 #[derive(Default)]
 pub struct PendingOpen(pub Mutex<Vec<String>>);
 
-/// `dotmd --export pdf|html <input> <output>`: export without showing the window, then quit.
-#[derive(Clone, serde::Serialize)]
-pub struct CliExport {
-    format: String,
-    input: String,
-    output: String,
-}
-
 #[derive(Default)]
-pub struct PendingExport(pub Mutex<Option<CliExport>>);
+pub struct PendingExport(pub Mutex<Option<cli::CliExport>>);
 
 #[tauri::command]
-fn take_cli_export(state: tauri::State<PendingExport>) -> Option<CliExport> {
+fn take_cli_export(state: tauri::State<PendingExport>) -> Option<cli::CliExport> {
     state.0.lock().unwrap().take()
 }
 
 #[tauri::command]
 fn quit(app: tauri::AppHandle, code: i32) {
     app.exit(code);
-}
-
-fn absolute(p: &str) -> String {
-    let path = std::path::Path::new(p);
-    if path.is_absolute() {
-        p.to_string()
-    } else {
-        std::env::current_dir().map(|d| d.join(path).to_string_lossy().into_owned()).unwrap_or_else(|_| p.to_string())
-    }
 }
 
 #[tauri::command]
@@ -49,21 +33,45 @@ fn take_pending_open(state: tauri::State<PendingOpen>) -> Vec<String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    let cli_export = match args.iter().position(|a| a == "--export") {
-        Some(i) if args.len() >= i + 4 => Some(CliExport {
-            format: args[i + 1].clone(),
-            input: absolute(&args[i + 2]),
-            output: absolute(&args[i + 3]),
-        }),
-        _ => None,
+    let cwd = std::env::current_dir().unwrap_or_default();
+    let (cli_paths, cli_export) = match cli::parse(&args, &cwd) {
+        cli::Cli::Open(paths) => (paths, None),
+        cli::Cli::Export(job) => (Vec::new(), Some(job)),
+        cli::Cli::Help => {
+            print!("{}", cli::USAGE);
+            return;
+        }
+        cli::Cli::Version => {
+            println!("dotmd {}", env!("CARGO_PKG_VERSION"));
+            return;
+        }
+        cli::Cli::Error(msg) => {
+            eprintln!("dotmd: {msg}\n\n{}", cli::USAGE);
+            std::process::exit(2);
+        }
     };
-    let cli_paths: Vec<String> = if cli_export.is_some() {
-        Vec::new()
-    } else {
-        args.iter().filter(|a| !a.starts_with('-')).map(|a| absolute(a)).collect()
-    };
+    let exporting = cli_export.is_some();
 
-    let app = tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    if !exporting {
+        // A second `dotmd file.md` hands its files to the running window and exits (like `code`).
+        // Exports run as their own headless process so they can report an exit code.
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            let args: Vec<String> = argv.into_iter().skip(1).collect();
+            if let cli::Cli::Open(paths) = cli::parse(&args, std::path::Path::new(&cwd)) {
+                log::info!("second launch: opening {paths:?}");
+                if let Some(state) = app.try_state::<PendingOpen>() {
+                    state.0.lock().unwrap().extend(paths.clone());
+                }
+                let _ = app.emit("open-paths", paths);
+            }
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.unminimize();
+                let _ = w.set_focus();
+            }
+        }));
+    }
+    let app = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(
@@ -78,6 +86,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             take_pending_open,
             take_cli_export,
+            cli::install_cli,
             quit,
             markdown::render_markdown,
             fs::read_text,

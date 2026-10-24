@@ -1,7 +1,8 @@
 // Single registry of user commands. Drives keyboard shortcuts, the command palette (⌘⇧P)
 // and the native menu bar, so a command is defined once and behaves the same everywhere.
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { app, settings, getEditorApi, type Mode } from './state.svelte';
+import { app, settings, getEditorApi, toast, type Mode } from './state.svelte';
+import { invoke } from '@tauri-apps/api/core';
 import { t, type Key } from './i18n';
 import { isMac, isPlainText } from './path';
 import { THEMES } from './themes';
@@ -132,6 +133,10 @@ function base(): Command[] {
     { id: 'lang.es', label: () => `${t('set.language')}: Español`, run: () => (settings.lang = 'es') },
 
     // Help
+    {
+      id: 'help.installCli', label: L('cmd.installCli'), menu: 'help',
+      run: () => invoke<string>('install_cli').then((path) => toast(t('toast.cliInstalled', { path }), 6000), (e) => toast(t('toast.error', { msg: String(e) }))),
+    },
     { id: 'help.website', label: L('cmd.website'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd') },
     { id: 'help.issue', label: L('cmd.reportIssue'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd/issues/new') },
   ];
