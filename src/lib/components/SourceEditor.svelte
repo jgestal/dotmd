@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import { createSource, execSource } from '../editor/source';
-  import { app, settings, setEditorApi, focusActive, typewriterActive, soundActive } from '../state.svelte';
+  import { app, settings, setEditorApi, focusModeNow, typewriterActive, soundActive } from '../state.svelte';
   import { docKind } from '../path';
   import { keySound } from '../sound';
   import { insertLink, insertImageFiles } from '../actions';
@@ -23,7 +23,7 @@
       lineNumbers: lineNumbers(),
       wrap: settings.lineWrap,
       spellcheck: settings.spellcheck,
-      focus: focusActive() ? settings.focusMode : 'off',
+      focus: focusModeNow(),
       typewriter: typewriterActive(),
       onChange: (text) => (app.content = text),
       onSelection: (text) => (app.selection = text),
@@ -58,7 +58,7 @@
     untrack(() => ed?.reconfigure(p));
   });
   $effect(() => {
-    const p = { focus: focusActive() ? settings.focusMode : ('off' as const), typewriter: typewriterActive() };
+    const p = { focus: focusModeNow(), typewriter: typewriterActive() };
     untrack(() => ed?.reconfigure(p));
   });
   $effect(() => {

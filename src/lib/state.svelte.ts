@@ -105,7 +105,7 @@ export const DEFAULT_SETTINGS: Settings = {
   lineWrap: true,
   spellcheck: true,
   autosave: false,
-  focusMode: 'paragraph',
+  focusMode: 'line',
   focusOnlyZen: true,
   typewriterScroll: true,
   typewriterOnlyZen: true,
@@ -174,6 +174,8 @@ export const app = $state({
   /** Number of sheets in page view (0 when off). */
   pageCount: 0,
   zen: false,
+  /** Zen entered through "Focus writing": forces line focus and typewriter scrolling. */
+  focusWriting: false,
   selection: '',
   settingsOpen: false,
   paletteOpen: false,
@@ -225,6 +227,11 @@ export function pushRecent(path: string) {
   session.recent = [path, ...session.recent.filter((p) => p !== path)].slice(0, 12);
 }
 
-export const focusActive = () => settings.focusMode !== 'off' && (!settings.focusOnlyZen || app.zen);
-export const typewriterActive = () => settings.typewriterScroll && (!settings.typewriterOnlyZen || app.zen);
+/** Focus writing session (full screen, current line lit, caret centered) regardless of settings. */
+export const focusWriting = () => app.zen && app.focusWriting;
+export const focusActive = () => focusWriting() || (settings.focusMode !== 'off' && (!settings.focusOnlyZen || app.zen));
+/** The focus highlight in effect: the current line in a focus writing session, else the user's choice. */
+export const focusModeNow = (): FocusMode =>
+  focusWriting() ? 'line' : !focusActive() ? 'off' : settings.focusMode;
+export const typewriterActive = () => focusWriting() || (settings.typewriterScroll && (!settings.typewriterOnlyZen || app.zen));
 export const soundActive = () => settings.typingSound !== 'off' && (!settings.soundOnlyZen || app.zen);

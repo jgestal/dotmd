@@ -1,0 +1,41 @@
+{
+  "open": "$FIX/long.md",
+  "settings": {
+    "focusMode": "off",
+    "zenFullscreen": false
+  },
+  "actions": [
+    {
+      "waitFor": "document.querySelector('.markdown-body h1')"
+    },
+    {
+      "chord": [
+        "Mod",
+        "Alt",
+        "KeyF"
+      ],
+      "waitFor": "document.querySelector('.app.zen .cm-editor.cm-focus-mode.cm-typewriter')",
+      "wait": 500
+    },
+    {
+      "eval": "{ [...document.querySelectorAll('.cm-line')].find(l => l.textContent.startsWith('Ink jumps')).id = 'target' }"
+    },
+    {
+      "click": "#target",
+      "wait": 800
+    },
+    {
+      "assert": "document.querySelectorAll('.cm-dim').length >= 1",
+      "shot": "screen-line"
+    },
+    {
+      "assert": "document.querySelectorAll('.cm-dim-line').length > 3 && !document.querySelector('.topbar')",
+      "shot": "zen"
+    },
+    {
+      "keys": "Escape",
+      "wait": 500,
+      "assert": "!document.querySelector('.app.zen') && !document.querySelector('.cm-focus-mode')"
+    }
+  ]
+}

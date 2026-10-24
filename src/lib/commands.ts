@@ -8,7 +8,7 @@ import { THEMES } from './themes';
 import type { FormatAction } from './snippets';
 import {
   newDoc, openFileDialog, openFolder, saveDoc, toggleZen, toggleTypewriterMode, insertLink, insertImage,
-  closeTab, cycleTab, goBack, goForward, canGoBack, canGoForward,
+  closeTab, cycleTab, goBack, goForward, canGoBack, canGoForward, toggleFocusWriting,
 } from './actions';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { exportRequest } from './exportRequest.svelte';
@@ -106,6 +106,7 @@ function base(): Command[] {
     { id: 'view.outline', label: L('cmd.outline'), menu: 'view', run: () => { app.sidebar = true; app.sidebarTab = 'outline'; } },
     { id: 'view.search', label: L('cmd.search'), shortcut: 'CmdOrCtrl+Shift+F', menu: 'view', run: () => { app.sidebar = true; app.sidebarTab = 'search'; app.searchFocus++; } },
     { id: 'view.zen', label: L('top.zen'), shortcut: 'CmdOrCtrl+Shift+Enter', menu: 'view', separator: true, run: toggleZen },
+    { id: 'view.focusWriting', label: L('cmd.focusWriting'), shortcut: 'CmdOrCtrl+Alt+F', menu: 'view', run: toggleFocusWriting },
     { id: 'view.typewriter', label: L('set.twMode'), menu: 'view', run: toggleTypewriterMode },
     { id: 'view.zoomIn', label: L('cmd.zoomIn'), shortcut: 'CmdOrCtrl+=', menu: 'view', separator: true, run: () => (settings.fontSize = Math.min(32, settings.fontSize + 1)) },
     { id: 'view.zoomOut', label: L('cmd.zoomOut'), shortcut: 'CmdOrCtrl+-', menu: 'view', run: () => (settings.fontSize = Math.max(10, settings.fontSize - 1)) },

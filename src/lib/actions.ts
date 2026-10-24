@@ -321,9 +321,23 @@ export function toggleTypewriterMode() {
 
 export async function toggleZen() {
   app.zen = !app.zen;
+  if (!app.zen) app.focusWriting = false;
   if (settings.zenFullscreen) {
     try { await getCurrentWindow().setFullscreen(app.zen); } catch {}
   }
+}
+
+/**
+ * Focus writing: full screen, everything but the line being written dimmed, caret kept centered.
+ * Switches a read-only view to the editor first.
+ */
+export async function toggleFocusWriting() {
+  if (app.zen) return toggleZen();
+  if (!app.docOpen) await newDoc();
+  if (app.mode === 'preview' || app.mode === 'split') app.mode = 'source';
+  app.focusWriting = true;
+  await toggleZen();
+  requestAnimationFrame(() => getEditorApi()?.focus());
 }
 
 export async function insertLink() {

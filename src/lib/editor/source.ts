@@ -1,5 +1,5 @@
 import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection, dropCursor, highlightSpecialChars, Decoration, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
-import { EditorState, Compartment, EditorSelection, RangeSetBuilder, type Extension } from '@codemirror/state';
+import { EditorState, Compartment, EditorSelection, RangeSetBuilder, StateEffect, type Extension } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
@@ -98,8 +98,62 @@ function focusDecorations(view: EditorView, mode: FocusMode): DecorationSet {
   return b.finish();
 }
 
+/** Screen line (after soft wrapping) holding the caret; measured outside the update cycle. */
+const setScreenLine = StateEffect.define<{ from: number; to: number }>();
+
+/**
+ * "Current line" focus for prose: a Markdown paragraph is one logical line that wraps over many
+ * screen lines, so we light only the wrapped line being typed and dim the rest of the paragraph.
+ */
+const screenLineFocus = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet = Decoration.none;
+    range = { from: -1, to: -1 };
+    constructor(view: EditorView) {
+      this.measure(view);
+      this.decorations = this.build(view);
+    }
+    update(u: ViewUpdate) {
+      for (const tr of u.transactions) for (const e of tr.effects) if (e.is(setScreenLine)) this.range = e.value;
+      if (u.docChanged || u.selectionSet || u.viewportChanged || u.geometryChanged) this.measure(u.view);
+      this.decorations = this.build(u.view);
+    }
+    measure(view: EditorView) {
+      view.requestMeasure({
+        key: this,
+        read: (v) => {
+          const cur = EditorSelection.cursor(v.state.selection.main.head);
+          return { from: v.moveToLineBoundary(cur, false).head, to: v.moveToLineBoundary(cur, true).head };
+        },
+        write: (r, v) => {
+          if (r.from !== this.range.from || r.to !== this.range.to) queueMicrotask(() => v.dispatch({ effects: setScreenLine.of(r) }));
+        },
+      });
+    }
+    build(view: EditorView): DecorationSet {
+      const { doc } = view.state;
+      const cur = doc.lineAt(view.state.selection.main.head);
+      const b = new RangeSetBuilder<Decoration>();
+      for (const { from, to } of view.visibleRanges) {
+        for (let pos = from; pos <= to; ) {
+          const line = doc.lineAt(pos);
+          if (line.number !== cur.number) b.add(line.from, line.from, dimLine);
+          else if (this.range.from >= line.from && this.range.to <= line.to) {
+            if (this.range.from > line.from) b.add(line.from, this.range.from, dimMark);
+            if (this.range.to < line.to) b.add(this.range.to, line.to, dimMark);
+          }
+          pos = line.to + 1;
+        }
+      }
+      return b.finish();
+    }
+  },
+  { decorations: (v) => v.decorations },
+);
+
 function focusPlugin(mode: FocusMode): Extension {
   if (mode === 'off') return [];
+  if (mode === 'line') return [screenLineFocus, EditorView.editorAttributes.of({ class: 'cm-focus-mode' })];
   return [
     ViewPlugin.fromClass(
       class {
