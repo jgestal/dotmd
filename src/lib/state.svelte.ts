@@ -68,6 +68,8 @@ export interface Settings {
   exportTheme: 'current' | 'modern' | 'github' | 'paper' | 'typewriter';
   /** Inline the theme's font files in exported HTML/PDF. */
   exportEmbedFonts: boolean;
+  /** Read/Split preview laid out on paper sheets (export paper size and margins). */
+  pageView: boolean;
   /** "auto" uses the system WebKit where available (macOS) and falls back to Chromium. */
   pdfEngine: 'auto' | 'chromium';
   customCss: string;
@@ -125,6 +127,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pdfMargin: 18,
   exportTheme: 'current',
   exportEmbedFonts: true,
+  pageView: false,
   pdfEngine: 'auto',
   customCss: '',
 };
@@ -168,6 +171,8 @@ export const app = $state({
   /** Bumped to focus the search box. */
   searchFocus: 0,
   quickOpen: false,
+  /** Number of sheets in page view (0 when off). */
+  pageCount: 0,
   zen: false,
   selection: '',
   settingsOpen: false,

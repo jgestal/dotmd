@@ -99,6 +99,8 @@ function base(): Command[] {
       id: `view.${m}`, label: L(`mode.${m}` as Key), shortcut: `CmdOrCtrl+${i + 1}`, menu: 'view' as const,
       enabled: () => hasDoc() && !(m === 'visual' && isPlainText(app.path)), run: () => setMode(m),
     })),
+    { id: 'view.pages', label: L('cmd.pages'), shortcut: 'CmdOrCtrl+Shift+L', menu: 'view', run: () => (settings.pageView = !settings.pageView) },
+    { id: 'fmt.pagebreak', label: L('tb.pagebreak'), menu: 'format', enabled: editing, run: fmt({ type: 'pagebreak' }) },
     { id: 'view.toggleEdit', label: L('cmd.toggleEdit'), shortcut: 'CmdOrCtrl+E', menu: 'view', enabled: hasDoc, run: () => setMode(app.mode === 'preview' ? lastEditMode : 'preview') },
     { id: 'view.sidebar', label: L('sidebar.toggle'), shortcut: 'CmdOrCtrl+\\', menu: 'view', separator: true, run: () => (app.sidebar = !app.sidebar) },
     { id: 'view.outline', label: L('cmd.outline'), menu: 'view', run: () => { app.sidebar = true; app.sidebarTab = 'outline'; } },

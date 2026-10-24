@@ -115,6 +115,9 @@
 .markdown-body sup a { text-decoration: none; }
 .markdown-body dt { font-weight: 650; }
 .markdown-body dd { margin: 0 0 0.6em 1.4em; }
+.markdown-body .page-break { break-after: page; height: 0; border-top: 1px dashed var(--border); margin: 1.5em 0; }
+.markdown-body.paged .page-break, .markdown-body .page .page-break { display: none; }
+@media print { .markdown-body .page-break { border: 0; margin: 0; } }
 .markdown-body table.csv { font-size: 0.86em; display: table; width: auto; }
 .markdown-body table.csv th { position: sticky; top: 0; }
 .markdown-body table.csv td.num { text-align: right; font-variant-numeric: tabular-nums; }

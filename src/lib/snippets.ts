@@ -15,6 +15,7 @@ export type FormatAction =
   | { type: 'footnote' }
   | { type: 'alert'; kind: string }
   | { type: 'details' }
+  | { type: 'pagebreak' }
   | { type: 'date' }
   | { type: 'formatTable' };
 
@@ -53,6 +54,7 @@ export function blockMarkdown(a: FormatAction): string | null {
     case 'math': return '$$\nE = mc^2\n$$';
     case 'hr': return '---';
     case 'alert': return `> [!${a.kind}]\n> `;
+    case 'pagebreak': return '<div class="page-break"></div>';
     case 'details': return '<details>\n<summary>Summary</summary>\n\nHidden content.\n\n</details>';
     case 'image': return `![${a.alt}](${encodeURI(a.src)})`;
     default: return null;

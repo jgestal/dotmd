@@ -2,6 +2,7 @@
   import { openUrl } from '@tauri-apps/plugin-opener';
   import { app, settings, toast } from '../state.svelte';
   import { postProcess, renderDocument } from '../render';
+  import { paginate, PAPER_MM } from '../paginate';
   import { currentTheme } from '../appearance.svelte';
   import { dirname, isAbsolute, join } from '../path';
   import { openPath, toggleTaskLine } from '../actions';
@@ -22,9 +23,22 @@
     const next = document.createElement('div');
     next.innerHTML = html;
     await postProcess(next, { dir: path ? dirname(path) : null, theme: currentTheme() });
+    if (paged) {
+      // Pagination measures heights, so images must be decoded before blocks are placed.
+      const imgs = [...next.querySelectorAll('img')];
+      imgs.forEach((i) => (i.loading = 'eager'));
+      await Promise.all(imgs.map((i) => i.decode().catch(() => {})));
+    }
     if (my !== seq || !body) return;
     const keep = scroller.scrollTop;
-    body.replaceChildren(...next.childNodes);
+    if (paged) {
+      body.replaceChildren();
+      app.pageCount = paginate(body, [...next.childNodes]);
+      fitPages();
+    } else {
+      app.pageCount = 0;
+      body.replaceChildren(...next.childNodes);
+    }
     if (path !== lastPath) {
       scroller.scrollTop = 0;
       lastPath = path;
@@ -38,10 +52,29 @@
   /** A reveal requested before the document finished rendering (search result in another file). */
   let pendingReveal = 0;
 
+  /** Page view: sheets with the export paper size and margins (Read and Split modes). */
+  const paged = $derived(settings.pageView);
+  const paper = $derived(PAPER_MM[settings.pdfPageSize] ?? PAPER_MM.A4);
+
+  /** Scales the sheets down when the pane is narrower than the paper. */
+  function fitPages() {
+    if (!body || !scroller) return;
+    const pagePx = (paper[0] / 25.4) * 96;
+    body.style.zoom = paged ? String(Math.min(1, (scroller.clientWidth - 48) / pagePx)) : '';
+  }
+
+  $effect(() => {
+    if (!scroller) return;
+    const ro = new ResizeObserver(() => fitPages());
+    ro.observe(scroller);
+    return () => ro.disconnect();
+  });
+
   let timer: ReturnType<typeof setTimeout> | undefined;
   $effect(() => {
     const md = app.content;
     const path = app.path;
+    paged; paper; settings.pdfMargin; // re-layout when page settings change
     currentTheme(); // re-render diagrams when the theme changes
     clearTimeout(timer);
     const delay = md.length > 200_000 ? 300 : 90;
@@ -51,7 +84,7 @@
   /** Top-level blocks with their source line range and position inside the scroller. */
   function blocks() {
     const base = scroller.getBoundingClientRect().top - scroller.scrollTop;
-    return [...body.querySelectorAll<HTMLElement>(':scope > [data-sourcepos]')].map((el) => {
+    return [...body.querySelectorAll<HTMLElement>(':scope > [data-sourcepos], :scope > .page > .page-inner > [data-sourcepos]')].map((el) => {
       const m = el.dataset.sourcepos!.match(/^(\d+):\d+-(\d+):/);
       const r = el.getBoundingClientRect();
       return { start: Number(m?.[1] ?? 0), end: Number(m?.[2] ?? m?.[1] ?? 0), top: r.top - base, height: r.height };
@@ -130,9 +163,11 @@
   }
 </script>
 
-<div class="preview-scroll" bind:this={scroller} onscroll={onScroll}>
+<div class="preview-scroll" class:desk={paged} bind:this={scroller} onscroll={onScroll}
+  style:--page-w="{paper[0]}mm" style:--page-h="{paper[1]}mm" style:--page-m="{settings.pdfMargin}mm">
   <article
     class="markdown-body preview"
+    class:paged
     class:justify={settings.justify}
     class:hyphenate={settings.hyphenate}
     bind:this={body}
@@ -145,6 +180,20 @@
   .preview-scroll { height: 100%; overflow-y: auto; overflow-x: hidden; }
   .preview { max-width: var(--doc-width); margin: 0 auto; padding: 36px 32px 30vh; user-select: text; -webkit-user-select: text; cursor: auto; }
   :global(.zen) .preview { padding-top: 12vh; }
+  .desk { background: color-mix(in srgb, var(--bg) 82%, #000); }
+  :global(.dark) .desk { background: color-mix(in srgb, var(--bg) 70%, #000); }
+  .preview.paged { max-width: none; padding: 28px 0 40vh; }
+  .preview.paged :global(.page) {
+    position: relative; box-sizing: border-box; width: var(--page-w); height: var(--page-h); padding: var(--page-m);
+    margin: 0 auto 28px; background: var(--bg); border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 10px 30px rgba(0, 0, 0, 0.22);
+  }
+  .preview.paged :global(.page-inner) { height: 100%; overflow: visible; }
+  .preview.paged :global(.page-inner > :first-child) { margin-top: 0; }
+  .preview.paged :global(.page::after) {
+    content: attr(data-page); position: absolute; left: 0; right: 0; bottom: calc(var(--page-m) * 0.4);
+    text-align: center; font: 10px var(--font-ui); color: var(--fg-muted); letter-spacing: 0.04em;
+  }
   :global(.markdown-body pre.has-copy .copy-code) {
     position: absolute; top: 6px; right: 6px; font: 11px var(--font-ui); color: var(--fg-muted);
     background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 2px 7px; opacity: 0.0;

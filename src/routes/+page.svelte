@@ -143,6 +143,9 @@
             </button>
           {/each}
         </div>
+        {#if app.mode === 'preview' || app.mode === 'split'}
+          <button class="tb" class:on={settings.pageView} onclick={() => (settings.pageView = !settings.pageView)} title="{t('cmd.pages')}  {modKey}⇧L"><Icon name="pages" /></button>
+        {/if}
         <button class="tb" onclick={() => saveDoc()} title="{t('top.save')}  {modKey}S" disabled={!isDirty()}><Icon name="save" /></button>
         <button class="tb" onclick={toggleZen} title="{t('top.zen')}  {modKey}⇧↩"><Icon name="zen" /></button>
       {/if}

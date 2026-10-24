@@ -106,6 +106,7 @@
     {/snippet}
   </Popover>
   <span class="spacer"></span>
+  {#if app.pageCount && (app.mode === 'preview' || app.mode === 'split')}<span class="pages">{app.pageCount} {t('stats.pages')}</span>{/if}
   {#if isDirty()}<span class="dirty" title={t('top.unsaved')}>●</span>{/if}
 </footer>
 
@@ -121,6 +122,7 @@
   .sel { color: var(--accent); }
   .spacer { flex: 1; }
   .dirty { color: var(--accent); font-size: 10px; }
+  .pages { margin-right: 8px; }
   .details { padding: 8px 10px; width: 290px; font-size: 12px; }
   .statusbar :global(.popover) { top: auto; bottom: calc(100% + 6px); }
   h4 { margin: 0 0 8px; font-size: 12px; }

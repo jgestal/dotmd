@@ -136,6 +136,7 @@
         <button class="menu-item" onclick={() => { exec({ type: 'hr' }); close(); }}><Icon name="hr" /> {t('tb.hr')}</button>
         <button class="menu-item" onclick={() => { exec({ type: 'footnote' }); close(); }}><Icon name="footnote" /> {t('tb.footnote')}</button>
         <button class="menu-item" onclick={() => { exec({ type: 'details' }); close(); }}><Icon name="details" /> {t('tb.details')}</button>
+        <button class="menu-item" onclick={() => { exec({ type: 'pagebreak' }); close(); }}><Icon name="pages" /> {t('tb.pagebreak')}</button>
         <button class="menu-item" onclick={() => { exec({ type: 'date' }); close(); }}><Icon name="date" /> {t('tb.date')}</button>
       {/snippet}
     </Popover>
