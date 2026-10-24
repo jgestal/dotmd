@@ -3,7 +3,15 @@
   import { app, settings, DEFAULT_SETTINGS, type StatKey, type Settings } from '../state.svelte';
   import { t, LANGUAGES, type Key } from '../i18n';
   import { THEMES, FONTS } from '../themes';
-  import { keySound } from '../sound';
+  import { keySound, bellSound } from '../sound';
+  import { openUrl } from '@tauri-apps/plugin-opener';
+  import { toggleTypewriterMode, typewriterModeOn } from '../actions';
+
+  const SOUND_CREDITS = [
+    ['exterminat', 'https://freesound.org/people/exterminat/sounds/164807/'],
+    ['NHumphrey', 'https://freesound.org/people/NHumphrey/sounds/204466/'],
+    ['knufds', 'https://freesound.org/people/knufds/sounds/345955/'],
+  ];
 
   type Section = 'appearance' | 'typography' | 'editor' | 'zen' | 'stats' | 'export' | 'advanced';
   let section = $state<Section>('appearance');
@@ -129,6 +137,14 @@
         <label class="check"><input type="checkbox" bind:checked={settings.autosave} /> {t('set.autosave')}</label>
 
       {:else if section === 'zen'}
+        <button class="tw-card" class:on={typewriterModeOn()} onclick={toggleTypewriterMode}>
+          <span class="tw-icon" aria-hidden="true">⌨︎</span>
+          <span class="tw-text">
+            <b>{t('set.twMode')}</b>
+            <small>{t('set.twModeHint')}</small>
+          </span>
+          <span class="tw-state">{typewriterModeOn() ? t('set.twModeOn') : t('set.twModeOff')}</span>
+        </button>
         <div class="row">
           <span>{t('set.focusMode')}</span>
           <div class="seg">
@@ -150,6 +166,14 @@
         </div>
         <div class="row"><span>{t('set.volume')}</span><input type="range" min="0" max="1" step="0.05" bind:value={settings.soundVolume} onchange={() => keySound('Enter')} /></div>
         <label class="check indent"><input type="checkbox" bind:checked={settings.soundOnlyZen} /> {t('set.onlyZen')}</label>
+        <label class="check"><input type="checkbox" bind:checked={settings.stereoKeys} /> {t('set.stereoKeys')}</label>
+        <div class="row">
+          <span>{t('set.bellColumn')} <b>{settings.bellColumn || t('set.bellOff')}</b></span>
+          <span class="inline">
+            <input type="range" min="0" max="120" step="1" bind:value={settings.bellColumn} />
+            <button class="btn small" onclick={bellSound}>{t('set.testBell')}</button>
+          </span>
+        </div>
 
       {:else if section === 'stats'}
         <label class="check"><input type="checkbox" bind:checked={settings.showStats} /> {t('set.showStats')}</label>
@@ -184,6 +208,13 @@
         <p class="hint">{t('set.customCssHint')}</p>
         <textarea bind:value={settings.customCss} rows="12" spellcheck="false" placeholder=".markdown-body h1 {'{'} color: tomato {'}'}"></textarea>
         <button class="btn danger" onclick={resetAll}>{t('set.resetAll')}</button>
+        <h3>{t('set.credits')}</h3>
+        <p class="hint">
+          {t('set.creditsSounds')}
+          {#each SOUND_CREDITS as [name, url], i}
+            <button class="linkish" onclick={() => openUrl(url)}>{name}</button>{i < SOUND_CREDITS.length - 1 ? ', ' : '.'}
+          {/each}
+        </p>
       {/if}
     </section>
   </div>
@@ -224,4 +255,19 @@
   .hint { color: var(--fg-muted); }
   .btn { margin-top: 14px; }
   .btn.danger { color: #ff453a; }
+  .btn.small { margin: 0; padding: 3px 8px; font-size: 12px; }
+  .inline { display: flex; align-items: center; gap: 8px; }
+  .inline input[type=range] { width: 160px; }
+  .linkish { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; cursor: pointer; }
+  .tw-card {
+    display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; margin-bottom: 14px;
+    padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); cursor: default;
+    background: linear-gradient(135deg, #f1ead6, #e6dcc0); color: #26231f; font-family: 'Courier Prime', monospace;
+  }
+  .tw-card.on { outline: 2.5px solid var(--accent); outline-offset: 2px; }
+  .tw-icon { font-size: 30px; }
+  .tw-text { flex: 1; display: grid; gap: 3px; }
+  .tw-text b { font-family: 'Special Elite', monospace; font-weight: 400; font-size: 16px; }
+  .tw-text small { font-size: 11.5px; color: #6d6556; }
+  .tw-state { font: 600 11.5px var(--font-ui); color: #a5281b; max-width: 130px; text-align: right; }
 </style>

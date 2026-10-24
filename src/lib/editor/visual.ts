@@ -20,10 +20,27 @@ export interface VisualOptions {
   theme: () => Theme;
   placeholder: string;
   onChange: (md: string) => void;
-  onKey: (key: string) => void;
+  onKey: (key: string, column: number) => void;
 }
 
 /** WYSIWYG editor (Milkdown/ProseMirror). Edits the formatted document and serializes back to Markdown. */
+/** Characters between the start of the caret's block (paragraph, heading, list item) and the caret. */
+function caretColumn(root: HTMLElement): number {
+  const sel = window.getSelection();
+  if (!sel?.rangeCount) return 0;
+  const caret = sel.getRangeAt(0);
+  let block = caret.startContainer as Node | null;
+  while (block && !(block instanceof HTMLElement && /^(P|H[1-6]|LI|PRE|BLOCKQUOTE|TD|TH)$/.test(block.tagName))) {
+    if (block === root) return 0;
+    block = block.parentNode;
+  }
+  if (!block) return 0;
+  const r = document.createRange();
+  r.setStart(block, 0);
+  r.setEnd(caret.startContainer, caret.startOffset);
+  return r.toString().length;
+}
+
 /** Front matter is kept out of the WYSIWYG document (ProseMirror would mangle it) and re-attached on output. */
 function splitFrontMatter(md: string): [string, string] {
   const m = md.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
@@ -74,7 +91,9 @@ export async function createVisual(root: HTMLElement, o: VisualOptions) {
   baseline = crepe.getMarkdown();
   suppress = false;
   root.addEventListener('keydown', (e) => {
-    if (!e.metaKey && !e.ctrlKey && (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) o.onKey(e.key);
+    if (e.metaKey || e.ctrlKey || !(e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) return;
+    const col = caretColumn(root);
+    o.onKey(e.key, e.key.length === 1 ? col + 1 : e.key === 'Backspace' ? Math.max(0, col - 1) : 0);
   });
 
   const run = (fn: (ctx: any) => unknown) => crepe.editor.action(fn as any);

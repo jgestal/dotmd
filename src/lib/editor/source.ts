@@ -281,7 +281,7 @@ export interface SourceOptions {
   typewriter: boolean;
   onChange: (text: string) => void;
   onSelection: (text: string) => void;
-  onKey: (key: string) => void;
+  onKey: (key: string, column: number) => void;
   onScroll: (topLine: number) => void;
 }
 
@@ -336,8 +336,11 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
           }
         }),
         EditorView.domEventHandlers({
-          keydown: (e) => {
-            if (!e.metaKey && !e.ctrlKey && (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) o.onKey(e.key);
+          keydown: (e, view) => {
+            if (e.metaKey || e.ctrlKey || !(e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) return;
+            const head = view.state.selection.main.head;
+            const col = head - view.state.doc.lineAt(head).from;
+            o.onKey(e.key, e.key.length === 1 ? col + 1 : e.key === 'Backspace' ? Math.max(0, col - 1) : 0);
           },
           scroll: (_e, view) => {
             const block = view.lineBlockAtHeight(view.scrollDOM.getBoundingClientRect().top - view.documentTop);

@@ -41,6 +41,12 @@ export interface Settings {
   typingSound: 'off' | 'typewriter' | 'soft' | 'mechanical';
   soundVolume: number;
   soundOnlyZen: boolean;
+  /** Ring the margin bell when the caret reaches this column (0 = never). */
+  bellColumn: number;
+  /** Pan each key strike by its position on the keyboard. */
+  stereoKeys: boolean;
+  /** Settings saved when "Typewriter mode" was switched on, restored when it is switched off. */
+  typewriterPrev: Partial<Settings> | null;
   crtScanlines: boolean;
   crtGlow: boolean;
   crtFlicker: boolean;
@@ -91,6 +97,9 @@ export const DEFAULT_SETTINGS: Settings = {
   typingSound: 'off',
   soundVolume: 0.5,
   soundOnlyZen: false,
+  bellColumn: 65,
+  stereoKeys: true,
+  typewriterPrev: null,
   crtScanlines: true,
   crtGlow: true,
   crtFlicker: false,

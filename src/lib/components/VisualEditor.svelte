@@ -25,7 +25,7 @@
         app.content = md;
         if (!warned) { warned = true; toast(t('toast.visualNote'), 4000); }
       },
-      onKey: (key) => soundActive() && keySound(key),
+      onKey: (key, col) => soundActive() && keySound(key, col),
     }).then((e) => {
       if (disposed) { e.destroy(); return; }
       ed = e;

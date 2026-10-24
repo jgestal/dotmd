@@ -3,6 +3,7 @@ import { open, save, ask, message } from '@tauri-apps/plugin-dialog';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { app, isDirty, session, settings, setContent, pushRecent, toast, getEditorApi } from './state.svelte';
 import { askFields } from './prompt.svelte';
+import { preloadSounds } from './sound';
 import { t } from './i18n';
 import { basename, dirname, isMarkdown, isPlainText, relative, stem } from './path';
 
@@ -147,6 +148,32 @@ export function toggleTaskLine(line: number) {
   if (toggled === lines[i]) return;
   lines[i] = toggled;
   setContent(lines.join('\n'), false);
+}
+
+const TYPEWRITER_MODE = {
+  theme: 'typewriter',
+  typingSound: 'typewriter',
+  typewriterScroll: true,
+  typewriterOnlyZen: false,
+  soundOnlyZen: false,
+  paperTexture: true,
+  inkVariation: true,
+} as const;
+
+export const typewriterModeOn = () => settings.typewriterPrev !== null;
+
+/** One-click "Typewriter mode": theme, real key sounds, margin bell and centered caret; toggling restores the previous settings. */
+export function toggleTypewriterMode() {
+  if (settings.typewriterPrev) {
+    Object.assign(settings, settings.typewriterPrev);
+    settings.typewriterPrev = null;
+    return;
+  }
+  const keys = Object.keys(TYPEWRITER_MODE) as (keyof typeof TYPEWRITER_MODE)[];
+  settings.typewriterPrev = Object.fromEntries(keys.map((k) => [k, settings[k]]));
+  Object.assign(settings, TYPEWRITER_MODE);
+  if (settings.bellColumn <= 0) settings.bellColumn = 65;
+  void preloadSounds();
 }
 
 export async function toggleZen() {

@@ -23,7 +23,7 @@
       typewriter: typewriterActive(),
       onChange: (text) => (app.content = text),
       onSelection: (text) => (app.selection = text),
-      onKey: (key) => soundActive() && keySound(key),
+      onKey: (key, col) => soundActive() && keySound(key, col),
       onScroll: (line) => onScrollLine?.(line),
     });
     const view = ed.view;

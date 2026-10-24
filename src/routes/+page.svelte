@@ -16,6 +16,7 @@
   import Welcome from '$lib/components/Welcome.svelte';
   import { app, settings, session, isDirty, type Mode } from '$lib/state.svelte';
   import { startAppearance } from '$lib/appearance.svelte';
+  import { preloadSounds } from '$lib/sound';
   import { t, type Key } from '$lib/i18n';
   import { isMac, isPlainText, modKey } from '$lib/path';
   import {
@@ -75,6 +76,7 @@
 
   onMount(() => {
     const win = getCurrentWindow();
+    if (settings.typingSound === 'typewriter') void preloadSounds();
     const unlisten: Promise<() => void>[] = [];
 
     unlisten.push(listen<string>('file-changed', (e) => onExternalChange(e.payload)));
