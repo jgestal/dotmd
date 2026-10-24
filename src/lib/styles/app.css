@@ -14,6 +14,12 @@ body {
 }
 body.resizing { cursor: col-resize; }
 body.resizing * { pointer-events: none; }
+body.dragging, body.dragging * { cursor: grabbing !important; }
+.drag-ghost {
+  position: fixed; left: 0; top: 0; z-index: 500; pointer-events: none; padding: 3px 9px; border-radius: 6px;
+  background: var(--accent); color: var(--accent-fg); font: 12px var(--font-ui); box-shadow: var(--shadow); white-space: nowrap;
+}
+.drop-target { outline: 2px solid var(--accent) !important; outline-offset: -2px; background: color-mix(in srgb, var(--accent) 14%, transparent) !important; }
 ::selection { background: var(--sel); }
 button { font-family: inherit; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }

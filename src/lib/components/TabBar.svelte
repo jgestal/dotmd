@@ -5,8 +5,8 @@
   import { app } from '../state.svelte';
   import { t } from '../i18n';
   import { activateTab, closeTab, docName, moveTab, newDoc } from '../actions';
+  import { pointerDrag } from '../drag';
 
-  let dragFrom = -1;
   let dropAt = $state(-1);
 
   const dirty = (i: number) =>
@@ -40,17 +40,18 @@
       role="tab"
       tabindex="0"
       aria-selected={i === app.activeTab}
-      draggable="true"
       title={tab.path ?? t('top.untitled')}
       onclick={() => activateTab(i)}
       onkeydown={(e) => e.key === 'Enter' && activateTab(i)}
       onauxclick={(e) => e.button === 1 && closeTab(i)}
       oncontextmenu={(e) => { e.preventDefault(); contextMenu(i); }}
-      ondragstart={(e) => { dragFrom = i; e.dataTransfer?.setData('text/plain', String(i)); }}
-      ondragover={(e) => { e.preventDefault(); dropAt = i; }}
-      ondragleave={() => (dropAt = -1)}
-      ondrop={(e) => { e.preventDefault(); moveTab(dragFrom, i); dropAt = -1; }}
-      ondragend={() => (dropAt = -1)}
+      data-index={i}
+      onpointerdown={(e) => !(e.target as HTMLElement).closest('.close') && pointerDrag(e, {
+        label: docName(i === app.activeTab ? app.path : tab.path),
+        target: '.tabbar .tab',
+        onOver: (el) => (dropAt = el ? Number(el.dataset.index) : -1),
+        onDrop: (el) => { moveTab(i, Number(el.dataset.index)); dropAt = -1; },
+      })}
     >
       <span class="name">{docName(i === app.activeTab ? app.path : tab.path)}</span>
       <button class="close" class:dirty={dirty(i)} onclick={(e) => { e.stopPropagation(); closeTab(i); }} aria-label={t('tabs.close')}>

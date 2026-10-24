@@ -5,7 +5,7 @@ import { app, toast } from './state.svelte';
 import { t } from './i18n';
 import { askFields } from './prompt.svelte';
 import { dirname, join } from './path';
-import { openFolder, openPath } from './actions';
+import { openFolder, openPath, renamePath, trashPath } from './actions';
 import { exportRequest } from './exportRequest.svelte';
 
 interface Entry { name: string; path: string; is_dir: boolean }
@@ -26,15 +26,7 @@ async function newFileIn(dir: string) {
 
 async function rename(entry: Entry) {
   const v = await askFields(t('ctx.rename'), [{ key: 'name', label: t('common.name'), value: entry.name }]);
-  if (!v?.name || v.name === entry.name) return;
-  const to = join(dirname(entry.path), v.name);
-  try {
-    await invoke('rename_path', { from: entry.path, to });
-    if (app.path === entry.path) app.path = to;
-    app.treeVersion++;
-  } catch (e) {
-    toast(t('toast.error', { msg: String(e) }));
-  }
+  if (v?.name && v.name !== entry.name) await renamePath(entry.path, v.name);
 }
 
 /** Native context menu for a file tree row. */
@@ -55,6 +47,7 @@ export async function treeContextMenu(entry: Entry) {
         ]
       : []),
     { id: 'reveal', text: t('ctx.reveal'), action: () => revealItemInDir(entry.path) },
+    ...(entry.path !== app.root ? [{ id: 'trash', text: t('ctx.trash'), action: () => trashPath(entry.path) }] : []),
     {
       id: 'copy', text: t('ctx.copyPath'),
       action: async () => { await navigator.clipboard.writeText(entry.path); toast(t('toast.copied'), 1000); },

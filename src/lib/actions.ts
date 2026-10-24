@@ -5,7 +5,7 @@ import { app, isDirty, session, settings, setContent, pushRecent, toast, getEdit
 import { askFields } from './prompt.svelte';
 import { preloadSounds } from './sound';
 import { t } from './i18n';
-import { basename, dirname, isMarkdown, isPlainText, relative, stem } from './path';
+import { basename, dirname, isMarkdown, isPlainText, join, relative, stem } from './path';
 
 const MD_FILTERS = () => [
   { name: t('dlg.markdown'), extensions: ['md', 'markdown', 'mdown', 'mkd'] },
@@ -327,6 +327,67 @@ export async function insertLink() {
     { key: 'url', label: t('link.url'), value: /^https?:\/\//.test(sel) ? sel : 'https://', placeholder: 'https://' },
   ]);
   if (v?.url) getEditorApi()?.exec({ type: 'link', url: v.url.trim(), text: v.text.trim() });
+}
+
+// ---- File operations from the tree
+
+const under = (p: string, dir: string) => p === dir || p.startsWith(dir + '/') || p.startsWith(dir + '\\');
+
+/** Points open tabs (and the active document) at a file or folder's new location. */
+function retarget(from: string, to: string) {
+  const move = (p: string | null) => (p && under(p, from) ? to + p.slice(from.length) : p);
+  for (const tb of app.tabs) tb.path = move(tb.path);
+  app.path = move(app.path);
+  session.expanded = session.expanded.map((p) => move(p)!);
+  persistTabs();
+  rewatch();
+}
+
+/** Moves a file or folder into another folder (drag and drop in the tree). */
+export async function movePath(from: string, toDir: string) {
+  if (dirname(from) === toDir || under(toDir, from)) return;
+  const to = join(toDir, basename(from));
+  try {
+    await invoke('rename_path', { from, to });
+    retarget(from, to);
+    app.treeVersion++;
+  } catch (e) {
+    toast(t(String(e) === 'exists' ? 'toast.exists' : 'toast.error', { msg: String(e), name: basename(from) }));
+  }
+}
+
+/** Renames a file or folder in place, keeping open tabs pointed at it. */
+export async function renamePath(from: string, name: string) {
+  const to = join(dirname(from), name);
+  try {
+    await invoke('rename_path', { from, to });
+    retarget(from, to);
+    app.treeVersion++;
+  } catch (e) {
+    toast(t(String(e) === 'exists' ? 'toast.exists' : 'toast.error', { msg: String(e), name }));
+  }
+}
+
+/** Moves a file or folder to the system trash after confirmation; closes its tabs. */
+export async function trashPath(path: string) {
+  const ok = await ask(t('dlg.trashBody', { name: basename(path) }), {
+    title: t('dlg.trashTitle'), kind: 'warning', okLabel: t('dlg.trash'), cancelLabel: t('common.cancel'),
+  });
+  if (!ok) return;
+  try {
+    await invoke('trash_path', { path });
+  } catch (e) {
+    return toast(t('toast.error', { msg: String(e) }));
+  }
+  snapshot();
+  for (let i = app.tabs.length - 1; i >= 0; i--) {
+    const tb = app.tabs[i];
+    if (!tb.path || !under(tb.path, path)) continue;
+    tb.saved = tb.content; // the file is gone: nothing left to save over
+    if (i === app.activeTab) app.saved = app.content;
+    await closeTab(i);
+  }
+  app.treeVersion++;
 }
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/i;

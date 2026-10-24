@@ -63,7 +63,7 @@
   {#if app.sidebarTab === 'files'}
     {#if app.root}
       <div class="root-row">
-        <button class="root-name" title={app.root} oncontextmenu={(e) => { e.preventDefault(); treeContextMenu({ name: basename(app.root!), path: app.root!, is_dir: true }); }}>
+        <button class="root-name" title={app.root} data-path={app.root} oncontextmenu={(e) => { e.preventDefault(); treeContextMenu({ name: basename(app.root!), path: app.root!, is_dir: true }); }}>
           {basename(app.root)}
         </button>
         <button class="tb small" title={t('sidebar.allFiles')} class:on={settings.showAllFiles} onclick={() => (settings.showAllFiles = !settings.showAllFiles)}><Icon name="file" size={14} /></button>

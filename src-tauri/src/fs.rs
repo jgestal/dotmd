@@ -197,3 +197,9 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 }
+
+/// Moves a file or folder to the system trash / recycle bin.
+#[tauri::command]
+pub fn trash_path(path: String) -> Result<(), String> {
+    trash::delete(&path).map_err(|e| e.to_string())
+}

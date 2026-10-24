@@ -5,7 +5,7 @@
 //   node tests/ui/run.mjs                 # every scenario in tests/ui/scenarios
 //   node tests/ui/run.mjs sounds tabs     # only these
 //
-// Scenario steps: eval, click, keys, chord (["Mod","Shift","KeyP"]), type, waitFor (JS condition), wait (ms), assert (must be true), shot.
+// Scenario steps: eval, click, drag ([from, to] selectors), keys, chord (["Mod","Shift","KeyP"]), type, waitFor (JS condition), wait (ms), assert (must be true), shot.
 //
 // Env: CHROME_PATH (browser binary), UI_PORT (port of a fresh Vite server, default 1425). Screenshots go to tests/ui/out.
 import http from 'node:http';
@@ -42,9 +42,8 @@ if (!fs.existsSync(RENDER)) {
   execFileSync('cargo', ['build', '-q', '--example', 'render'], { cwd: path.join(ROOT, 'src-tauri'), stdio: 'inherit' });
 }
 
-// Fixtures are copied so scenarios may write files freely.
-const FIX = fs.mkdtempSync(path.join(os.tmpdir(), 'dotmd-ui-'));
-fs.cpSync(path.join(HERE, 'fixtures'), FIX, { recursive: true });
+// Each scenario gets a fresh copy of the fixtures, so it may move, write or delete files freely.
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'dotmd-ui-'));
 fs.mkdirSync(OUT, { recursive: true });
 
 const TEXT = /\.(md|markdown|txt)$/i;
@@ -64,7 +63,8 @@ const handlers = {
   pdf_engine: () => findChrome(),
   read_data_url: () => 'data:image/png;base64,',
   write_export: ({ path: p, html }) => (fs.writeFileSync(p, html), null),
-  rename_path: ({ from, to }) => (fs.renameSync(from, to), null),
+  rename_path: ({ from, to }) => { if (fs.existsSync(to)) throw 'exists'; fs.renameSync(from, to); return null; },
+  trash_path: ({ path: p }) => (fs.rmSync(p, { recursive: true }), null),
   create_file: ({ path: p }) => (fs.writeFileSync(p, '', { flag: 'wx' }), null),
   fuzzy_find: ({ root, query }) => {
     const q = query.toLowerCase();
@@ -145,6 +145,8 @@ let failures = 0;
 
 for (const file of files) {
   const name = file.replace(/\.json$/, '');
+  const FIX = path.join(TMP, name);
+  fs.cpSync(path.join(HERE, 'fixtures'), FIX, { recursive: true });
   const sc = JSON.parse(fs.readFileSync(path.join(HERE, 'scenarios', file), 'utf8').replaceAll('$FIX', FIX.replaceAll('\\', '/')));
   pendingOpen = sc.open ? [sc.open] : [];
   const page = await browser.newPage();
@@ -161,6 +163,12 @@ for (const file of files) {
       unregisterCallback: () => {},
       convertFileSrc: (p) => 'http://127.0.0.1:1431/file?path=' + encodeURIComponent(p),
       invoke: async (cmd, args) => {
+        // Native dialogs: answer with window.__dialogAnswer (set by a scenario step), default "cancel".
+        if (cmd === 'plugin:dialog|message') {
+          const b = args?.buttons;
+          const [ok, cancel] = b?.OkCancelCustom ?? (b === 'YesNo' ? ['Yes', 'No'] : ['Ok', 'Cancel']);
+          return window.__dialogAnswer ? ok : cancel;
+        }
         const r = await fetch('http://127.0.0.1:1431/invoke', { method: 'POST', body: JSON.stringify({ cmd, args }) }).then((r) => r.json());
         if (r.error) throw r.error;
         if (cmd === 'search_folder') { for (const ev of r.result) args.onEvent.onmessage(ev); return null; }
@@ -182,6 +190,16 @@ for (const file of files) {
       for (const k of keys.reverse()) await page.keyboard.up(k);
     }
     if (s.click) await page.click(s.click);
+    if (s.drag) {
+      // Real mouse drag between the centers of two elements: [fromSelector, toSelector].
+      const center = (sel) => page.$eval(sel, (el) => { const r = el.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; });
+      const [a, b] = [await center(s.drag[0]), await center(s.drag[1])];
+      await page.mouse.move(...a);
+      await page.mouse.down();
+      await page.mouse.move(a[0] + 10, a[1] + 10, { steps: 3 });
+      await page.mouse.move(...b, { steps: 8 });
+      await page.mouse.up();
+    }
     if (s.type) await page.keyboard.type(s.type, { delay: 5 });
     if (s.eval) await page.evaluate(s.eval).catch((e) => failed.push(`eval threw: ${e.message.split("\n")[0]}`));
     if (s.waitFor) {
@@ -205,5 +223,5 @@ for (const file of files) {
 await browser.close();
 server.close();
 stopVite();
-fs.rmSync(FIX, { recursive: true, force: true });
+fs.rmSync(TMP, { recursive: true, force: true });
 process.exit(failures ? 1 : 0);

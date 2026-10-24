@@ -3,7 +3,8 @@
   import Icon from './Icon.svelte';
   import Self from './TreeNode.svelte';
   import { app, session, settings } from '../state.svelte';
-  import { openPath } from '../actions';
+  import { movePath, openPath } from '../actions';
+  import { pointerDrag } from '../drag';
   import { treeContextMenu } from '../treeMenu';
 
   interface Entry { name: string; path: string; is_dir: boolean }
@@ -53,6 +54,13 @@
   onclick={toggle}
   onkeydown={onKey}
   oncontextmenu={(e) => { e.preventDefault(); treeContextMenu(entry); }}
+  onpointerdown={(e) => pointerDrag(e, {
+    label: entry.name,
+    target: '.tree-row[data-dir], .root-name',
+    onDrop: (el) => movePath(entry.path, el.dataset.path!),
+  })}
+  data-dir={entry.is_dir ? '' : undefined}
+  data-path={entry.path}
   title={entry.path}
 >
   {#if entry.is_dir}
