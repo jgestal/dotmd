@@ -368,6 +368,11 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
       if (p.markdown !== undefined) effects.push(cLang.reconfigure(langExt(p.markdown)));
       view.dispatch({ effects });
     },
+    /** Puts `line` at the top of the viewport without moving the cursor (scroll sync). */
+    scrollToLine(line: number) {
+      const l = view.state.doc.line(Math.min(Math.max(1, line), view.state.doc.lines));
+      view.dispatch({ effects: EditorView.scrollIntoView(l.from, { y: 'start', yMargin: 8 }) });
+    },
     revealLine(line: number) {
       const l = view.state.doc.line(Math.min(Math.max(1, line), view.state.doc.lines));
       view.dispatch({ selection: { anchor: l.from }, effects: EditorView.scrollIntoView(l.from, { y: 'start', yMargin: 40 }) });

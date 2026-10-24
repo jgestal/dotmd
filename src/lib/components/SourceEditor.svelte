@@ -6,7 +6,8 @@
   import { keySound } from '../sound';
   import { insertLink } from '../actions';
 
-  let { onScrollLine }: { onScrollLine?: (line: number) => void } = $props();
+  let { onScrollLine, syncLine = 0 }: { onScrollLine?: (line: number) => void; syncLine?: number } = $props();
+  let quietUntil = 0;
 
   let host: HTMLElement;
   let ed: ReturnType<typeof createSource> | null = null;
@@ -24,7 +25,7 @@
       onChange: (text) => (app.content = text),
       onSelection: (text) => (app.selection = text),
       onKey: (key, col) => soundActive() && keySound(key, col),
-      onScroll: (line) => onScrollLine?.(line),
+      onScroll: (line) => performance.now() > quietUntil && onScrollLine?.(line),
     });
     const view = ed.view;
     setEditorApi({
@@ -59,6 +60,11 @@
   $effect(() => {
     const p = { markdown: md() };
     untrack(() => ed?.reconfigure(p));
+  });
+  // Follow the preview while scrolling it in split mode.
+  $effect(() => {
+    const line = syncLine;
+    if (line > 0) untrack(() => { quietUntil = performance.now() + 200; ed?.scrollToLine(line); });
   });
   $effect(() => {
     const r = app.reveal;

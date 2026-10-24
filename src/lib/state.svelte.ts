@@ -27,6 +27,8 @@ export interface Settings {
   readingWpm: number;
   sidebarSide: 'left' | 'right';
   sidebarWidth: number;
+  /** Width of the source pane in split mode (0.2–0.8). */
+  splitRatio: number;
   showAllFiles: boolean;
   lineNumbers: boolean;
   lineWrap: boolean;
@@ -83,6 +85,7 @@ export const DEFAULT_SETTINGS: Settings = {
   readingWpm: 230,
   sidebarSide: 'left',
   sidebarWidth: 260,
+  splitRatio: 0.5,
   showAllFiles: false,
   lineNumbers: false,
   lineWrap: true,

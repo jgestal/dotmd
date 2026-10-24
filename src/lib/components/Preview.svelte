@@ -7,7 +7,7 @@
   import { openPath, toggleTaskLine } from '../actions';
   import { t } from '../i18n';
 
-  let { syncLine = 0 }: { syncLine?: number } = $props();
+  let { syncLine = 0, onScrollLine }: { syncLine?: number; onScrollLine?: (line: number) => void } = $props();
 
   let scroller: HTMLElement;
   let body: HTMLElement;
@@ -42,17 +42,42 @@
     timer = setTimeout(() => render(md, path), lastPath === path ? delay : 0);
   });
 
-  /** Scrolls so the element generated from `line` sits at the top (split-mode sync, outline clicks). */
+  /** Top-level blocks with their source line range and position inside the scroller. */
+  function blocks() {
+    const base = scroller.getBoundingClientRect().top - scroller.scrollTop;
+    return [...body.querySelectorAll<HTMLElement>(':scope > [data-sourcepos]')].map((el) => {
+      const m = el.dataset.sourcepos!.match(/^(\d+):\d+-(\d+):/);
+      const r = el.getBoundingClientRect();
+      return { start: Number(m?.[1] ?? 0), end: Number(m?.[2] ?? m?.[1] ?? 0), top: r.top - base, height: r.height };
+    });
+  }
+
+  /** Ignore our own scroll events right after a programmatic scroll, so the two panes don't ping-pong. */
+  let quietUntil = 0;
+
+  /** Scrolls so source `line` sits at the top, interpolating inside long blocks (split sync, outline clicks). */
   function scrollToLine(line: number, smooth = false) {
     if (!body || line < 1) return;
-    let best: HTMLElement | null = null;
-    for (const el of body.querySelectorAll<HTMLElement>(':scope > [data-sourcepos]')) {
-      const start = parseInt(el.dataset.sourcepos!, 10);
-      if (start <= line) best = el;
-      else break;
+    let top = 0;
+    for (const b of blocks()) {
+      if (b.start > line) break;
+      const span = Math.max(1, b.end - b.start + 1);
+      top = b.top + Math.min(1, (line - b.start) / span) * b.height;
     }
-    const top = best ? best.offsetTop - 24 : 0;
-    scroller.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' });
+    quietUntil = performance.now() + 200;
+    scroller.scrollTo({ top: Math.max(0, top - 24), behavior: smooth ? 'smooth' : 'auto' });
+  }
+
+  function onScroll() {
+    if (!onScrollLine || performance.now() < quietUntil || !body) return;
+    const y = scroller.scrollTop + 24;
+    let line = 1;
+    for (const b of blocks()) {
+      if (b.top > y) break;
+      const span = Math.max(1, b.end - b.start + 1);
+      line = b.start + Math.floor(Math.min(1, (y - b.top) / Math.max(1, b.height)) * span);
+    }
+    onScrollLine(line);
   }
 
   $effect(() => {
@@ -96,7 +121,7 @@
   }
 </script>
 
-<div class="preview-scroll" bind:this={scroller}>
+<div class="preview-scroll" bind:this={scroller} onscroll={onScroll}>
   <article
     class="markdown-body preview"
     class:justify={settings.justify}

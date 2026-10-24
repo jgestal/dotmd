@@ -28,7 +28,9 @@
   forwardConsole();
   startAppearance();
 
+  /** Split mode: line at the top of the editor (→ preview) and of the preview (→ editor). */
   let syncLine = $state(0);
+  let previewLine = $state(0);
   const plain = $derived(isPlainText(app.path));
   const editing = $derived(app.mode !== 'preview');
 
@@ -38,6 +40,19 @@
     ['split', 'mode.split', 'mode.splitTip', 'split'],
     ['visual', 'mode.visual', 'mode.visualTip', 'visual'],
   ];
+
+  let contentEl = $state<HTMLElement>();
+
+  /** Drag the split divider; double-click resets to 50 %. */
+  function startSplitDrag(e: PointerEvent) {
+    const rect = contentEl!.getBoundingClientRect();
+    const move = (ev: PointerEvent) => (settings.splitRatio = Math.min(0.8, Math.max(0.2, (ev.clientX - rect.left) / rect.width)));
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); document.body.classList.remove('resizing'); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    document.body.classList.add('resizing');
+    e.preventDefault();
+  }
 
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape' && app.zen && !app.settingsOpen && !app.exportOpen && !app.paletteOpen) { toggleZen(); return; }
@@ -130,12 +145,13 @@
     <main class="main">
       {#if app.docOpen}
         {#if editing && settings.showToolbar && !app.zen}<Toolbar />{/if}
-        <div class="content mode-{app.mode}">
+        <div class="content mode-{app.mode}" bind:this={contentEl} style:--split="{settings.splitRatio * 100}%">
           {#if app.mode === 'source'}
             <SourceEditor />
           {:else if app.mode === 'split'}
-            <div class="pane"><SourceEditor onScrollLine={(l) => (syncLine = l)} /></div>
-            <div class="pane preview-pane"><Preview {syncLine} /></div>
+            <div class="pane"><SourceEditor onScrollLine={(l) => (syncLine = l)} syncLine={previewLine} /></div>
+            <div class="divider" role="separator" aria-orientation="vertical" onpointerdown={startSplitDrag} ondblclick={() => (settings.splitRatio = 0.5)}></div>
+            <div class="pane preview-pane"><Preview {syncLine} onScrollLine={(l) => (previewLine = l)} /></div>
           {:else if app.mode === 'visual'}
             {#await import('$lib/components/VisualEditor.svelte') then { default: VisualEditor }}
               <VisualEditor />
@@ -193,9 +209,11 @@
   .body { flex: 1; display: flex; min-height: 0; }
   .main { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
   .content { flex: 1; min-height: 0; position: relative; }
-  .content.mode-split { display: grid; grid-template-columns: 1fr 1fr; }
+  .content.mode-split { display: grid; grid-template-columns: var(--split, 50%) 1px 1fr; }
   .pane { min-width: 0; min-height: 0; overflow: hidden; }
-  .preview-pane { border-left: 1px solid var(--border); }
+  .divider { background: var(--border); position: relative; cursor: col-resize; }
+  .divider::after { content: ''; position: absolute; inset: 0 -4px; }
+  .divider:hover { background: var(--accent); }
   .preview-pane :global(.preview) { padding-left: 28px; padding-right: 28px; }
 
   .zen .main { background: var(--bg); }

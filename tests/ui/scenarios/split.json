@@ -1,0 +1,33 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    {
+      "eval": "{ document.querySelectorAll('.mode')[2].click() }",
+      "waitFor": "document.querySelector('.preview .mermaid-diagram svg') && document.querySelector('.cm-scroller')",
+      "wait": 800
+    },
+    {
+      "eval": "{ const s = document.querySelector('.preview-scroll'); s.scrollTop = s.scrollHeight }",
+      "wait": 700
+    },
+    {
+      "assert": "document.querySelector('.cm-scroller').scrollTop > 200",
+      "shot": "preview-drives-editor"
+    },
+    {
+      "eval": "{ document.querySelector('.cm-scroller').scrollTop = 0 }",
+      "wait": 700
+    },
+    {
+      "assert": "document.querySelector('.preview-scroll').scrollTop < 120"
+    },
+    {
+      "eval": "{ const d = document.querySelector('.divider'); const r = d.getBoundingClientRect(); d.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: r.left, clientY: 300 })); window.dispatchEvent(new PointerEvent('pointermove', { clientX: r.left - 200, clientY: 300 })); window.dispatchEvent(new PointerEvent('pointerup', {})) }",
+      "wait": 400
+    },
+    {
+      "assert": "import('/src/lib/state.svelte.ts').then(m => m.settings.splitRatio < 0.45)",
+      "shot": "divider"
+    }
+  ]
+}
