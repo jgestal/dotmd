@@ -177,6 +177,8 @@ export const app = $state({
   quickOpen: false,
   /** Number of sheets in page view (0 when off). */
   pageCount: 0,
+  /** Duration of the last pagination (diagnostics and performance tests). */
+  paginateMs: 0,
   zen: false,
   /** Zen entered through "Focus writing": forces line focus and typewriter scrolling. */
   focusWriting: false,

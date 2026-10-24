@@ -1,0 +1,30 @@
+{
+  "open": "$FIX/long.md",
+  "settings": {
+    "theme": "modern"
+  },
+  "actions": [
+    {
+      "waitFor": "document.querySelector('.markdown-body h1')"
+    },
+    {
+      "eval": "{ (async () => { const { invoke } = await import('/node_modules/@tauri-apps/api/core.js'); const chunk = '## Section\\n\\n' + 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. '.repeat(6) + '\\n\\n- one\\n- two\\n\\n'; const text = '# Big\\n\\n' + chunk.repeat(600); await invoke('write_text', { path: window.__FIX + '/big.md', content: text }); const a = await import('/src/lib/actions.ts'); await a.openPath(window.__FIX + '/big.md'); window.__opened = true; })() }",
+      "waitFor": "window.__opened && document.querySelector('.topbar .name')?.textContent === 'big.md' && document.querySelectorAll('.preview > h2').length > 500",
+      "timeout": 30000
+    },
+    {
+      "eval": "{ window.__t0 = performance.now(); import('/src/lib/state.svelte.ts').then(m => { m.settings.pageView = true; }); }",
+      "waitFor": "document.querySelectorAll('.page').length > 100 && (window.__t1 = window.__t1 || performance.now())",
+      "timeout": 60000
+    },
+    {
+      "assert": "(() => { const ms = Math.round(window.__t1 - window.__t0); console.log('PAGINATE_MS', ms, document.querySelectorAll('.page').length); return ms < 2500 || ms; })()"
+    },
+    {
+      "assert": "[...document.querySelectorAll('.page-inner')].every(p => p.children.length === 1 || p.scrollHeight <= p.clientHeight + 1)"
+    },
+    {
+      "assert": "import('/src/lib/state.svelte.ts').then(m => { console.log('PAGINATE_ONLY_MS', Math.round(m.app.paginateMs), m.app.pageCount); return m.app.paginateMs < 250 || m.app.paginateMs; })"
+    }
+  ]
+}

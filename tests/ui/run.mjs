@@ -199,6 +199,7 @@ async function runScenario(file, name) {
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => process.env.UI_DEBUG && m.type() === 'log' && console.log('    [page]', m.text()));
   page.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && errors.push(m.text()));
   await page.evaluateOnNewDocument((fix) => { window.__FIX = fix; }, FIX.replaceAll('\\', '/'));
   await page.evaluateOnNewDocument((settings) => {

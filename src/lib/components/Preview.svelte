@@ -33,7 +33,9 @@
     const keep = scroller.scrollTop;
     if (paged) {
       body.replaceChildren();
+      const t0 = performance.now();
       app.pageCount = paginate(body, [...next.childNodes]);
+      app.paginateMs = performance.now() - t0;
       fitPages();
     } else {
       app.pageCount = 0;
@@ -77,7 +79,8 @@
     paged; paper; settings.pdfMargin; // re-layout when page settings change
     currentTheme(); // re-render diagrams when the theme changes
     clearTimeout(timer);
-    const delay = md.length > 200_000 ? 300 : 90;
+    // Long documents re-render less often while typing (page view re-lays out every sheet).
+    const delay = md.length > 200_000 ? 300 : paged && md.length > 30_000 ? 350 : 90;
     timer = setTimeout(() => render(md, path), lastPath === path ? delay : 0);
   });
 

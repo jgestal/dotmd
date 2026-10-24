@@ -21,37 +21,76 @@ function newPage(container: HTMLElement): HTMLElement {
   return inner;
 }
 
+interface Box { node: Node; top: number; bottom: number; heading: boolean; brk: boolean }
+
 /**
- * Moves `nodes` into page sheets appended to `container` (which must be in the DOM so heights can
- * be measured). A block that does not fit starts the next page; a heading is never left alone at the
- * bottom of a page; `.page-break` elements force a new page. Blocks taller than a page keep their
- * own page and simply overflow it. Returns the number of pages.
+ * Assigns blocks to pages from their measured positions (pure arithmetic, so it is unit-testable).
+ * A block that does not fit starts the next page; a heading is never left alone at the bottom of a
+ * page; page breaks force a new page; a block taller than a page gets a page of its own.
  */
-export function paginate(container: HTMLElement, nodes: Node[]): number {
-  let inner = newPage(container);
-  let pages = 1;
-  const next = () => {
-    inner = newPage(container);
-    pages++;
-  };
-  for (const node of nodes) {
-    if (node.nodeType === Node.TEXT_NODE && !node.textContent?.trim()) continue;
-    if (node instanceof HTMLElement && node.classList.contains('page-break')) {
-      if (inner.childNodes.length) next();
+export function assignPages(boxes: Omit<Box, 'node'>[], pageHeight: number): number[] {
+  const page: number[] = [];
+  let current = 0;
+  let start = -1; // top of the first block on the current page
+  let onlyHeadings = true; // the current page holds nothing but headings so far
+  for (let i = 0; i < boxes.length; i++) {
+    const b = boxes[i];
+    if (b.brk) {
+      if (start >= 0) { current++; start = -1; onlyHeadings = true; }
+      page.push(-1);
       continue;
     }
-    inner.appendChild(node);
-    if (inner.scrollHeight <= inner.clientHeight + 1 || inner.childNodes.length === 1) continue;
-    // Overflow: move the block (and a heading right above it) to a fresh page.
-    inner.removeChild(node);
-    const prev = inner.lastElementChild;
-    const carry = prev && HEADING.test(prev.tagName) && inner.childNodes.length > 1 ? prev : null;
-    carry?.remove();
-    next();
-    if (carry) inner.appendChild(carry);
-    inner.appendChild(node);
+    if (start < 0) start = b.top;
+    // A block taller than any page stays under the heading that introduces it.
+    const tallAfterHeading = onlyHeadings && b.bottom - b.top > pageHeight;
+    if (b.bottom - start > pageHeight + 1 && b.top > start && !tallAfterHeading) {
+      onlyHeadings = true;
+      current++;
+      start = b.top;
+      // Keep a heading with the block it introduces.
+      const prev = i - 1;
+      if (prev >= 0 && boxes[prev].heading && page[prev] === current - 1 && prev > 0 && page[prev - 1] === current - 1) {
+        page[prev] = current;
+        start = boxes[prev].top;
+      }
+    }
+    page.push(current);
+    if (!b.heading) onlyHeadings = false;
   }
-  const sheets = container.querySelectorAll<HTMLElement>(':scope > .page');
-  sheets.forEach((p, i) => p.setAttribute('data-page', `${i + 1} / ${pages}`));
-  return pages;
+  return page;
+}
+
+/**
+ * Moves `nodes` into page sheets appended to `container` (which must be in the DOM). All blocks are
+ * measured in one layout pass, as print engines do, then distributed without further reflows.
+ * Returns the number of pages.
+ */
+export function paginate(container: HTMLElement, nodes: Node[]): number {
+  const blocks = nodes.filter((n) => n.nodeType === Node.ELEMENT_NODE || n.textContent?.trim());
+  // One measuring sheet with the page's width and styles but no height limit.
+  const measure = newPage(container);
+  const sheet = measure.parentElement!;
+  sheet.classList.add('measuring');
+  const pageHeight = measure.clientHeight;
+  sheet.style.height = 'auto';
+  measure.style.height = 'auto';
+  for (const n of blocks) measure.appendChild(n);
+  const boxes = blocks.map((n) => {
+    if (!(n instanceof HTMLElement)) return { top: 0, bottom: 0, heading: false, brk: false };
+    return { top: n.offsetTop, bottom: n.offsetTop + n.offsetHeight, heading: HEADING.test(n.tagName), brk: n.classList.contains('page-break') };
+  });
+  const assignment = assignPages(boxes, pageHeight);
+  sheet.remove();
+
+  const inners: HTMLElement[] = [];
+  blocks.forEach((n, i) => {
+    const p = assignment[i];
+    if (p < 0) return; // page breaks are consumed
+    while (inners.length <= p) inners.push(newPage(container));
+    inners[p].appendChild(n);
+  });
+  if (!inners.length) inners.push(newPage(container));
+  const total = inners.length;
+  inners.forEach((inner, i) => inner.parentElement!.setAttribute('data-page', `${i + 1} / ${total}`));
+  return total;
 }
