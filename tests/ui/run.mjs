@@ -7,7 +7,7 @@
 //
 // Scenario steps: eval, click, keys, chord (["Mod","Shift","KeyP"]), type, waitFor (JS condition), wait (ms), assert (must be true), shot.
 //
-// Env: CHROME_PATH (browser binary), UI_PORT (Vite port, default 1420). Screenshots go to tests/ui/out.
+// Env: CHROME_PATH (browser binary), UI_PORT (port of a fresh Vite server, default 1425). Screenshots go to tests/ui/out.
 import http from 'node:http';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -19,7 +19,7 @@ import puppeteer from 'puppeteer-core';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '../..');
 const OUT = path.join(HERE, 'out');
-const PORT = Number(process.env.UI_PORT ?? 1420);
+const PORT = Number(process.env.UI_PORT ?? 1425);
 const BRIDGE = 1431;
 const EXE = process.platform === 'win32' ? '.exe' : '';
 const RENDER = path.join(ROOT, 'src-tauri/target/debug/examples', 'render' + EXE);
@@ -95,11 +95,14 @@ await new Promise((r) => server.listen(BRIDGE, r));
 async function viteUp() {
   try { return (await fetch(`http://127.0.0.1:${PORT}/`)).ok; } catch { return false; }
 }
-let vite = null;
-if (!(await viteUp())) {
-  vite = spawn('npx', ['vite', 'dev', '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore', shell: process.platform === 'win32' });
-  for (let i = 0; i < 120 && !(await viteUp()); i++) await new Promise((r) => setTimeout(r, 500));
-}
+// Always a fresh Vite: a long-running dev server serves HMR-stamped module URLs, which would give
+// scenarios that import app modules a second, empty copy of the state.
+if (await viteUp()) throw new Error(`port ${PORT} is busy; stop that server or set UI_PORT`);
+const viteBin = path.join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js');
+const vite = spawn(process.execPath, [viteBin, 'dev', '--port', String(PORT), '--strictPort'], { cwd: ROOT, stdio: 'ignore' });
+const stopVite = () => { try { vite.kill(); } catch {} };
+process.on('exit', stopVite);
+for (let i = 0; i < 120 && !(await viteUp()); i++) await new Promise((r) => setTimeout(r, 500));
 
 const browser = await puppeteer.launch({
   executablePath: findChrome(),
@@ -173,6 +176,6 @@ for (const file of files) {
 
 await browser.close();
 server.close();
-vite?.kill();
+stopVite();
 fs.rmSync(FIX, { recursive: true, force: true });
 process.exit(failures ? 1 : 0);
