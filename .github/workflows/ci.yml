@@ -14,6 +14,7 @@ jobs:
   test:
     name: Checks and tests (Linux)
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,6 +36,7 @@ jobs:
         working-directory: src-tauri
         run: cargo test
       - name: UI tests (headless Chrome)
+        timeout-minutes: 20
         env:
           CHROME_PATH: /usr/bin/google-chrome
         run: npm run test:ui

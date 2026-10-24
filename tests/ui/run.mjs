@@ -135,20 +135,34 @@ const browser = await puppeteer.launch({
   executablePath: findChrome(),
   headless: true,
   args: ['--no-first-run', '--window-size=1280,860', '--autoplay-policy=no-user-gesture-required', '--no-sandbox'],
+  protocolTimeout: 60000,
   defaultViewport: { width: 1280, height: 860, deviceScaleFactor: 1 },
 });
 
-// Warm-up: a fresh Vite optimizes dependencies on first request, which can take longer than a
-// scenario's waitFor on slow CI machines. Load the heavy, lazily imported modules once up front.
-{
+// Warm-up: a fresh Vite discovers and optimizes dependencies on first use and then reloads the
+// page, which would break a running scenario. Load every lazily imported module (visual editor,
+// Mermaid, all CodeMirror languages) up front and repeat until a pass completes without a reload.
+const withTimeout = (p, ms, what) =>
+  Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(`${what} timed out`)), ms))]);
+for (let attempt = 1; attempt <= 4; attempt++) {
+  const t0 = Date.now();
   const page = await browser.newPage();
-  await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle0', timeout: 120000 }).catch(() => {});
-  await page.evaluate(() => Promise.all([
-    import('/src/lib/components/VisualEditor.svelte'),
-    import('/src/lib/editor/visual.ts'),
-    import('mermaid').catch(() => {}),
-  ])).catch((e) => console.log('warm-up:', e.message));
-  await page.close();
+  const ok = await withTimeout((async () => {
+    await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'load', timeout: 60000 });
+    await page.evaluate(async () => {
+      await Promise.all([import('/src/lib/components/VisualEditor.svelte'), import('/src/lib/editor/visual.ts')]);
+      const [{ mermaidSvg }, { THEMES }] = await Promise.all([import('/src/lib/render.ts'), import('/src/lib/themes.ts')]);
+      await mermaidSvg('flowchart LR\n  A --> B', THEMES[0]);
+      const ld = await import('/node_modules/@codemirror/language-data/dist/index.js');
+      await Promise.all(ld.languages.map((l) => l.load().catch(() => {})));
+    });
+    return true;
+  })(), 90000, 'warm-up').catch((e) => (console.log(`warm-up ${attempt}: ${e.message.split('\n')[0]}`), false));
+  // Closing a page that Vite is reloading can hang in puppeteer: never wait long for it.
+  await withTimeout(page.close(), 5000, 'close').catch(() => {});
+  if (process.env.UI_DEBUG) console.log(`warm-up ${attempt} ${ok ? 'ok' : 'retry'} in ${Date.now() - t0} ms`);
+  if (ok) break;
+  await new Promise((r) => setTimeout(r, 3000));
 }
 
 const wanted = process.argv.slice(2);
@@ -156,13 +170,33 @@ const files = fs.readdirSync(path.join(HERE, 'scenarios')).filter((f) => f.endsW
   .filter((f) => !wanted.length || wanted.includes(f.replace(/\.json$/, '')));
 let failures = 0;
 
+let currentPage = null;
+
+/** Fails a scenario that hangs instead of blocking the whole run (e.g. Vite reloading mid-test). */
+const SCENARIO_TIMEOUT = Number(process.env.UI_SCENARIO_TIMEOUT ?? 120000);
+
 for (const file of files) {
   const name = file.replace(/\.json$/, '');
+  let timer;
+  const result = await Promise.race([
+    runScenario(file, name),
+    new Promise((res) => (timer = setTimeout(() => res([`scenario timed out after ${SCENARIO_TIMEOUT / 1000}s`]), SCENARIO_TIMEOUT))),
+  ]);
+  clearTimeout(timer);
+  if (currentPage && !currentPage.isClosed()) await withTimeout(currentPage.close(), 5000, 'close').catch(() => {}); // a timed-out scenario
+  console.log(`${result.length ? '✗' : '✓'} ${name}`);
+  for (const f of result) console.log('    ' + f);
+  failures += result.length ? 1 : 0;
+}
+
+async function runScenario(file, name) {
   const FIX = path.join(TMP, name);
   fs.cpSync(path.join(HERE, 'fixtures'), FIX, { recursive: true });
   const sc = JSON.parse(fs.readFileSync(path.join(HERE, 'scenarios', file), 'utf8').replaceAll('$FIX', FIX.replaceAll('\\', '/')));
   pendingOpen = sc.open ? [sc.open] : [];
   const page = await browser.newPage();
+  currentPage = page;
+  page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && errors.push(m.text()));
@@ -228,13 +262,11 @@ for (const file of files) {
     if (s.shot) await page.screenshot({ path: path.join(OUT, `${name}-${s.shot}.png`) });
   }
   failed.push(...errors.map((e) => `page error: ${e}`));
-  console.log(`${failed.length ? '✗' : '✓'} ${name}`);
-  for (const f of failed) console.log('    ' + f);
-  failures += failed.length ? 1 : 0;
-  await page.close();
+  await withTimeout(page.close(), 5000, 'close').catch(() => {});
+  return failed;
 }
 
-await browser.close();
+await withTimeout(browser.close(), 10000, 'browser close').catch(() => browser.process()?.kill('SIGKILL'));
 server.close();
 stopVite();
 fs.rmSync(TMP, { recursive: true, force: true });
