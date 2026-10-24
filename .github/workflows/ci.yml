@@ -32,6 +32,8 @@ jobs:
       - run: npm ci
       - name: Type-check frontend
         run: npm run check
+      - name: Unit tests (Vitest)
+        run: npm test
       - name: Rust tests
         working-directory: src-tauri
         run: cargo test

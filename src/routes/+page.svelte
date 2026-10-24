@@ -67,6 +67,7 @@
   // Native menu, rebuilt when the UI language changes.
   $effect(() => {
     settings.lang;
+    session.recent.join('\n'); // rebuild "Open Recent"
     installMenu().catch((err) => console.warn('menu', err));
   });
 

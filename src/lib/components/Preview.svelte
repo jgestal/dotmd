@@ -108,7 +108,12 @@
   }
 
   function onScroll() {
-    if (!onScrollLine || performance.now() < quietUntil || !body) return;
+    if (!body) return;
+    if (!onScrollLine) {
+      if (app.mode === 'preview') app.viewLine = topLine();
+      return;
+    }
+    if (performance.now() < quietUntil) return;
     const y = scroller.scrollTop + 24;
     let line = 1;
     for (const b of blocks()) {
@@ -117,6 +122,17 @@
       line = b.start + Math.floor(Math.min(1, (y - b.top) / Math.max(1, b.height)) * span);
     }
     onScrollLine(line);
+  }
+
+  /** Source line at the top of the viewport (outline highlight in Read mode). */
+  function topLine(): number {
+    const y = scroller.scrollTop + 24;
+    let line = 1;
+    for (const b of blocks()) {
+      if (b.top > y) break;
+      line = b.start;
+    }
+    return line;
   }
 
   $effect(() => {

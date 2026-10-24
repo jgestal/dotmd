@@ -13,10 +13,12 @@
     "tauri": "tauri",
     "test:ui": "node tests/ui/run.mjs",
     "test:rust": "cd src-tauri && cargo test",
-    "screenshots": "node tests/ui/run.mjs screenshots && for n in welcome read split pages tractor typewriter csv focus-crt settings; do cp tests/ui/out/screenshots-$n.png docs/screenshots/$n.png; done"
+    "screenshots": "node tests/ui/run.mjs screenshots && for n in welcome read split pages tractor typewriter csv focus-crt settings; do cp tests/ui/out/screenshots-$n.png docs/screenshots/$n.png; done",
+    "test": "vitest run"
   },
   "license": "MIT",
   "dependencies": {
+    "@codemirror/autocomplete": "^6.20.4",
     "@codemirror/commands": "^6.11.1",
     "@codemirror/lang-markdown": "^6.5.2",
     "@codemirror/lang-yaml": "^6.1.3",
@@ -44,17 +46,22 @@
     "dompurify": "^3.4.17",
     "highlight.js": "^11.12.0",
     "katex": "^0.19.1",
-    "mermaid": "^12.2.0"
+    "mermaid": "^12.2.0",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2"
   },
   "devDependencies": {
     "@sveltejs/adapter-static": "^3.0.10",
     "@sveltejs/kit": "^2.65.1",
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@tauri-apps/cli": "^2",
+    "@types/turndown": "^5.0.6",
+    "jsdom": "^29.1.1",
     "puppeteer-core": "^25.16.0",
     "svelte": "^5.56.3",
     "svelte-check": "^4.6.0",
     "typescript": "~6.0.3",
-    "vite": "^8.0.16"
+    "vite": "^8.0.16",
+    "vitest": "^4.1.12"
   }
 }

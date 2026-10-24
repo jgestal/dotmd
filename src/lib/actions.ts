@@ -343,6 +343,33 @@ export async function toggleFocusWriting() {
   requestAnimationFrame(() => getEditorApi()?.focus());
 }
 
+/** Copies the selection (or the whole document) as formatted text, for Gmail, Docs, Word… */
+export async function copyRichText() {
+  const { richHtml } = await import('./export');
+  const { currentTheme } = await import('./appearance.svelte');
+  const { THEMES } = await import('./themes');
+  const md = app.selection || app.content;
+  // Light colours always: the paste target has a white background.
+  const html = await richHtml(md, app.path, currentTheme().dark ? THEMES[0] : currentTheme());
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ 'text/html': new Blob([html], { type: 'text/html' }), 'text/plain': new Blob([md], { type: 'text/plain' }) }),
+    ]);
+    toast(t('toast.copiedRich'), 1500);
+  } catch (e) {
+    toast(t('toast.error', { msg: String(e) }));
+  }
+}
+
+/** Inserts a link (or the image) to another file at the cursor: dragging a tree row into the editor. */
+export function insertFileLink(path: string) {
+  const api = getEditorApi();
+  if (!api) return;
+  const src = app.path ? relative(dirname(app.path), path) : path;
+  if (isImagePath(path)) api.exec({ type: 'image', src, alt: stem(path) });
+  else api.exec({ type: 'link', url: encodeURI(src), text: stem(path) });
+}
+
 export async function insertLink() {
   const sel = app.selection;
   const v = await askFields(t('link.title'), [

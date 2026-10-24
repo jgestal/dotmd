@@ -40,6 +40,13 @@
     return out;
   });
   const minLevel = $derived(Math.min(...headings.map((h) => h.level), 6));
+  /** The heading of the section being read or edited. */
+  const activeHeading = $derived(headings.findLastIndex((h) => h.line <= app.viewLine));
+  let outlineEl = $state<HTMLElement>();
+  $effect(() => {
+    activeHeading;
+    outlineEl?.querySelector('.outline-item.active')?.scrollIntoView({ block: 'nearest' });
+  });
 
   // Resizable sidebar: drag the edge.
   function startResize(e: PointerEvent) {
@@ -84,9 +91,9 @@
   {:else if app.sidebarTab === 'search'}
     <SearchPanel />
   {:else}
-    <nav class="outline">
-      {#each headings as h}
-        <button class="outline-item" style="padding-left:{8 + (h.level - minLevel) * 14}px" class:h1={h.level === minLevel}
+    <nav class="outline" bind:this={outlineEl}>
+      {#each headings as h, i}
+        <button class="outline-item" style="padding-left:{8 + (h.level - minLevel) * 14}px" class:h1={h.level === minLevel} class:active={i === activeHeading}
           onclick={() => (app.reveal = { line: h.line, n: app.reveal.n + 1 })}>{h.text}</button>
       {:else}
         <p class="empty">{t('sidebar.noHeadings')}</p>
@@ -122,6 +129,7 @@
     font: 13px var(--font-ui); padding: 4px 8px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default;
   }
   .outline-item.h1 { color: var(--fg); font-weight: 600; }
+  .outline-item.active { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
   .outline-item:hover { background: var(--bg-hover); color: var(--fg); }
   .empty { padding: 24px 14px; color: var(--fg-muted); font-size: 13px; text-align: center; }
   .resizer { position: absolute; top: 0; bottom: 0; right: -3px; width: 6px; cursor: col-resize; z-index: 5; }

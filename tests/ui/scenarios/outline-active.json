@@ -1,0 +1,11 @@
+{
+  "open": "$FIX/long.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1')" },
+    { "eval": "{ [...document.querySelectorAll('.sidebar .tab')][1].click() }", "waitFor": "document.querySelector('.outline-item')" },
+    { "eval": "{ const s = document.querySelector('.preview-scroll'); s.scrollTop = s.scrollHeight; s.dispatchEvent(new Event('scroll')) }", "wait": 500 },
+    { "assert": "document.querySelector('.outline-item.active')?.textContent.trim() === 'Chapter 4'", "shot": "outline" },
+    { "eval": "{ const s = document.querySelector('.preview-scroll'); s.scrollTop = 0; s.dispatchEvent(new Event('scroll')) }", "wait": 500 },
+    { "assert": "document.querySelector('.outline-item.active')?.textContent.trim() === 'A long document'" }
+  ]
+}

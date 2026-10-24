@@ -27,10 +27,11 @@
       typewriter: typewriterActive(),
       onChange: (text) => (app.content = text),
       onSelection: (text) => (app.selection = text),
-      onCursor: (line, col) => (app.cursor = { line, col }),
+      onCursor: (line, col) => { app.cursor = { line, col }; app.viewLine = line; },
       onKey: (key, col) => soundActive() && keySound(key, col),
       onScroll: (line) => performance.now() > quietUntil && onScrollLine?.(line),
       onImages: (files) => void insertImageFiles(files),
+      markdownPaste: () => docKind(app.path) === 'markdown',
     });
     const view = ed.view;
     setEditorApi({

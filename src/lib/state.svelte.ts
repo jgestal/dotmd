@@ -183,6 +183,8 @@ export const app = $state({
   selection: '',
   /** Caret position in the source editor (1-based), for the status bar. */
   cursor: { line: 1, col: 1 },
+  /** Source line at the top of the preview or under the caret, for the outline highlight. */
+  viewLine: 1,
   settingsOpen: false,
   paletteOpen: false,
   exportOpen: false,

@@ -124,6 +124,32 @@ async function renderFragment(md: string, path: string | null, theme: Theme): Pr
   return host;
 }
 
+/** Inline styles for rich-text pastes: mail clients and Google Docs ignore <style> blocks. */
+const RICH_STYLE: Record<string, string> = {
+  table: 'border-collapse:collapse;margin:8px 0',
+  th: 'border:1px solid #d0d7de;padding:4px 10px;background:#f6f8fa;text-align:left',
+  td: 'border:1px solid #d0d7de;padding:4px 10px',
+  pre: 'background:#f6f8fa;padding:10px 12px;border-radius:6px;font-family:Menlo,Consolas,monospace;font-size:13px;white-space:pre-wrap',
+  code: 'font-family:Menlo,Consolas,monospace;font-size:90%;background:#f3f3f6;padding:1px 4px;border-radius:4px',
+  blockquote: 'margin:8px 0;padding:2px 12px;border-left:4px solid #d0d7de;color:#57606a',
+  mark: 'background:#fff3a3',
+  img: 'max-width:100%',
+};
+
+/** The document (or a Markdown snippet) as self-contained HTML with inline styles, for the clipboard. */
+export async function richHtml(md: string, path: string | null, theme: Theme): Promise<string> {
+  const frag = await renderFragment(md, path, theme);
+  frag.querySelectorAll('a.anchor, .copy-code, .front-matter').forEach((el) => el.remove());
+  for (const [tag, style] of Object.entries(RICH_STYLE)) {
+    frag.querySelectorAll<HTMLElement>(tag).forEach((el) => {
+      if (tag === 'code' && el.parentElement?.tagName === 'PRE') return;
+      el.setAttribute('style', style);
+    });
+  }
+  frag.querySelectorAll('[class]').forEach((el) => el.removeAttribute('class'));
+  return `<div style="font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;color:#1f2328">${frag.innerHTML}</div>`;
+}
+
 export async function buildDocument(docs: { md: string; path: string | null }[], o: ExportOptions, title: string): Promise<string> {
   const parts: string[] = [];
   for (let i = 0; i < docs.length; i++) {

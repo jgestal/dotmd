@@ -179,7 +179,7 @@ for (const file of files) {
   const name = file.replace(/\.json$/, '');
   let timer;
   const result = await Promise.race([
-    runScenario(file, name),
+    runScenario(file, name).catch((e) => [`scenario crashed: ${e.message ?? e}`]),
     new Promise((res) => (timer = setTimeout(() => res([`scenario timed out after ${SCENARIO_TIMEOUT / 1000}s`]), SCENARIO_TIMEOUT))),
   ]);
   clearTimeout(timer);

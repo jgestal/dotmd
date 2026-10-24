@@ -8,7 +8,7 @@ import { THEMES } from './themes';
 import type { FormatAction } from './snippets';
 import {
   newDoc, openFileDialog, openFolder, saveDoc, toggleZen, toggleTypewriterMode, insertLink, insertImage,
-  closeTab, cycleTab, goBack, goForward, canGoBack, canGoForward, toggleFocusWriting,
+  closeTab, cycleTab, goBack, goForward, canGoBack, canGoForward, toggleFocusWriting, copyRichText,
 } from './actions';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { exportRequest } from './exportRequest.svelte';
@@ -67,6 +67,9 @@ function base(): Command[] {
     { id: 'file.exportPdf', label: L('cmd.exportPdf'), menu: 'file', enabled: hasDoc, run: () => exportRequest.quick(app.path, 'pdf') },
     { id: 'file.exportHtml', label: L('cmd.exportHtml'), menu: 'file', enabled: hasDoc, run: () => exportRequest.quick(app.path, 'html') },
     { id: 'file.print', label: L('cmd.print'), menu: 'file', enabled: hasDoc, run: () => window.print() },
+
+    // Edit
+    { id: 'edit.copyRich', label: L('cmd.copyRich'), shortcut: 'CmdOrCtrl+Alt+C', menu: 'edit', enabled: hasDoc, run: copyRichText },
 
     // Format
     { id: 'fmt.bold', label: L('tb.bold'), shortcut: 'CmdOrCtrl+B', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'bold' }) },

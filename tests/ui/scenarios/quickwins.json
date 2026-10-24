@@ -1,0 +1,25 @@
+{
+  "open": "$FIX/notes/second.md",
+  "actions": [
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')" },
+    { "eval": "{ document.querySelector('.cm-content').focus() }" },
+    { "chord": ["Mod", "ArrowDown"], "wait": 200 },
+    { "type": "\n\n- item one\nitem two", "wait": 300 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => m.app.content.includes('- item one\\n- item two'))" },
+    { "keys": "Enter" }, { "keys": "Enter", "wait": 200 },
+    { "type": "Call (x", "wait": 200 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => m.app.content.includes('Call (x)'))" },
+    { "chord": ["Mod", "ArrowDown"] }, { "keys": "Enter" },
+    { "type": "DotMD", "wait": 100 },
+    { "chord": ["Shift", "ArrowLeft"] }, { "chord": ["Shift", "ArrowLeft"] }, { "chord": ["Shift", "ArrowLeft"] }, { "chord": ["Shift", "ArrowLeft"] }, { "chord": ["Shift", "ArrowLeft"], "wait": 200 },
+    { "eval": "{ const dt = new DataTransfer(); dt.setData('text/plain', 'https://github.com/jgestal/dotmd'); document.querySelector('.cm-content').dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })) }", "wait": 300 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => m.app.content.includes('[DotMD](https://github.com/jgestal/dotmd)'))" },
+    { "keys": "End" }, { "keys": "Enter" },
+    { "eval": "{ const dt = new DataTransfer(); dt.setData('text/html', '<h2>Pasted</h2><ul><li>alpha</li><li>beta</li></ul>'); dt.setData('text/plain', 'Pasted\\nalpha\\nbeta'); document.querySelector('.cm-content').dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true })) }", "wait": 300 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => m.app.content.includes('[DotMD](https://github.com/jgestal/dotmd)\\n\\n## Pasted\\n\\n- alpha\\n- beta'))" },
+    { "keys": "Enter" },
+    { "drag": [".tree-row[data-path$=\"plain.txt\"]", ".cm-content"], "wait": 400 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => m.app.content.includes('[plain](plain.txt)'))", "shot": "editor" },
+    { "assert": "import('/src/lib/export.ts').then(async (e) => { const a = await import('/src/lib/appearance.svelte.ts'); const h = await e.richHtml('# T\\n\\n| a | b |\\n|---|---|\\n| 1 | 2 |\\n\\n`x`', null, a.currentTheme()); return h.includes('<table style=') && h.includes('<code style=') && !h.includes('class='); })" }
+  ]
+}

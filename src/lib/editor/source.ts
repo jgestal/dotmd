@@ -8,6 +8,8 @@ import { basename, isMarkdown } from '../path';
 import { yamlFrontmatter } from '@codemirror/lang-yaml';
 import { syntaxHighlighting, HighlightStyle, bracketMatching, indentOnInput } from '@codemirror/language';
 import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/search';
+import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
+import { htmlToMarkdown, linkFromPaste, shouldConvertHtml } from '../paste';
 import { tags as t } from '@lezer/highlight';
 import { blockMarkdown, formatTable, today, type FormatAction } from '../snippets';
 import type { FocusMode } from '../state.svelte';
@@ -342,6 +344,8 @@ export interface SourceOptions {
   onKey: (key: string, column: number) => void;
   onScroll: (topLine: number) => void;
   onImages: (files: File[]) => void;
+  /** Convert rich-text (HTML) pastes to Markdown: only for Markdown documents. */
+  markdownPaste: () => boolean;
 }
 
 export function createSource(parent: HTMLElement, o: SourceOptions) {
@@ -373,6 +377,7 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
         bracketMatching(),
         highlightActiveLine(),
         highlightSelectionMatches(),
+        closeBrackets(),
         search({ top: true }),
         syntaxHighlighting(mdHighlight),
         baseTheme,
@@ -391,6 +396,7 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
           ...[1, 2, 3, 4, 5, 6].map((level) => ({ key: `Mod-Alt-${level}`, run: fmt({ type: 'heading', level }) })),
           { key: 'Mod-Alt-0', run: fmt({ type: 'paragraph' }) },
           { key: 'Mod-Shift-t', run: fmt({ type: 'formatTable' }) },
+          ...closeBracketsKeymap,
           ...searchKeymap,
           ...historyKeymap,
           indentWithTab,
@@ -406,11 +412,30 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
           }
         }),
         EditorView.domEventHandlers({
-          paste: (e) => {
-            const files = [...(e.clipboardData?.files ?? [])].filter((f) => f.type.startsWith('image/'));
-            if (!files.length) return false;
+          paste: (e, view) => {
+            const data = e.clipboardData;
+            if (!data) return false;
+            const files = [...data.files].filter((f) => f.type.startsWith('image/'));
+            if (files.length) {
+              e.preventDefault();
+              o.onImages(files);
+              return true;
+            }
+            const text = data.getData('text/plain');
+            const sel = view.state.selection.main;
+            const link = linkFromPaste(view.state.sliceDoc(sel.from, sel.to), text);
+            const html = data.getData('text/html');
+            let insert = link ?? (o.markdownPaste() && shouldConvertHtml(html, text) ? htmlToMarkdown(html) : null);
+            if (insert === null) return false;
+            // Converted blocks (headings, lists, tables) need a blank line from the text around them.
+            if (!link && /^(#|[-*+] |\d+\. |\||>|```)/m.test(insert)) {
+              const line = view.state.doc.lineAt(sel.from);
+              const before = view.state.sliceDoc(line.from, sel.from);
+              if (before.trim()) insert = '\n\n' + insert;
+              else if (line.number > 1 && view.state.doc.line(line.number - 1).text.trim()) insert = '\n' + insert;
+            }
             e.preventDefault();
-            o.onImages(files);
+            view.dispatch(view.state.replaceSelection(insert), { scrollIntoView: true, userEvent: 'input.paste' });
             return true;
           },
           keydown: (e, view) => {

@@ -3,6 +3,9 @@ import { Menu, MenuItem, PredefinedMenuItem, Submenu } from '@tauri-apps/api/men
 import { t } from './i18n';
 import { isMac } from './path';
 import { allCommands, runCommand, type MenuId } from './commands';
+import { session } from './state.svelte';
+import { basename, dirname } from './path';
+import { openPath } from './actions';
 
 const sep = () => PredefinedMenuItem.new({ item: 'Separator' });
 
@@ -21,6 +24,16 @@ async function itemsFor(menu: MenuId) {
     );
   }
   return out;
+}
+
+async function recentMenu() {
+  const items = [];
+  for (const [i, p] of session.recent.slice(0, 12).entries()) {
+    items.push(await MenuItem.new({ id: `recent.${i}`, text: `${basename(p)} — ${dirname(p)}`, action: () => void openPath(p) }));
+  }
+  if (items.length) items.push(await sep());
+  items.push(await MenuItem.new({ id: 'recent.clear', text: t('menu.clearRecent'), enabled: items.length > 0, action: () => (session.recent = []) }));
+  return Submenu.new({ text: t('menu.recent'), items });
 }
 
 /** (Re)builds the app menu; called on start and when the UI language changes. */
@@ -46,7 +59,11 @@ export async function installMenu() {
       }),
     );
   }
-  submenus.push(await Submenu.new({ text: t('menu.file'), items: [...(await itemsFor('file')), ...(isMac ? [] : [await sep(), await PredefinedMenuItem.new({ item: 'Quit' })])] }));
+  const fileItems = await itemsFor('file');
+  // "Open Recent" goes right after "Open folder…".
+  const at = fileItems.findIndex((i) => (i as MenuItem).id === 'file.openFolder') + 1;
+  fileItems.splice(at, 0, await recentMenu());
+  submenus.push(await Submenu.new({ text: t('menu.file'), items: [...fileItems, ...(isMac ? [] : [await sep(), await PredefinedMenuItem.new({ item: 'Quit' })])] }));
   submenus.push(
     await Submenu.new({
       text: t('menu.edit'),

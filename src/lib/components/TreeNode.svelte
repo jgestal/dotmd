@@ -3,7 +3,7 @@
   import Icon from './Icon.svelte';
   import Self from './TreeNode.svelte';
   import { app, session, settings } from '../state.svelte';
-  import { movePath, openPath } from '../actions';
+  import { insertFileLink, movePath, openPath } from '../actions';
   import { pointerDrag } from '../drag';
   import { docKind, isTextPath } from '../path';
 
@@ -60,8 +60,9 @@
   oncontextmenu={(e) => { e.preventDefault(); treeContextMenu(entry); }}
   onpointerdown={(e) => pointerDrag(e, {
     label: entry.name,
-    target: '.tree-row[data-dir], .root-name',
-    onDrop: (el) => movePath(entry.path, el.dataset.path!),
+    target: '.tree-row[data-dir], .root-name, .cm-content, .milkdown .ProseMirror',
+    // Onto a folder: move. Into the editor: insert a link (or the image) to this file.
+    onDrop: (el) => (el.dataset.path ? movePath(entry.path, el.dataset.path) : !entry.is_dir && insertFileLink(entry.path)),
   })}
   data-dir={entry.is_dir ? '' : undefined}
   data-path={entry.path}
