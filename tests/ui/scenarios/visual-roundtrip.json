@@ -1,0 +1,9 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    { "eval": "document.querySelectorAll('.mode')[3].click()", "waitFor": "document.querySelector('.milkdown .ProseMirror')", "wait": 1000 },
+    { "eval": "const p=[...document.querySelectorAll('.ProseMirror p')][0]; const r=document.createRange(); r.selectNodeContents(p); r.collapse(false); const s=getSelection(); s.removeAllRanges(); s.addRange(r); document.querySelector('.ProseMirror').focus()" },
+    { "type": "X", "wait": 800 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(({ app: a }) => a.content.includes('> [!NOTE]') && a.content.includes('> [!WARNING]') && a.content.includes('==highlight==') && a.content.includes('- [x] Sidebar') && a.content.includes('---\\n\\n# DotMD demo') && a.content.includes('notes/second.md).X'))" }
+  ]
+}

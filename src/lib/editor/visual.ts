@@ -2,6 +2,7 @@ import { Crepe } from '@milkdown/crepe';
 import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
 import { callCommand, insert, replaceAll } from '@milkdown/kit/utils';
+import { remarkStringifyOptionsCtx } from '@milkdown/kit/core';
 import {
   toggleStrongCommand, toggleEmphasisCommand, toggleInlineCodeCommand, wrapInHeadingCommand,
   wrapInBlockquoteCommand, wrapInBulletListCommand, wrapInOrderedListCommand, turnIntoTextCommand, toggleLinkCommand,
@@ -43,8 +44,15 @@ function caretColumn(root: HTMLElement): number {
 
 /** Front matter is kept out of the WYSIWYG document (ProseMirror would mangle it) and re-attached on output. */
 function splitFrontMatter(md: string): [string, string] {
-  const m = md.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n/);
+  const m = md.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n(?:[ \t]*\r?\n)*/);
   return m ? [m[0], md.slice(m[0].length)] : ['', md];
+}
+
+/** Undoes escapes Milkdown adds to syntax it does not model, so GitHub callouts and ==highlight== survive a save. */
+export function restoreSyntax(md: string): string {
+  return md
+    .replace(/^(\s*(?:>\s*)+)\\\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/gim, '$1[!$2]')
+    .replace(/\\=\\=/g, '==');
 }
 
 export async function createVisual(root: HTMLElement, o: VisualOptions) {
@@ -84,9 +92,11 @@ export async function createVisual(root: HTMLElement, o: VisualOptions) {
   crepe.on((api) => {
     api.markdownUpdated((_ctx, md) => {
       if (suppress || md === baseline) return;
-      o.onChange(front + md);
+      o.onChange(front + restoreSyntax(md));
     });
   });
+  // Keep the author's list style ("-") instead of remark's default "*".
+  crepe.editor.config((ctx) => ctx.update(remarkStringifyOptionsCtx, (prev) => ({ ...prev, bullet: '-' as const, rule: '-' as const })));
   await crepe.create();
   baseline = crepe.getMarkdown();
   suppress = false;
@@ -131,7 +141,7 @@ export async function createVisual(root: HTMLElement, o: VisualOptions) {
 
   return {
     exec,
-    getMarkdown: () => front + crepe.getMarkdown(),
+    getMarkdown: () => front + restoreSyntax(crepe.getMarkdown()),
     setDoc(md: string) {
       suppress = true;
       try {
