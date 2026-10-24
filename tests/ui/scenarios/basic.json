@@ -1,0 +1,11 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.mermaid-diagram svg')", "assert": "document.querySelector('.markdown-body h1')?.textContent.includes('demo')" },
+    { "assert": "!!document.querySelector('.mermaid-diagram svg')" },
+    { "assert": "!!document.querySelector('.katex')" },
+    { "assert": "document.querySelector('.statusbar').textContent.includes('words')", "shot": "read" },
+    { "eval": "document.querySelectorAll('.mode')[2].click()", "wait": 1500, "assert": "!!document.querySelector('.cm-editor') && !!document.querySelector('.preview')", "shot": "split" },
+    { "eval": "document.querySelectorAll('.mode')[3].click()", "waitFor": "document.querySelector('.milkdown .ProseMirror')", "wait": 1000, "assert": "!!document.querySelector('.milkdown') && !document.querySelector('.topbar .dirty')", "shot": "visual" }
+  ]
+}

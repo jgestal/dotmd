@@ -1,0 +1,14 @@
+{
+  "open": "$FIX/notes/second.md",
+  "settings": { "typingSound": "typewriter" },
+  "actions": [
+    { "eval": "window.__snd = import('/src/lib/sound.ts').then(async (m) => { await m.preloadSounds(); return m.samplesReady(); })", "wait": 2500 },
+    { "assert": "window.__snd.then(v => v === true)" },
+    { "eval": "document.querySelectorAll('.topbar .tb')[document.querySelectorAll('.topbar .tb').length - 1].click()", "wait": 500 },
+    { "eval": "[...document.querySelectorAll('.nav-item')][3].click()", "wait": 400 },
+    { "eval": "document.querySelector('.tw-card').click()", "wait": 400, "shot": "typewriter-mode" },
+    { "assert": "document.documentElement.dataset.theme === 'typewriter' && document.querySelector('.tw-card.on') !== null" },
+    { "eval": "document.querySelector('.tw-card').click()", "wait": 400 },
+    { "assert": "document.documentElement.dataset.theme !== 'typewriter'" }
+  ]
+}
