@@ -45,6 +45,16 @@
     },
     {
       "assert": "window.__played.filter(d => d > 1.2).length === 1 || window.__played"
+    },
+    {
+      "eval": "{ window.__played = [] }"
+    },
+    {
+      "keys": "Enter",
+      "wait": 300
+    },
+    {
+      "assert": "window.__played.length === 1 && window.__played[0] > 1 || window.__played"
     }
   ]
 }

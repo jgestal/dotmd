@@ -438,12 +438,6 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
             view.dispatch(view.state.replaceSelection(insert), { scrollIntoView: true, userEvent: 'input.paste' });
             return true;
           },
-          keydown: (e, view) => {
-            if (e.metaKey || e.ctrlKey || !(e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) return;
-            const head = view.state.selection.main.head;
-            const col = head - view.state.doc.lineAt(head).from;
-            o.onKey(e.key, e.key.length === 1 ? col + 1 : e.key === 'Backspace' ? Math.max(0, col - 1) : 0);
-          },
           scroll: (_e, view) => {
             const block = view.lineBlockAtHeight(view.scrollDOM.getBoundingClientRect().top - view.documentTop);
             o.onScroll(view.state.doc.lineAt(block.from).number);
@@ -454,6 +448,15 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
   });
 
   if (!isMarkdown(o.filename)) setLanguage(o.filename);
+
+  // Typing sounds listen in the capture phase: keymaps (e.g. Markdown list continuation on Enter)
+  // consume their keys before CodeMirror's own event handlers would see them.
+  view.contentDOM.addEventListener('keydown', (e) => {
+    if (e.metaKey || e.ctrlKey || e.isComposing || !(e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) return;
+    const head = view.state.selection.main.head;
+    const col = head - view.state.doc.lineAt(head).from;
+    o.onKey(e.key, e.key.length === 1 ? col + 1 : e.key === 'Backspace' ? Math.max(0, col - 1) : 0);
+  }, true);
 
   return {
     view,
