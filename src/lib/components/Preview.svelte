@@ -185,7 +185,7 @@
   .preview.paged { max-width: none; padding: 28px 0 40vh; }
   .preview.paged :global(.page) {
     position: relative; box-sizing: border-box; width: var(--page-w); height: var(--page-h); padding: var(--page-m);
-    margin: 0 auto 28px; background: var(--bg); border-radius: 2px;
+    margin: 0 auto 28px; background: var(--paper, var(--bg)); border-radius: 2px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 10px 30px rgba(0, 0, 0, 0.22);
   }
   .preview.paged :global(.page-inner) { height: 100%; overflow: visible; }

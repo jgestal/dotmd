@@ -1,0 +1,9 @@
+{
+  "open": "$FIX/README.md",
+  "settings": { "theme": "tractor" },
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body .mermaid-diagram svg')", "wait": 600 },
+    { "assert": "getComputedStyle(document.querySelector('.preview')).backgroundImage.includes('repeating-linear-gradient')", "shot": "read" },
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')", "wait": 600, "shot": "source" }
+  ]
+}

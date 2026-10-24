@@ -70,6 +70,7 @@
                 <b style="font-family:{th.fonts.heading}">Aa</b>
                 <i style="background:{th.vars['--accent']}"></i>
                 {#if th.kind === 'crt'}<em class="scan"></em>{/if}
+                {#if th.kind === 'tractor'}<em class="bands" style="--b:{th.vars['--band']};--p:{th.vars['--paper']};--h:{th.vars['--bg']}"></em>{/if}
               </span>
               <span>{th.name}</span>
             </button>
@@ -195,6 +196,7 @@
             <option value="github">GitHub</option>
             <option value="paper">Paper</option>
             <option value="typewriter">Typewriter</option>
+            <option value="tractor">Continuous Paper</option>
           </select>
         </div>
         <div class="row">
@@ -239,6 +241,14 @@
   .theme-card { display: grid; gap: 6px; border: 0; background: none; color: var(--fg); font: 12px var(--font-ui); padding: 0; text-align: center; cursor: default; }
   .swatch { position: relative; display: flex; align-items: center; justify-content: center; height: 62px; border-radius: 9px; border: 1px solid var(--border); overflow: hidden; font-size: 20px; }
   .swatch i { position: absolute; bottom: 8px; left: 10px; right: 50%; height: 4px; border-radius: 2px; }
+  .swatch .bands {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(circle, var(--h) 0 2.5px, transparent 3px) left top / 12px 12px repeat-y,
+      radial-gradient(circle, var(--h) 0 2.5px, transparent 3px) right top / 12px 12px repeat-y,
+      repeating-linear-gradient(to bottom, var(--b) 0 8px, var(--p) 8px 16px);
+  }
+  .swatch b, .swatch i { position: relative; z-index: 1; }
   .swatch .scan { position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.35) 2px 3px); }
   .swatch.split span { flex: 1; height: 100%; }
   .theme-card.on .swatch { outline: 2.5px solid var(--accent); outline-offset: 2px; }

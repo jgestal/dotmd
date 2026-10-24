@@ -1,6 +1,6 @@
 // Themes are data, not CSS, so the same values can style the app, Mermaid and exported files.
 
-export type ThemeKind = 'normal' | 'typewriter' | 'crt';
+export type ThemeKind = 'normal' | 'typewriter' | 'crt' | 'tractor';
 
 export interface Theme {
   id: string;
@@ -21,6 +21,7 @@ export const FONTS: Record<string, { label: string; stack: string }> = {
   courier: { label: 'Courier Prime', stack: '"Courier Prime", "Courier New", Courier, monospace' },
   elite: { label: 'Special Elite', stack: '"Special Elite", "Courier Prime", "American Typewriter", monospace' },
   vt323: { label: 'VT323', stack: 'VT323, "IBM Plex Mono", monospace' },
+  doto: { label: 'Doto (dot matrix)', stack: 'Doto, "Courier Prime", monospace' },
   mono: { label: 'System Mono', stack: 'ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, "DejaVu Sans Mono", monospace' },
 };
 
@@ -109,6 +110,11 @@ export const THEMES: Theme[] = [
     id: 'typewriter', name: 'Typewriter', dark: false, kind: 'typewriter',
     fonts: { ui: F('courier'), doc: F('courier'), heading: F('elite'), code: F('courier') },
     vars: light({ '--bg': '#f1ead6', '--bg-elev': '#e8dfc6', '--bg-hover': 'rgba(60,40,10,.07)', '--bg-active': 'rgba(60,40,10,.12)', '--fg': '#26231f', '--fg-muted': '#6d6556', '--fg-dim': 'rgba(38,35,31,.25)', '--border': '#d6caa9', '--accent': '#a5281b', '--link': '#7b1f14', '--code-bg': '#e6dcc0', '--code-fg': '#26231f', '--quote': '#bfae86', '--sel': 'rgba(165,40,27,.18)', '--mark': '#f0d56a', '--syn-keyword': '#a5281b', '--syn-string': '#3d5a2a', '--syn-number': '#6d4c1a', '--syn-comment': '#8c826d', '--syn-func': '#26231f', '--syn-type': '#6d4c1a' }),
+  },
+  {
+    id: 'tractor', name: 'Continuous Paper', dark: false, kind: 'tractor',
+    fonts: { ui: F('system'), doc: F('doto'), heading: F('doto'), code: F('doto') },
+    vars: light({ '--bg': '#e4e6df', '--bg-elev': '#dcdfd6', '--bg-hover': 'rgba(40,60,40,.07)', '--bg-active': 'rgba(40,60,40,.12)', '--paper': '#fbfcf7', '--band': 'rgba(150, 196, 156, .30)', '--perf': '#bfc6b4', '--fg': '#2a2e35', '--fg-muted': '#6a7068', '--fg-dim': 'rgba(42,46,53,.25)', '--border': '#cdd2c5', '--accent': '#2f7d4f', '--link': '#2b5c99', '--code-bg': 'rgba(60,80,60,.07)', '--code-fg': '#2a2e35', '--quote': '#b9c4b0', '--sel': 'rgba(47,125,79,.2)', '--mark': '#f2e58f', '--syn-keyword': '#2f7d4f', '--syn-string': '#8a4b2a', '--syn-number': '#2b5c99', '--syn-comment': '#8b9186', '--syn-func': '#2a2e35', '--syn-type': '#5b4a8a' }),
   },
   {
     id: 'crt-green', name: 'CRT Phosphor', dark: true, kind: 'crt',

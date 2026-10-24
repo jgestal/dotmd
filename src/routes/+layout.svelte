@@ -10,6 +10,8 @@
   import '@fontsource/courier-prime/700.css';
   import '@fontsource/special-elite';
   import '@fontsource/vt323';
+  import '@fontsource/doto/600.css';
+  import '@fontsource/doto/800.css';
   import 'katex/dist/katex.min.css';
   import '$lib/styles/document.css';
   import '$lib/styles/app.css';

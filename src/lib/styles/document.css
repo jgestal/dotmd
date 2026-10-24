@@ -149,3 +149,36 @@
 .theme-crt .markdown-body h1, .theme-crt .markdown-body h2, .markdown-body.theme-crt h1, .markdown-body.theme-crt h2 { font-weight: 400; text-transform: uppercase; }
 .theme-crt .markdown-body h1::before, .markdown-body.theme-crt h1::before { content: '> '; color: var(--fg-muted); }
 .theme-crt .markdown-body img, .markdown-body.theme-crt img { filter: grayscale(1) sepia(1) hue-rotate(var(--crt-hue, 70deg)) saturate(3) brightness(0.9); }
+
+/* Continuous (tractor-feed) paper: green-bar bands, sprocket holes, perforations and the
+   tear line of each 11-inch sheet. Also applied to exported HTML/PDF via main.theme-tractor. */
+.theme-tractor .preview:not(.paged), .theme-tractor .cm-content, .theme-tractor .visual .ProseMirror, main.markdown-body.theme-tractor {
+  --band-h: calc(var(--doc-size, 16px) * var(--line-height, 1.65) * 2);
+  --hole: radial-gradient(circle at 50% 50%, var(--bg) 0 4.5px, var(--perf) 5px, transparent 6px);
+  background-color: var(--paper);
+  background-image:
+    var(--hole), var(--hole),
+    linear-gradient(var(--paper), var(--paper)), linear-gradient(var(--paper), var(--paper)),
+    repeating-linear-gradient(to bottom, var(--perf) 0 3px, transparent 3px 7px),
+    repeating-linear-gradient(to bottom, var(--perf) 0 3px, transparent 3px 7px),
+    repeating-linear-gradient(to bottom, transparent 0 calc(11in - 1px), var(--perf) calc(11in - 1px) 11in),
+    repeating-linear-gradient(to bottom, var(--band) 0 var(--band-h), transparent var(--band-h) calc(var(--band-h) * 2));
+  background-size: 0.5in 0.5in, 0.5in 0.5in, 0.5in 100%, 0.5in 100%, 1px 100%, 1px 100%, 100% 100%, 100% 100%;
+  background-repeat: repeat-y, repeat-y, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-position: left top, right top, left top, right top, 0.5in 0, calc(100% - 0.5in) 0, 0 0, 0 0;
+  padding-left: calc(0.5in + 36px) !important;
+  padding-right: calc(0.5in + 36px) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+.theme-tractor .markdown-body, .theme-tractor .cm-content, .markdown-body.theme-tractor {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--fg) 92%, transparent);
+  text-shadow: 0.3px 0.3px 0 color-mix(in srgb, var(--fg) 30%, transparent);
+}
+.theme-tractor .markdown-body h1, .theme-tractor .markdown-body h2, .markdown-body.theme-tractor h1, .markdown-body.theme-tractor h2 {
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+}
+.theme-tractor .markdown-body h2, .markdown-body.theme-tractor h2 { border-bottom: 2px dotted var(--perf); }
+.theme-tractor .markdown-body pre, .theme-tractor .markdown-body code { background: transparent; }
+.theme-tractor .cm-cursor { border-left: 0.6em solid var(--accent) !important; opacity: 0.45; }
+main.markdown-body.theme-tractor { padding-top: 0.5in; padding-bottom: 0.5in; }

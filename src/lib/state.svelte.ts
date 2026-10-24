@@ -65,7 +65,7 @@ export interface Settings {
   inkVariation: boolean;
   pdfPageSize: 'A4' | 'Letter' | 'A5' | 'Legal';
   pdfMargin: number;
-  exportTheme: 'current' | 'modern' | 'github' | 'paper' | 'typewriter';
+  exportTheme: 'current' | 'modern' | 'github' | 'paper' | 'typewriter' | 'tractor';
   /** Inline the theme's font files in exported HTML/PDF. */
   exportEmbedFonts: boolean;
   /** Read/Split preview laid out on paper sheets (export paper size and margins). */

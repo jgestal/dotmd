@@ -103,7 +103,7 @@
           <select bind:value={settings.exportTheme}>
             <option value="current">{t('export.themeCurrent')}</option>
             <option value="modern">Modern</option><option value="github">GitHub</option>
-            <option value="paper">Paper</option><option value="typewriter">Typewriter</option>
+            <option value="paper">Paper</option><option value="typewriter">Typewriter</option><option value="tractor">Continuous Paper</option>
           </select>
         </div>
         <p class="engine muted">{t('export.engine')}: {engine === undefined ? '…' : engine ? engine.split(/[\\/]/).pop() : t('export.noEngine')}</p>
