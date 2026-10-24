@@ -156,8 +156,15 @@ export async function postProcess(root: HTMLElement, opts: PostOptions): Promise
     }
   }
 
-  if (!opts.forExport) {
-    for (const cb of root.querySelectorAll<HTMLInputElement>('input[type=checkbox]')) cb.removeAttribute('disabled');
+  for (const cb of root.querySelectorAll<HTMLInputElement>('input[type=checkbox]')) {
+    if (!opts.forExport) cb.removeAttribute('disabled');
+    else {
+      // Form controls print inconsistently (WebKit draws them as dots): use glyphs in exports.
+      const box = document.createElement('span');
+      box.className = 'task-box';
+      box.textContent = cb.checked || cb.hasAttribute('checked') ? '☑' : '☐';
+      cb.replaceWith(box);
+    }
   }
   await Promise.all(jobs);
 }

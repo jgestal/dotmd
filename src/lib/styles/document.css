@@ -55,6 +55,7 @@
 .markdown-body .task-list-item { list-style: none; }
 .markdown-body .task-list-item input[type=checkbox] { margin: 0 0.5em 0 -1.4em; vertical-align: middle; accent-color: var(--accent); width: 1em; height: 1em; }
 .markdown-body .contains-task-list { padding-left: 1.6em; }
+.markdown-body .task-box { display: inline-block; width: 1.1em; margin-left: -1.4em; margin-right: 0.3em; color: var(--accent); }
 
 .markdown-body blockquote { margin-left: 0; padding: 0.1em 1em; color: var(--fg-muted); border-left: 0.25em solid var(--quote); }
 .markdown-body blockquote > :last-child { margin-bottom: 0; }

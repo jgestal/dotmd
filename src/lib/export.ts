@@ -160,6 +160,15 @@ export async function exportHtmlFile(docs: { md: string; path: string | null }[]
 /** Returns false when no PDF engine is available (caller falls back to the print dialog). */
 export async function exportPdfFile(docs: { md: string; path: string | null }[], out: string, o: ExportOptions): Promise<boolean> {
   const html = await buildDocument(docs, o, docs.length === 1 && docs[0].path ? stem(docs[0].path) : stem(out));
+  // System WebKit first (macOS), so no browser is needed; Chromium headless otherwise.
+  if (settings.pdfEngine !== 'chromium') {
+    try {
+      await invoke('export_pdf_native', { html, out, pageSize: o.pageSize, marginMm: o.margin });
+      return true;
+    } catch (e) {
+      if (String(e) !== 'unsupported') console.warn('Native PDF export failed, trying Chromium:', e);
+    }
+  }
   try {
     await invoke('export_pdf', { html, out });
     return true;

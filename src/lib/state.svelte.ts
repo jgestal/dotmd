@@ -68,6 +68,8 @@ export interface Settings {
   exportTheme: 'current' | 'modern' | 'github' | 'paper' | 'typewriter';
   /** Inline the theme's font files in exported HTML/PDF. */
   exportEmbedFonts: boolean;
+  /** "auto" uses the system WebKit where available (macOS) and falls back to Chromium. */
+  pdfEngine: 'auto' | 'chromium';
   customCss: string;
 }
 
@@ -123,6 +125,7 @@ export const DEFAULT_SETTINGS: Settings = {
   pdfMargin: 18,
   exportTheme: 'current',
   exportEmbedFonts: true,
+  pdfEngine: 'auto',
   customCss: '',
 };
 

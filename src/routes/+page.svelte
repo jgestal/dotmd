@@ -22,6 +22,7 @@
   import { startAppearance } from '$lib/appearance.svelte';
   import { preloadSounds } from '$lib/sound';
   import { forwardConsole } from '$lib/log';
+  import { runCliExport } from '$lib/cli';
   import { t, type Key } from '$lib/i18n';
   import { isMac, isPlainText, modKey } from '$lib/path';
   import { insertImagePaths, isImagePath } from '$lib/actions';
@@ -107,6 +108,7 @@
     );
 
     (async () => {
+      if (await runCliExport()) return;
       const pending = await invoke<string[]>('take_pending_open');
       if (pending.length) await handleDroppedPaths(pending);
       else {
