@@ -166,6 +166,7 @@ for (const file of files) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && errors.push(m.text()));
+  await page.evaluateOnNewDocument((fix) => { window.__FIX = fix; }, FIX.replaceAll('\\', '/'));
   await page.evaluateOnNewDocument((settings) => {
     localStorage.clear();
     if (settings) localStorage.setItem('dotmd.settings', JSON.stringify(settings));

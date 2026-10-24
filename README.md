@@ -10,6 +10,8 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
 ## Features
 
 - **Four modes**: *Read*, *Source* (raw Markdown or plain text), *Split* (source and preview, with synced scrolling) and *Visual* (WYSIWYG, edit on the formatted document). Switch with ⌘1–4.
+- **Page view** (⌘⇧L): the preview laid out on A4/Letter sheets with the export margins and page numbers, so you see the PDF before exporting. Manual page breaks.
+- **Any text file**: Markdown, plain text, logs, CSV/TSV (shown as a table), JSON, YAML, source code (highlighted by language), README/LICENSE… UTF-8, UTF-16 and Latin-1, Windows line endings preserved.
 - **Folder sidebar** you can hide (⌘\\), resize or move to the right, with a filter, an outline tab, folder-wide search (⌘⇧F) and a native context menu (new, rename, move by dragging, Move to Trash).
 - **Tabs**, back/forward history (⌘[ / ⌘]), **quick open** (⌘P) and a **command palette** (⌘⇧P), plus a full native menu bar.
 - **Drag & drop** files and folders. Open from the command line or the OS "Open with…". Paste or drop images into the editor and they are saved to `assets/`.
@@ -19,22 +21,27 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
   - Code blocks by language, 10 Mermaid templates, math, GitHub callouts, footnotes and collapsible sections.
 - **Rendering**: GitHub Flavored Markdown, Mermaid diagrams, KaTeX math, syntax highlighting, front matter, clickable task lists and links between notes.
 - **Live reload** when another program changes the open file.
-- **Statistics under the document**: words, characters, letters, sentences, paragraphs and reading time, each toggled separately.
+- **Statistics under the document**: words, characters, letters, sentences, paragraphs and reading time, each toggled separately, plus cursor position, document type and line endings.
   - The detail panel adds a readability score (Flesch for English, Fernández-Huerta for Spanish) and a word goal with a progress ring.
 - **Zen mode**:
   - Full screen, with focus highlighting on the current line, sentence or paragraph.
   - Typewriter scrolling, which keeps the cursor centered.
   - Optional typing sounds, including **real typewriter recordings** (CC0) panned by key position, with a margin bell and carriage return.
   - One-click **Typewriter mode**.
-- **11 themes**, including **Typewriter** (paper texture, uneven ink) and **CRT** green and amber (scanlines, glow, flicker).
+- **Focus writing** (⌘⌥F): full screen, only the line you are typing lit, caret kept centered.
+- **12 themes**, including **Typewriter** (paper texture, uneven ink), **Continuous paper** (green-bar tractor-feed paper with sprocket holes and a dot-matrix font) and **CRT** green and amber (scanlines, glow, flicker).
   - Customize the accent color, fonts, size, line height, text width and paragraph spacing, or add your own CSS.
 - **Export** to self-contained HTML (fonts embedded) and to PDF, one file or **in batch**, with an option to merge everything into a single document and a table of contents. PDFs are printed natively on macOS and Linux.
 - **Command line**: `dotmd --export pdf notes.md notes.pdf` exports without opening a window.
 - **Languages**: English (default) and Spanish.
 
-| Split mode | Typewriter theme | CRT + Zen |
+| Split mode | Page view | Focus writing (CRT theme) |
 |---|---|---|
-| ![](docs/screenshots/split.png) | ![](docs/screenshots/typewriter.png) | ![](docs/screenshots/crt-zen.png) |
+| ![](docs/screenshots/split.png) | ![](docs/screenshots/pages.png) | ![](docs/screenshots/focus-crt.png) |
+| **Continuous paper theme** | **Typewriter theme (visual editor)** | **CSV as a table** |
+| ![](docs/screenshots/tractor.png) | ![](docs/screenshots/typewriter.png) | ![](docs/screenshots/csv.png) |
+| **Welcome** | **Settings** | |
+| ![](docs/screenshots/welcome.png) | ![](docs/screenshots/settings.png) | |
 
 ## Development
 

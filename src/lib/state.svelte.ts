@@ -8,6 +8,8 @@ export interface Tab {
   content: string;
   saved: string;
   mode: Mode;
+  /** Line endings on disk; the editors always work with "\n". */
+  crlf: boolean;
 }
 export type FocusMode = 'off' | 'line' | 'sentence' | 'paragraph';
 export type StatKey =
@@ -158,6 +160,8 @@ export const app = $state({
   path: null as string | null,
   /** A document (saved or untitled) is open; false shows the welcome screen. */
   docOpen: false,
+  /** The active document uses Windows line endings on disk. */
+  crlf: false,
   tabs: [] as Tab[],
   activeTab: -1,
   content: '',
@@ -177,6 +181,8 @@ export const app = $state({
   /** Zen entered through "Focus writing": forces line focus and typewriter scrolling. */
   focusWriting: false,
   selection: '',
+  /** Caret position in the source editor (1-based), for the status bar. */
+  cursor: { line: 1, col: 1 },
   settingsOpen: false,
   paletteOpen: false,
   exportOpen: false,

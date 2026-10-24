@@ -338,6 +338,7 @@ export interface SourceOptions {
   typewriter: boolean;
   onChange: (text: string) => void;
   onSelection: (text: string) => void;
+  onCursor?: (line: number, col: number) => void;
   onKey: (key: string, column: number) => void;
   onScroll: (topLine: number) => void;
   onImages: (files: File[]) => void;
@@ -400,6 +401,8 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
           if (u.selectionSet || u.docChanged) {
             const r = u.state.selection.main;
             o.onSelection(r.empty ? '' : u.state.sliceDoc(r.from, r.to));
+            const line = u.state.doc.lineAt(r.head);
+            o.onCursor?.(line.number, r.head - line.from + 1);
           }
         }),
         EditorView.domEventHandlers({

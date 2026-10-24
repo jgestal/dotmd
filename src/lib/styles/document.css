@@ -182,3 +182,4 @@
 .theme-tractor .markdown-body pre, .theme-tractor .markdown-body code { background: transparent; }
 .theme-tractor .cm-cursor { border-left: 0.6em solid var(--accent) !important; opacity: 0.45; }
 main.markdown-body.theme-tractor { padding-top: 0.5in; padding-bottom: 0.5in; }
+.theme-tractor .visual .ProseMirror { min-height: calc(100vh - 140px); }

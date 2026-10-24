@@ -1,0 +1,23 @@
+{
+  "settings": { "theme": "modern" },
+  "actions": [
+    { "waitFor": "document.querySelector('.welcome h1')", "shot": "welcome" },
+    { "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/README.md')) }", "waitFor": "document.querySelector('.markdown-body .mermaid-diagram svg')", "wait": 800, "shot": "read" },
+    { "eval": "{ document.querySelector('.preview-scroll').scrollTop = 900 }", "wait": 600, "shot": "read-diagrams" },
+    { "chord": ["Mod", "Digit3"], "waitFor": "document.querySelector('.cm-editor') && document.querySelector('.preview .mermaid-diagram svg')", "wait": 900, "shot": "split" },
+    { "chord": ["Mod", "Digit1"], "wait": 300 },
+    { "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/long.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'long.md'", "wait": 400 },
+    { "chord": ["Mod", "Shift", "KeyL"], "waitFor": "document.querySelectorAll('.page').length >= 3", "wait": 800, "shot": "pages" },
+    { "chord": ["Mod", "Shift", "KeyL"], "wait": 300 },
+    { "eval": "{ import('/src/lib/state.svelte.ts').then(m => { m.settings.theme = 'tractor'; }); import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/README.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'README.md' && document.querySelector('.markdown-body h1')", "wait": 1200, "shot": "tractor" },
+    { "eval": "{ import('/src/lib/state.svelte.ts').then(m => { m.settings.theme = 'typewriter'; }); import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/notes/second.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'second.md'", "wait": 400 },
+    { "chord": ["Mod", "Digit4"], "waitFor": "document.querySelector('.milkdown .ProseMirror')", "wait": 1200, "shot": "typewriter" },
+    { "eval": "{ import('/src/lib/state.svelte.ts').then(m => { m.settings.theme = 'modern'; }); import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/data/people.csv')) }", "waitFor": "document.querySelector('table.csv')", "wait": 600, "shot": "csv" },
+    { "eval": "{ import('/src/lib/state.svelte.ts').then(m => { m.settings.theme = 'crt-green'; m.settings.zenFullscreen = false; }); import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/long.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'long.md'", "wait": 500 },
+    { "chord": ["Mod", "Alt", "KeyF"], "waitFor": "document.querySelector('.app.zen .cm-focus-mode')", "wait": 500 },
+    { "eval": "{ [...document.querySelectorAll('.cm-line')].find(l => l.textContent.startsWith('Ink jumps')).id = 'target' }" },
+    { "click": "#target", "wait": 3500, "shot": "focus-crt" },
+    { "keys": "Escape", "wait": 400 },
+    { "eval": "{ import('/src/lib/state.svelte.ts').then(m => { m.settings.theme = 'modern-dark'; m.app.settingsOpen = true; }) }", "waitFor": "document.querySelector('.settings .themes')", "wait": 600, "shot": "settings" }
+  ]
+}

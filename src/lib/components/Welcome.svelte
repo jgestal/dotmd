@@ -8,13 +8,19 @@
 
 <div class="welcome">
   <div class="card">
-    <div class="logo" aria-hidden="true"><span><span class="dot">.</span>md</span></div>
-    <h1>{t('welcome.title')}</h1>
-    <p class="sub">{t('welcome.subtitle')}</p>
+    <img class="logo" src="/favicon.png" alt="" width="88" height="88" />
+    <h1>DotMD</h1>
+    <p class="tagline">Markdown Viewer &amp; Editor</p>
+    <p class="sub">{t('welcome.title')}. {t('welcome.subtitle')}</p>
     <div class="actions">
       <button class="big" onclick={openFileDialog}><Icon name="filetext" size={20} /><span>{t('welcome.openFile')}</span><kbd>{modKey}O</kbd></button>
       <button class="big" onclick={() => openFolder()}><Icon name="folder" size={20} /><span>{t('welcome.openFolder')}</span><kbd>{modKey}⇧O</kbd></button>
       <button class="big" onclick={newDoc}><Icon name="plus" size={20} /><span>{t('welcome.new')}</span><kbd>{modKey}N</kbd></button>
+    </div>
+    <div class="tips">
+      <span><kbd>{modKey}P</kbd> {t('cmd.quickOpen')}</span>
+      <span><kbd>{modKey}⇧P</kbd> {t('cmd.palette')}</span>
+      <span><kbd>{modKey}⌥F</kbd> {t('cmd.focusWriting')}</span>
     </div>
     {#if session.recent.length}
       <h3>{t('welcome.recent')}</h3>
@@ -30,13 +36,11 @@
 <style>
   .welcome { height: 100%; display: grid; place-items: center; overflow: auto; padding: 24px; }
   .card { width: min(520px, 100%); text-align: center; }
-  .logo {
-    width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 16px; display: grid; place-items: center;
-    background: linear-gradient(145deg, var(--accent), color-mix(in srgb, var(--accent) 55%, #000)); color: var(--accent-fg);
-    font: 700 24px var(--font-code); box-shadow: var(--shadow); letter-spacing: -0.02em;
-  }
-  .logo .dot { opacity: 0.6; }
-  h1 { font: 650 22px var(--font-heading); margin: 0 0 6px; }
+  .logo { display: block; width: 88px; height: 88px; margin: 0 auto 10px; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.18)); }
+  h1 { font: 700 28px var(--font-heading); margin: 0; letter-spacing: -0.02em; }
+  .tagline { margin: 2px 0 10px; color: var(--accent); font: 600 12px var(--font-ui); letter-spacing: 0.08em; text-transform: uppercase; }
+  .tips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin-top: 16px; color: var(--fg-muted); font-size: 12px; }
+  .tips kbd { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; margin-right: 3px; }
   .sub { color: var(--fg-muted); margin: 0 0 24px; font-size: 13.5px; }
   .actions { display: grid; gap: 8px; }
   .big {

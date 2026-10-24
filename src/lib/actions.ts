@@ -32,7 +32,7 @@ let tabSeq = 0;
 /** Copies the active document into its tab entry. */
 function snapshot() {
   const tb = app.tabs[app.activeTab];
-  if (tb) Object.assign(tb, { path: app.path, content: app.content, saved: app.saved, mode: app.mode });
+  if (tb) Object.assign(tb, { path: app.path, content: app.content, saved: app.saved, mode: app.mode, crlf: app.crlf });
 }
 
 function persistTabs() {
@@ -55,6 +55,7 @@ export function activateTab(i: number) {
   app.saved = tb.saved;
   app.content = tb.content;
   app.mode = tb.mode;
+  app.crlf = tb.crlf;
   app.docOpen = true;
   app.selection = '';
   app.sessionStartWords = -1;
@@ -183,7 +184,9 @@ export async function openPath(path: string, opts: { fromHistory?: boolean; back
     if (!app.docOpen || !prev || isPlainText(prev) !== isPlainText(path)) mode = settings.defaultMode;
     // Visual (WYSIWYG) editing only exists for Markdown; other text opens in its source.
     if (isPlainText(path) && mode === 'visual') mode = 'source';
-    addTab({ path, content: text, saved: text, mode }, true);
+    const crlf = text.includes('\r\n');
+    const lf = crlf ? text.replace(/\r\n/g, '\n') : text;
+    addTab({ path, content: lf, saved: lf, mode, crlf }, true);
     if (!app.root) app.root = dirname(path);
     pushRecent(path);
   } catch (e) {
@@ -207,7 +210,7 @@ export async function openFileDialog() {
 }
 
 export async function newDoc() {
-  addTab({ path: null, content: '', saved: '', mode: settings.defaultMode === 'preview' ? 'source' : settings.defaultMode }, false);
+  addTab({ path: null, content: '', saved: '', mode: settings.defaultMode === 'preview' ? 'source' : settings.defaultMode, crlf: false }, false);
 }
 
 export async function saveDoc(as = false): Promise<boolean> {
@@ -222,7 +225,7 @@ export async function saveDoc(as = false): Promise<boolean> {
   }
   const text = app.content;
   try {
-    await invoke('write_text', { path, content: text });
+    await invoke('write_text', { path, content: app.crlf ? text.replace(/\n/g, '\r\n') : text });
     app.saved = text;
     if (path !== app.path) {
       app.path = path;
@@ -243,7 +246,7 @@ export async function saveDoc(as = false): Promise<boolean> {
 
 /** Called when another program changes an open file. */
 export async function onExternalChange(path: string) {
-  const text = await invoke<string>('read_text', { path });
+  const text = (await invoke<string>('read_text', { path })).replace(/\r\n/g, '\n');
   if (path !== app.path) {
     // Background tab: follow the disk silently unless it has unsaved edits.
     const tb = app.tabs.find((x) => x.path === path);

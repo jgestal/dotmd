@@ -38,6 +38,8 @@ export function cssVars(theme: Theme): Record<string, string> {
   return vars;
 }
 
+let appliedVars = new Set<string>();
+
 export function startAppearance() {
   const mq = window.matchMedia('(prefers-color-scheme: dark)');
   app.systemDark = mq.matches;
@@ -54,11 +56,15 @@ export function startAppearance() {
     $effect(() => {
       const theme = currentTheme();
       const root = document.documentElement;
-      for (const [k, v] of Object.entries(cssVars(theme))) root.style.setProperty(k, v);
+      const vars = cssVars(theme);
+      // Drop variables only the previous theme defined (e.g. --paper), so they don't leak.
+      for (const k of appliedVars) if (!(k in vars)) root.style.removeProperty(k);
+      appliedVars = new Set(Object.keys(vars));
+      for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
       root.dataset.theme = theme.id;
       root.style.colorScheme = theme.dark ? 'dark' : 'light';
       const c = root.classList;
-      c.remove('theme-normal', 'theme-typewriter', 'theme-crt');
+      for (const cls of [...c]) if (cls.startsWith('theme-')) c.remove(cls);
       c.add(`theme-${theme.kind}`);
       c.toggle('dark', theme.dark);
       c.toggle('scanlines', theme.kind === 'crt' && settings.crtScanlines);

@@ -4,7 +4,15 @@
   import { app, settings, isDirty, type StatKey } from '../state.svelte';
   import { computeStats, countWords, formatMinutes, guessLang, toPlain, type Stats } from '../stats';
   import { t, type Key } from '../i18n';
-  import { isMarkdown } from '../path';
+  import { codeLang, docKind, isMarkdown } from '../path';
+
+  const KIND_LABEL = { markdown: 'Markdown', csv: 'CSV', text: 'Text', code: '' } as const;
+  const kindLabel = $derived.by(() => {
+    const k = docKind(app.path);
+    if (k !== 'code') return KIND_LABEL[k];
+    const l = codeLang(app.path!);
+    return l ? l[0].toUpperCase() + l.slice(1) : 'Code';
+  });
 
   let stats = $state<Stats>(computeStats('', true, 'en'));
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -107,6 +115,9 @@
   </Popover>
   <span class="spacer"></span>
   {#if app.pageCount && (app.mode === 'preview' || app.mode === 'split')}<span class="pages">{app.pageCount} {t('stats.pages')}</span>{/if}
+  {#if app.mode === 'source' || app.mode === 'split'}<span class="meta">Ln {app.cursor.line}, Col {app.cursor.col}</span>{/if}
+  <span class="meta">{kindLabel}</span>
+  {#if app.path}<span class="meta">{app.crlf ? 'CRLF' : 'LF'}</span>{/if}
   {#if isDirty()}<span class="dirty" title={t('top.unsaved')}>●</span>{/if}
 </footer>
 
@@ -123,6 +134,7 @@
   .spacer { flex: 1; }
   .dirty { color: var(--accent); font-size: 10px; }
   .pages { margin-right: 8px; }
+  .meta { margin-right: 12px; white-space: nowrap; }
   .details { padding: 8px 10px; width: 290px; font-size: 12px; }
   .statusbar :global(.popover) { top: auto; bottom: calc(100% + 6px); }
   h4 { margin: 0 0 8px; font-size: 12px; }
