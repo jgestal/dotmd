@@ -3,6 +3,7 @@ import '@milkdown/crepe/theme/common/style.css';
 import '@milkdown/crepe/theme/frame.css';
 import { callCommand, insert, replaceAll } from '@milkdown/kit/utils';
 import { remarkStringifyOptionsCtx } from '@milkdown/kit/core';
+import { visualDecorations } from './visualDecorations';
 import {
   toggleStrongCommand, toggleEmphasisCommand, toggleInlineCodeCommand, wrapInHeadingCommand,
   wrapInBlockquoteCommand, wrapInBulletListCommand, wrapInOrderedListCommand, turnIntoTextCommand, toggleLinkCommand,
@@ -100,6 +101,7 @@ export async function createVisual(root: HTMLElement, o: VisualOptions) {
   });
   // Keep the author's list style ("-") instead of remark's default "*".
   crepe.editor.config((ctx) => ctx.update(remarkStringifyOptionsCtx, (prev) => ({ ...prev, bullet: '-' as const, rule: '-' as const })));
+  crepe.editor.use(visualDecorations);
   await crepe.create();
   baseline = crepe.getMarkdown();
   suppress = false;

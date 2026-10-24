@@ -1,0 +1,11 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    { "waitFor": "document.querySelectorAll('.mode').length === 4" },
+    { "chord": ["Mod", "Digit4"], "waitFor": "document.querySelector('.milkdown .ProseMirror')", "wait": 1000 },
+    { "assert": "!!document.querySelector('.ProseMirror blockquote.markdown-alert-note') && !!document.querySelector('.ProseMirror blockquote.markdown-alert-warning')" },
+    { "assert": "document.querySelector('.ProseMirror .alert-marker')?.textContent === '[!NOTE]'" },
+    { "assert": "[...document.querySelectorAll('.ProseMirror .mdv-highlight')].map(e => e.textContent).join('') === '==highlight==' && document.querySelectorAll('.ProseMirror .mdv-syntax').length === 2" },
+    { "assert": "!document.querySelector('.topbar .dirty')", "shot": "callouts" }
+  ]
+}

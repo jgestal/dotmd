@@ -108,6 +108,18 @@
   }
   .visual :global(.ProseMirror) { padding: 16px 32px !important; outline: none; line-height: var(--line-height); }
   .visual :global(.ProseMirror p) { font-size: var(--doc-size); line-height: var(--line-height); }
+  /* Callouts and highlights (see editor/visualDecorations.ts) */
+  .visual :global(.ProseMirror blockquote.markdown-alert) {
+    border-left: 0.25em solid var(--alert, var(--accent)); border-radius: 0 6px 6px 0; padding: 0.4em 1em;
+    background: color-mix(in srgb, var(--alert, var(--accent)) 8%, transparent); color: var(--fg);
+  }
+  .visual :global(.ProseMirror blockquote.markdown-alert::before) { display: none; }
+  .visual :global(.alert-marker) {
+    font-family: var(--font-ui); font-size: 0.78em; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--alert, var(--accent));
+  }
+  .visual :global(.mdv-highlight) { background: var(--mark); border-radius: 3px; }
+  .visual :global(.mdv-syntax) { opacity: 0.35; }
   .visual.focus-on :global(.ProseMirror > *) { opacity: 0.28; transition: opacity 0.18s; }
   .visual.focus-on :global(.ProseMirror > .mdv-focus) { opacity: 1; }
 </style>
