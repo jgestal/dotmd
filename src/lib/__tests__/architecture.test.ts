@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
-const LIB = path.resolve(__dirname, '..');
+const LIB = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const files = (dir: string) =>
-  fs.readdirSync(path.join(LIB, dir)).filter((f) => f.endsWith('.ts')).map((f) => path.join(LIB, dir, f));
+  fs.readdirSync(path.join(LIB, dir)).filter((f: string) => f.endsWith('.ts')).map((f: string) => path.join(LIB, dir, f));
 const imports = (file: string) => [...fs.readFileSync(file, 'utf8').matchAll(/from\s+'([^']+)'/g)].map((m) => m[1]);
 
 const FRAMEWORK = [/^@tauri-apps\//, /^svelte/, /state\.svelte/, /i18n/, /container/, /\.svelte$/, /infrastructure\//];
