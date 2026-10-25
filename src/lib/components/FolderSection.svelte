@@ -1,6 +1,6 @@
 <script lang="ts">
   // One workspace folder in the sidebar: collapsible header with actions, and its file tree.
-  import { invoke } from '@tauri-apps/api/core';
+  import { services } from '../container';
   import Icon from './Icon.svelte';
   import TreeNode from './TreeNode.svelte';
   import { app, session, settings } from '../state.svelte';
@@ -20,7 +20,7 @@
     app.treeVersion;
     const all = settings.showAllFiles;
     if (collapsed || gone) return;
-    invoke<Entry[]>('list_dir', { path: root, all })
+    services.fs.listDir(root, all)
       .then((e) => (entries = e))
       .catch(() => { entries = []; missing[root] = true; });
   });

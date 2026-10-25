@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/core';
+  import { services } from '../container';
   import { open } from '@tauri-apps/plugin-dialog';
   import Icon from './Icon.svelte';
   import { app, settings } from '../state.svelte';
@@ -17,10 +17,10 @@
   let engine = $state<string | null | undefined>(undefined);
 
   $effect(() => {
-    invoke<string | null>('pdf_engine').then((e) => (engine = e));
+    services.exporter.pdfEngineName().then((e) => (engine = e));
     const roots = workspaceFolders();
     if (roots.length) {
-      Promise.all(roots.map((path) => invoke<string[]>('list_tree', { path }))).then((lists) => lists.flat()).then((list) => {
+      Promise.all(roots.map((path) => services.fs.listTree(path))).then((lists) => lists.flat()).then((list) => {
         files = list;
         picked = Object.fromEntries(list.map((f) => [f, f === app.path]));
         if (!app.path && list.length) picked[list[0]] = true;

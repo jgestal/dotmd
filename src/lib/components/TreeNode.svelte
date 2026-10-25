@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/core';
+  import { services } from '../container';
   import Icon from './Icon.svelte';
   import Self from './TreeNode.svelte';
   import { app, session, settings } from '../state.svelte';
@@ -20,7 +20,7 @@
 
   async function load() {
     try {
-      children = await invoke<Entry[]>('list_dir', { path: entry.path, all: settings.showAllFiles });
+      children = await services.fs.listDir(entry.path, settings.showAllFiles);
     } catch {
       children = [];
     }

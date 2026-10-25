@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/core';
+  import { services } from '../container';
   import Picker from './Picker.svelte';
   import { app, session } from '../state.svelte';
   import { t } from '../i18n';
@@ -26,7 +26,7 @@
         .sort((a, b) => b.m!.score - a.m!.score)
         .map(({ p, m }) => ({ item: p, html: highlight(basename(p), m!.indices), detail: dirname(p) }));
     }
-    const lists = await Promise.all(roots.map((root) => invoke<Hit[]>('fuzzy_find', { root, query: q, limit: 60 }).then((hits) =>
+    const lists = await Promise.all(roots.map((root) => services.search.fuzzyFind(root, q, 60).then((hits) =>
       // With several folders the folder name prefixes each path (its letters do not count as matches).
       roots.length > 1 ? hits.map((h) => ({ ...h, rel: `${basename(root)}/${h.rel}`, indices: h.indices.map((i) => i + basename(root).length + 1) })) : hits)));
     return lists.flat().sort((a, b) => b.score - a.score).slice(0, 60).map(label);

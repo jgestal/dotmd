@@ -1,4 +1,5 @@
-import { invoke, convertFileSrc } from '@tauri-apps/api/core';
+import { convertFileSrc } from '@tauri-apps/api/core';
+import { services } from './container';
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js/lib/common';
 import katex from 'katex';
@@ -6,7 +7,7 @@ import { codeLang, docKind, isAbsolute, join } from './path';
 import type { Theme } from './themes';
 
 export async function renderHtml(md: string): Promise<string> {
-  const raw = await invoke<string>('render_markdown', { text: md });
+  const raw = await services.markdown.toHtml(md);
   return DOMPurify.sanitize(raw, { ADD_ATTR: ['target'], FORBID_TAGS: ['style', 'script'] });
 }
 
@@ -152,7 +153,7 @@ export async function postProcess(root: HTMLElement, opts: PostOptions): Promise
     const abs = resolveSrc(img.getAttribute('src') ?? '', opts.dir);
     if (!abs) continue;
     if (opts.forExport) {
-      jobs.push(invoke<string>('read_data_url', { path: abs }).then((d) => (img.src = d)).catch(() => {}));
+      jobs.push(services.exporter.imageDataUrl(abs).then((d) => (img.src = d)).catch(() => {}));
     } else {
       img.src = convertFileSrc(abs);
     }

@@ -1,6 +1,6 @@
 // `dotmd --export pdf|html <inputs…> [-o out] [--merge]`: renders with the user's settings, writes the
 // files and quits without ever showing the window. Folders are expanded to the documents inside.
-import { invoke } from '@tauri-apps/api/core';
+import { services } from './container';
 import { settings } from './state.svelte';
 import { currentTheme } from './appearance.svelte';
 import { exportHtmlFile, exportPdfFile, exportTheme } from './export';
@@ -24,8 +24,8 @@ export function planOutputs(files: { path: string; root: string | null }[], job:
 async function expand(inputs: string[]): Promise<{ path: string; root: string | null }[]> {
   const out: { path: string; root: string | null }[] = [];
   for (const p of inputs) {
-    const kind = await invoke<string>('path_kind', { path: p });
-    if (kind === 'dir') for (const f of await invoke<string[]>('list_tree', { path: p })) out.push({ path: f, root: p });
+    const kind = await services.fs.kind(p);
+    if (kind === 'dir') for (const f of await services.fs.listTree(p)) out.push({ path: f, root: p });
     else if (kind === 'file') out.push({ path: p, root: null });
     else throw new Error(`not found: ${p}`);
   }
@@ -33,7 +33,7 @@ async function expand(inputs: string[]): Promise<{ path: string; root: string | 
 }
 
 export async function runCliExport(): Promise<boolean> {
-  const job = await invoke<CliExport | null>('take_cli_export');
+  const job = await services.process.takeCliExport<CliExport>();
   if (!job) return false;
   let code = 0;
   try {
@@ -43,7 +43,7 @@ export async function runCliExport(): Promise<boolean> {
     const o = { theme: exportTheme(currentTheme()), pageSize: settings.pdfPageSize, margin: settings.pdfMargin, toc: job.merge };
     const write = (docs: { md: string; path: string }[], out: string) =>
       job.format === 'html' ? exportHtmlFile(docs, out, o) : exportPdfFile(docs, out, o).then((ok) => { if (!ok) throw new Error('no PDF engine available'); });
-    const read = async (path: string) => ({ md: await invoke<string>('read_text', { path }), path });
+    const read = async (path: string) => ({ md: await services.fs.readText(path), path });
 
     if (job.merge) {
       await write(await Promise.all(files.map((f) => read(f.path))), job.output!);
@@ -60,6 +60,6 @@ export async function runCliExport(): Promise<boolean> {
     console.error('export failed:', e);
     code = 1;
   }
-  await invoke('quit', { code });
+  await services.process.quit(code);
   return true;
 }

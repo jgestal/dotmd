@@ -1,7 +1,7 @@
 // Composition root: the only place that picks concrete adapters and wires the use cases together.
 // Everything else receives its dependencies (Services and state) instead of importing them.
-import type { FileFilter, Services } from './ports';
-import { tauriDialogs, tauriFileSystem, tauriWatcher, tauriWindow } from './infrastructure/tauri';
+import type { FileFilter, PlatformServices } from './ports';
+import { tauriDialogs, tauriExporter, tauriFileSystem, tauriMarkdown, tauriProcess, tauriSearch, tauriWatcher, tauriWindow } from './infrastructure/tauri';
 import { createDocuments } from './application/documents';
 import { createWorkspace } from './application/workspace';
 import { createFiles } from './application/files';
@@ -9,7 +9,11 @@ import { app, missing, session, settings, toast } from './state.svelte';
 import { t, type Key } from './i18n';
 import { basename, dirname, isPlainText, isTextPath, join } from './path';
 
-export const services: Services = {
+export const services: PlatformServices = {
+  markdown: tauriMarkdown,
+  exporter: tauriExporter,
+  search: tauriSearch,
+  process: tauriProcess,
   fs: tauriFileSystem,
   dialogs: tauriDialogs,
   window: tauriWindow,

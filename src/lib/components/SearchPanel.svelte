@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { invoke, Channel } from '@tauri-apps/api/core';
+  import { services } from '../container';
   import Icon from './Icon.svelte';
   import { app, settings } from '../state.svelte';
   import { t } from '../i18n';
@@ -7,10 +7,7 @@
   import { workspaceFolders } from '../workspace.svelte';
   import { escapeHtml } from '../render';
 
-  interface LineHit { line: number; text: string; ranges: [number, number][] }
-  type SearchEvent =
-    | { kind: 'file'; path: string; rel: string; matches: LineHit[] }
-    | { kind: 'done'; files: number; matches: number; truncated: boolean };
+  import type { LineHit, SearchEvent } from '../ports';
 
   let query = $state('');
   let regex = $state(false);
@@ -41,14 +38,13 @@
     error = '';
     if (!q.trim() || !roots.length) { running = false; return; }
     running = true;
-    const ch = new Channel<SearchEvent>();
-    ch.onmessage = (ev) => {
+    const onEvent = (ev: SearchEvent) => {
       if (my !== seq) return;
       if (ev.kind === 'file') results.push({ path: ev.path, rel: ev.rel, matches: ev.matches, open: true });
       else { summary = ev; running = false; }
     };
     try {
-      await invoke('search_folder', { roots, query: q, regex: r, caseSensitive: c, onEvent: ch });
+      await services.search.searchFolders(roots, q, { regex: r, caseSensitive: c }, onEvent);
     } catch (e) {
       if (my === seq) { error = String(e); running = false; }
     }

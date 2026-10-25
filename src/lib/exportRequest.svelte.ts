@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { services } from './container';
 import { save } from '@tauri-apps/plugin-dialog';
 import { app, settings, toast } from './state.svelte';
 import { t } from './i18n';
@@ -23,7 +23,7 @@ function options(toc: boolean): ExportOptions {
 async function readDoc(path: string): Promise<{ md: string; path: string }> {
   // The open document may have unsaved edits: export what the user sees.
   if (path === app.path) return { md: app.content, path };
-  return { md: await invoke<string>('read_text', { path }), path };
+  return { md: await services.fs.readText(path), path };
 }
 
 function fallbackPrint() {

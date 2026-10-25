@@ -27,6 +27,14 @@ describe('architecture', () => {
   it('ports are pure types', () => {
     for (const f of files('ports')) expect(imports(f)).toEqual([]);
   });
+  it('only infrastructure calls Rust commands (invoke)', () => {
+    const walk = (dir: string): string[] =>
+      fs.readdirSync(dir, { withFileTypes: true }).flatMap((e: any) => (e.isDirectory() ? walk(path.join(dir, e.name)) : [path.join(dir, e.name)]));
+    const offenders = walk(LIB)
+      .filter((f) => /\.(ts|svelte)$/.test(f) && !f.includes('infrastructure') && !f.includes('__tests__'))
+      .filter((f) => /\binvoke\s*[<(]/.test(fs.readFileSync(f, 'utf8')));
+    expect(offenders.map((f) => path.relative(LIB, f))).toEqual([]);
+  });
   it('only infrastructure talks to Tauri among the core modules', () => {
     for (const dir of ['domain', 'application', 'ports']) {
       for (const f of files(dir)) expect(fs.readFileSync(f, 'utf8')).not.toMatch(/invoke\(|@tauri-apps/);

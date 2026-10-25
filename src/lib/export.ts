@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { services } from './container';
 import documentCss from './styles/document.css?raw';
 import { postProcess, renderDocument, escapeHtml } from './render';
 import { THEMES, type Theme } from './themes';
@@ -222,7 +222,7 @@ ${parts.join('\n')}
 
 export async function exportHtmlFile(docs: { md: string; path: string | null }[], out: string, o: ExportOptions) {
   const html = await buildDocument(docs, o, docs.length === 1 && docs[0].path ? stem(docs[0].path) : stem(out));
-  await invoke('write_export', { path: out, html });
+  await services.exporter.writeHtml(out, html);
 }
 
 /** Returns false when no PDF engine is available (caller falls back to the print dialog). */
@@ -232,17 +232,17 @@ export async function exportPdfFile(docs: { md: string; path: string | null }[],
   if (settings.pdfEngine !== 'chromium') {
     try {
       // Margins live inside the paginated sheets, so the print operation itself uses none.
-      await invoke('export_pdf_native', { html, out, pageSize: o.pageSize, marginMm: 0 });
+      await services.exporter.printPdfNative(html, out, o.pageSize, 0);
       return true;
     } catch (e) {
-      if (String(e) !== 'unsupported') console.warn('Native PDF export failed, trying Chromium:', e);
+      if ((e as Error).message !== 'unsupported') console.warn('Native PDF export failed, trying Chromium:', e);
     }
   }
   try {
-    await invoke('export_pdf', { html, out });
+    await services.exporter.printPdfChromium(html, out);
     return true;
   } catch (e) {
-    if (String(e) === 'no-engine') return false;
+    if ((e as { code?: string }).code === 'no-engine') return false;
     throw e;
   }
 }

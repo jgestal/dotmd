@@ -1,8 +1,8 @@
 // Tauri adapters: the real implementations of the ports (Rust commands and plugins).
-import { invoke } from '@tauri-apps/api/core';
+import { invoke, Channel } from '@tauri-apps/api/core';
 import { ask, message, open, save } from '@tauri-apps/plugin-dialog';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import type { AppWindow, Dialogs, DirEntry, FileSystem, FileWatcher, PathKind } from '../../ports';
+import type { AppProcess, AppWindow, Dialogs, DirEntry, Exporter, FileSystem, FileWatcher, FuzzyHit, MarkdownEngine, PathKind, SearchEngine, SearchEvent } from '../../ports';
 import { toAppError } from '../../domain/errors';
 
 /** Runs a Rust command, turning its string errors into AppErrors. */
@@ -48,4 +48,32 @@ export const tauriWindow: AppWindow = {
 
 export const tauriWatcher: FileWatcher = {
   watch: (paths) => invoke<void>('watch_files', { paths }).catch(() => {}),
+};
+
+export const tauriMarkdown: MarkdownEngine = {
+  toHtml: (text) => call<string>('render_markdown', { text }),
+};
+
+export const tauriExporter: Exporter = {
+  writeHtml: (path, html) => call<void>('write_export', { path, html }, path),
+  printPdfNative: (html, out, pageSize, marginMm) => call<void>('export_pdf_native', { html, out, pageSize, marginMm }, out),
+  printPdfChromium: (html, out) => call<void>('export_pdf', { html, out }, out),
+  pdfEngineName: () => call<string | null>('pdf_engine', {}),
+  imageDataUrl: (path) => call<string>('read_data_url', { path }, path),
+};
+
+export const tauriSearch: SearchEngine = {
+  fuzzyFind: (root, query, limit) => call<FuzzyHit[]>('fuzzy_find', { root, query, limit }, root),
+  async searchFolders(roots, query, o, onEvent) {
+    const ch = new Channel<SearchEvent>();
+    ch.onmessage = onEvent;
+    await call<void>('search_folder', { roots, query, regex: o.regex, caseSensitive: o.caseSensitive, onEvent: ch });
+  },
+};
+
+export const tauriProcess: AppProcess = {
+  takePendingOpen: () => call<string[]>('take_pending_open', {}),
+  takeCliExport: <T>() => call<T | null>('take_cli_export', {}),
+  quit: (code) => call<void>('quit', { code }),
+  installCli: () => call<string>('install_cli', {}),
 };

@@ -1,4 +1,3 @@
-import { invoke } from '@tauri-apps/api/core';
 import { Menu } from '@tauri-apps/api/menu';
 import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { app, toast } from './state.svelte';
@@ -7,22 +6,14 @@ import { askFields } from './prompt.svelte';
 import { dirname, join } from './path';
 import { openFolder, openPath, renamePath, trashPath } from './actions';
 import { exportRequest } from './exportRequest.svelte';
+import { files } from './container';
 import { isFavorite, removeFolder, toggleFavorite, workspaceFolders } from './workspace.svelte';
 
 interface Entry { name: string; path: string; is_dir: boolean }
 
 async function newFileIn(dir: string) {
   const v = await askFields(t('ctx.newFile'), [{ key: 'name', label: t('common.name'), value: 'note.md' }]);
-  if (!v?.name) return;
-  const name = /\.[a-z0-9]+$/i.test(v.name) ? v.name : v.name + '.md';
-  const path = join(dir, name);
-  try {
-    await invoke('create_file', { path });
-    app.treeVersion++;
-    await openPath(path);
-  } catch (e) {
-    toast(t('toast.error', { msg: String(e) }));
-  }
+  if (v?.name) await files.createIn(dir, v.name);
 }
 
 async function rename(entry: Entry) {

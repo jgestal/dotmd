@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { invoke } from '@tauri-apps/api/core';
+  import { services } from '$lib/container';
   import { listen } from '@tauri-apps/api/event';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { getCurrentWebview } from '@tauri-apps/api/webview';
@@ -89,7 +89,7 @@
     const unlisten: Promise<() => void>[] = [];
 
     unlisten.push(listen<string>('file-changed', (e) => onExternalChange(e.payload)));
-    unlisten.push(listen<string[]>('open-paths', () => invoke<string[]>('take_pending_open').then(handleDroppedPaths)));
+    unlisten.push(listen<string[]>('open-paths', () => services.process.takePendingOpen().then(handleDroppedPaths)));
     unlisten.push(
       getCurrentWebview().onDragDropEvent((e) => {
         const p = e.payload;
@@ -115,7 +115,7 @@
     (async () => {
       if (await runCliExport()) return;
       try {
-        const pending = await invoke<string[]>('take_pending_open');
+        const pending = await services.process.takePendingOpen();
         if (pending.length) await handleDroppedPaths(pending);
         else {
           // Older sessions only knew one folder.
