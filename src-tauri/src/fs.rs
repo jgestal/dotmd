@@ -228,9 +228,70 @@ pub fn copy_asset(dir: String, src: String) -> Result<String, String> {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    fn temp(name: &str) -> PathBuf {
+        let d = std::env::temp_dir().join(format!("dotmd-fs-{}-{name}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&d);
+        std::fs::create_dir_all(&d).unwrap();
+        d
+    }
+    fn s(p: &Path) -> String { p.to_string_lossy().into_owned() }
+
+    #[test]
+    fn lists_folders_first_and_hides_dotfiles_and_non_text() {
+        let d = temp("list");
+        for f in ["b.md", "A.txt", "photo.jpg", ".secret.md"] { std::fs::write(d.join(f), "x").unwrap(); }
+        for f in ["zdir", "node_modules", ".git"] { std::fs::create_dir(d.join(f)).unwrap(); }
+        let names: Vec<String> = list_dir(s(&d), false).unwrap().into_iter().map(|e| e.name).collect();
+        assert_eq!(names, ["zdir", "A.txt", "b.md"]);
+        let all: Vec<String> = list_dir(s(&d), true).unwrap().into_iter().map(|e| e.name).collect();
+        assert!(all.contains(&"photo.jpg".to_string()));
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn walks_text_documents_recursively() {
+        let d = temp("tree");
+        std::fs::create_dir_all(d.join("a/b")).unwrap();
+        std::fs::create_dir_all(d.join("node_modules/x")).unwrap();
+        for f in ["root.md", "a/one.txt", "a/b/two.md", "a/b/img.png", "node_modules/x/skip.md"] { std::fs::write(d.join(f), "x").unwrap(); }
+        let tree = list_tree(s(&d));
+        let rel: Vec<String> = tree.iter().map(|p| p.trim_start_matches(&s(&d)).to_string()).collect();
+        assert_eq!(rel.len(), 3, "{rel:?}");
+        assert!(!rel.iter().any(|p| p.contains("node_modules") || p.ends_with(".png")));
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn writes_atomically_and_reads_back() {
+        let d = temp("write");
+        let f = s(&d.join("doc.md"));
+        write_text(f.clone(), "hola".into()).unwrap();
+        write_text(f.clone(), "adiós".into()).unwrap();
+        assert_eq!(read_text(f).unwrap(), "adiós");
+        let leftovers: Vec<_> = std::fs::read_dir(&d).unwrap().filter_map(|e| e.ok()).filter(|e| e.file_name().to_string_lossy().contains("tmp")).collect();
+        assert!(leftovers.is_empty(), "temporary file left behind");
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
+    fn rename_and_create_refuse_to_overwrite() {
+        let d = temp("rename");
+        let (a, b) = (s(&d.join("a.md")), s(&d.join("b.md")));
+        create_file(a.clone()).unwrap();
+        create_file(b.clone()).unwrap();
+        assert!(create_file(a.clone()).is_err());
+        assert_eq!(rename_path(a.clone(), b.clone()).unwrap_err(), "exists");
+        rename_path(a, s(&d.join("c.md"))).unwrap();
+        assert_eq!(path_kind(s(&d.join("c.md"))), "file");
+        assert_eq!(path_kind(s(&d)), "dir");
+        assert_eq!(path_kind(s(&d.join("a.md"))), "missing");
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
     #[test]
     fn decodes_common_encodings() {
-        use super::decode_text;
         assert_eq!(decode_text(b"\xEF\xBB\xBFhola").unwrap(), "hola");
         assert_eq!(decode_text(b"\xFF\xFEh\0i\0").unwrap(), "hi");
         assert_eq!(decode_text(b"caf\xE9").unwrap(), "café");
@@ -239,7 +300,6 @@ mod tests {
 
     #[test]
     fn recognises_text_files() {
-        use std::path::Path;
         assert!(super::is_text_file(Path::new("a/notes.MD")));
         assert!(super::is_text_file(Path::new("data.csv")));
         assert!(super::is_text_file(Path::new("Makefile")));
