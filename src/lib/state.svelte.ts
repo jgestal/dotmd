@@ -214,6 +214,9 @@ export const app = $state({
 
 export const isDirty = () => app.content !== app.saved;
 
+/** Workspace folders and favourites that no longer exist on disk. */
+export const missing = $state<Record<string, boolean>>({});
+
 $effect.root(() => {
   $effect(() => {
     try { localStorage.setItem('dotmd.settings', JSON.stringify(settings)); } catch {}

@@ -16,7 +16,8 @@
     "screenshots": "node tests/ui/run.mjs screenshots && for n in welcome read split pages tractor typewriter csv focus-crt settings; do cp tests/ui/out/screenshots-$n.png docs/screenshots/$n.png; done",
     "test": "vitest run",
     "build:debug": "tauri build --debug --no-bundle",
-    "test:cli": "node tests/e2e/cli.mjs"
+    "test:cli": "node tests/e2e/cli.mjs",
+    "test:coverage": "vitest run --coverage"
   },
   "license": "MIT",
   "dependencies": {
@@ -60,6 +61,7 @@
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "@tauri-apps/cli": "^2",
     "@types/turndown": "^5.0.6",
+    "@vitest/coverage-v8": "^4.1.12",
     "jsdom": "^29.1.1",
     "puppeteer-core": "^25.16.0",
     "svelte": "^5.56.3",
