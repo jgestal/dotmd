@@ -22,7 +22,7 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
 - **Rendering**: GitHub Flavored Markdown, Mermaid diagrams, KaTeX math, syntax highlighting, front matter, clickable task lists and links between notes.
 - **Live reload** when another program changes the open file.
 - **Statistics under the document**: words, characters, letters, sentences, paragraphs and reading time, each toggled separately, plus cursor position, document type and line endings.
-  - The detail panel adds a readability score (Flesch for English, Fernández-Huerta for Spanish) and a word goal with a progress ring.
+  - The detail panel adds a readability score adapted to the document's language (Flesch, Fernández-Huerta, Kandel-Moles, Amstad, Flesch-Vacca, Martins) and a word goal with a progress ring.
 - **Zen mode**:
   - Full screen, with focus highlighting on the current line, sentence or paragraph.
   - Typewriter scrolling, which keeps the cursor centered.
@@ -35,7 +35,9 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
   - Customize the accent color, fonts, size, line height, text width and paragraph spacing, or add your own CSS.
 - **Export** to self-contained HTML (fonts embedded) and to PDF, one file or **in batch**, with an option to merge everything into a single document and a table of contents. PDFs are printed natively on macOS and Linux.
 - **Command line**: `dotmd --export pdf notes.md notes.pdf` exports without opening a window.
-- **Languages**: English (default) and Spanish.
+- **Presentations**: any Markdown document is a deck — `---` separates slides, a paragraph starting with `Note:` holds the speaker notes. Present full screen (⌘⌥↩; arrows, N for notes, Esc), or export the slides as a 16:9 PDF or an HTML deck (`dotmd --export pdf talk.md --slides`).
+- **Languages**: English (default), Spanish, French, German, Italian, Portuguese, Catalan and Galician.
+- **Preferences** can be exported, imported or kept in a synced folder (Google Drive, Dropbox, iCloud…).
 
 | Split mode | Page view | Focus writing (CRT theme) |
 |---|---|---|

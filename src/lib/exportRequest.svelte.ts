@@ -4,7 +4,7 @@ import { app, settings, toast } from './state.svelte';
 import { t } from './i18n';
 import { dirname, join, relative, stem } from './path';
 import { currentTheme } from './appearance.svelte';
-import { exportHtmlFile, exportPdfFile, exportTheme, type ExportOptions } from './export';
+import { exportHtmlFile, exportPdfFile, exportSlidesFile, exportTheme, type ExportOptions } from './export';
 
 export type Format = 'pdf' | 'html';
 
@@ -48,6 +48,20 @@ export const exportRequest = $state({
       const doc = path ? await readDoc(path) : { md: app.content, path: null };
       if (format === 'html') await exportHtmlFile([doc], out, options(false));
       else if (!(await exportPdfFile([doc], out, options(false)))) return fallbackPrint();
+      toast(t('toast.exported', { n: 1 }));
+    } catch (e) {
+      toast(t('toast.error', { msg: String(e) }), 5000);
+    }
+  },
+
+  /** The open document as slides (PDF, one 16:9 page per slide, or an HTML deck). */
+  async slides(path: string | null) {
+    const base = path ? join(dirname(path), stem(path)) : t('top.untitled');
+    const out = await save({ defaultPath: `${base} (slides).pdf`, filters: [{ name: 'PDF', extensions: ['pdf'] }, { name: 'HTML', extensions: ['html'] }] });
+    if (!out) return;
+    try {
+      const doc = path ? await readDoc(path) : { md: app.content, path: null };
+      if (!(await exportSlidesFile(doc.md, doc.path, out, exportTheme(currentTheme())))) return fallbackPrint();
       toast(t('toast.exported', { n: 1 }));
     } catch (e) {
       toast(t('toast.error', { msg: String(e) }), 5000);

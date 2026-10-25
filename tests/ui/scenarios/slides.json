@@ -1,0 +1,21 @@
+{
+  "open": "$FIX/deck.md",
+  "settings": { "theme": "modern" },
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1')" },
+    { "chord": ["Mod", "Alt", "Enter"], "waitFor": "document.querySelector('.presentation .slide')", "wait": 500, "shot": "title" },
+    { "assert": "document.querySelector('.slide').classList.contains('title') && document.querySelector('.slide-num').textContent.trim() === '1 / 4'" },
+    { "keys": "ArrowRight", "wait": 300 },
+    { "assert": "document.querySelector('.slide-body h2').textContent === 'Agenda' && !document.querySelector('.slide-body').textContent.includes('Note:')" },
+    { "keys": "n", "wait": 300, "shot": "notes" },
+    { "assert": "document.querySelector('.notes').textContent.includes('two minutes')" },
+    { "keys": "ArrowRight", "waitFor": "document.querySelector('.slide-body .mermaid-diagram svg')", "wait": 300 },
+    { "keys": "End", "wait": 500, "shot": "long" },
+    { "assert": "(() => { const b = document.querySelector('.slide-body'); return b.scrollHeight <= b.clientHeight + 1 && parseFloat(b.style.fontSize) < 30; })()" },
+    { "keys": "Escape", "wait": 300 },
+    { "assert": "!document.querySelector('.presentation')" },
+    { "eval": "{ window.__savePath = window.__FIX + '/deck.html'; import('/src/lib/exportRequest.svelte.ts').then(m => m.exportRequest.slides(window.__FIX + '/deck.md')) }", "waitFor": "document.querySelector('.toast')?.textContent.includes('Exported')" },
+    { "eval": "{ window.__TAURI_INTERNALS__.invoke('read_text', { path: window.__FIX + '/deck.html' }).then(t => (window.__deck = t)) }", "waitFor": "window.__deck" },
+    { "assert": "(window.__deck.match(/<section class=\"slide /g) || []).length === 4 && window.__deck.includes('@page{size:254mm 142.875mm')" }
+  ]
+}

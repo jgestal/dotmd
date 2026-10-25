@@ -7,6 +7,8 @@ export const PAPER_MM: Record<string, [number, number]> = {
   A5: [148, 210],
   Letter: [215.9, 279.4],
   Legal: [215.9, 355.6],
+  /** 16:9 slides (10 × 5.625 in). */
+  Slides: [254, 142.875],
 };
 
 const HEADING = /^H[1-6]$/;

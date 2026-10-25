@@ -91,6 +91,7 @@ function base(): Command[] {
     { id: 'file.export', label: L('cmd.export'), shortcut: 'CmdOrCtrl+Shift+E', menu: 'file', separator: true, run: () => (app.exportOpen = true) },
     { id: 'file.exportPdf', label: L('cmd.exportPdf'), menu: 'file', enabled: hasDoc, run: () => exportRequest.quick(app.path, 'pdf') },
     { id: 'file.exportHtml', label: L('cmd.exportHtml'), menu: 'file', enabled: hasDoc, run: () => exportRequest.quick(app.path, 'html') },
+    { id: 'file.exportSlides', label: L('cmd.exportSlides'), menu: 'file', enabled: () => hasDoc() && !isPlainText(app.path), run: () => exportRequest.slides(app.path) },
     { id: 'file.print', label: L('cmd.print'), menu: 'file', enabled: hasDoc, run: () => window.print() },
 
     // Edit
@@ -150,6 +151,7 @@ function base(): Command[] {
     { id: 'view.sidebar', label: L('sidebar.toggle'), shortcut: 'CmdOrCtrl+\\', menu: 'view', separator: true, checked: () => app.sidebar, run: () => (app.sidebar = !app.sidebar) },
     { id: 'view.outline', label: L('cmd.outline'), menu: 'view', run: () => { app.sidebar = true; app.sidebarTab = 'outline'; } },
     { id: 'view.search', label: L('cmd.search'), shortcut: 'CmdOrCtrl+Shift+F', menu: 'view', run: () => { app.sidebar = true; app.sidebarTab = 'search'; app.searchFocus++; } },
+    { id: 'view.present', label: L('cmd.present'), shortcut: 'CmdOrCtrl+Alt+Enter', menu: 'view', separator: true, enabled: () => hasDoc() && !isPlainText(app.path), checked: () => app.presenting, run: () => (app.presenting = !app.presenting) },
     { id: 'view.zen', label: L('top.zen'), shortcut: 'CmdOrCtrl+Shift+Enter', menu: 'view', separator: true, checked: () => app.zen, run: toggleZen },
     { id: 'view.focusWriting', label: L('cmd.focusWriting'), shortcut: 'CmdOrCtrl+Alt+F', menu: 'view', checked: focusWriting, run: toggleFocusWriting },
     { id: 'view.focusToggle', label: L('cmd.toggleFocus'), shortcut: 'CmdOrCtrl+Alt+L', menu: 'view', checked: () => settings.focusMode !== 'off' && !settings.focusOnlyZen, run: toggleFocusHighlight },

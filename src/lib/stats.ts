@@ -75,21 +75,48 @@ export function computeStats(raw: string, markdown: boolean, lang: string): Stat
   if (words > 30 && plain.length < 200_000) {
     for (const w of plain.match(/\p{L}+/gu) ?? []) syllables += countSyllables(w);
     const s = Math.max(1, sentences);
-    readability = lang === 'es'
-      ? 206.84 - 0.6 * (syllables / words) * 100 - 1.02 * (s / words) * 100 // Fernández-Huerta
-      : 206.835 - 1.015 * (words / s) - 84.6 * (syllables / words); // Flesch reading ease
+    const asl = words / s; // words per sentence
+    const asw = syllables / words; // syllables per word
+    readability = (READABILITY[lang] ?? READABILITY.en)(asl, asw);
     readability = Math.max(0, Math.min(100, Math.round(readability)));
   }
   return { words, chars, charsNoSpaces, letters, sentences, paragraphs, lines, headings, links, images, syllables, readability };
 }
 
-/** Guesses whether a document is Spanish, for picking the readability formula. */
+/** Flesch reading ease adapted to each language (0 = very hard, 100 = very easy). */
+const READABILITY: Record<string, (asl: number, asw: number) => number> = {
+  en: (asl, asw) => 206.835 - 1.015 * asl - 84.6 * asw, // Flesch
+  es: (asl, asw) => 206.84 - 60 * asw - 102 / asl, // Fernández-Huerta
+  ca: (asl, asw) => 206.84 - 60 * asw - 102 / asl, // Fernández-Huerta (close Romance syllable structure)
+  gl: (asl, asw) => 206.84 - 60 * asw - 102 / asl,
+  fr: (asl, asw) => 207 - 1.015 * asl - 73.6 * asw, // Kandel & Moles
+  de: (asl, asw) => 180 - asl - 58.5 * asw, // Amstad
+  it: (asl, asw) => 217 - 1.3 * asl - 60 * asw, // Flesch–Vacca
+  pt: (asl, asw) => 248.835 - 1.015 * asl - 84.6 * asw, // Martins et al.
+};
+
+// Frequent words that are typical of each language (overlaps kept small on purpose).
+const MARKERS: Record<string, string[]> = {
+  en: ['the', 'and', 'of', 'to', 'is', 'that', 'it', 'for', 'with', 'this', 'are', 'was'],
+  es: ['el', 'los', 'las', 'y', 'por', 'del', 'para', 'con', 'es', 'está', 'pero', 'muy'],
+  fr: ['le', 'les', 'des', 'est', 'et', 'une', 'qui', 'pas', 'dans', 'pour', 'sur', 'avec'],
+  de: ['der', 'die', 'das', 'und', 'ist', 'nicht', 'ein', 'eine', 'mit', 'von', 'sich', 'auch'],
+  it: ['il', 'gli', 'della', 'delle', 'sono', 'anche', 'questo', 'è', 'nel', 'alla', 'perché', 'molto'],
+  pt: ['não', 'uma', 'os', 'também', 'são', 'você', 'em', 'mais', 'pelo', 'muito', 'isso', 'até'],
+  ca: ['els', 'amb', 'és', 'i', 'això', 'perquè', 'dels', 'aquest', 'molt', 'però', 'fins', 'seu'],
+  gl: ['unha', 'non', 'tamén', 'xa', 'ao', 'polo', 'coma', 'moi', 'iso', 'aínda', 'nin', 'cando'],
+};
+
+/** Guesses the language of a document (for the readability formula); `fallback` if unsure. */
 export function guessLang(text: string, fallback: string): string {
-  const sample = text.slice(0, 4000).toLowerCase();
-  const es = (sample.match(/\b(el|la|los|las|que|de|y|en|un|una|por|para|con|es|del)\b/g) ?? []).length;
-  const en = (sample.match(/\b(the|and|of|to|is|in|that|it|for|with|on|this|are)\b/g) ?? []).length;
-  if (es + en < 8) return fallback;
-  return es > en ? 'es' : 'en';
+  const words = text.slice(0, 4000).toLowerCase().match(/\p{L}+/gu) ?? [];
+  const counts = new Map<string, number>();
+  const index = new Map<string, string[]>();
+  for (const [lang, list] of Object.entries(MARKERS)) for (const w of list) index.set(w, [...(index.get(w) ?? []), lang]);
+  for (const w of words) for (const lang of index.get(w) ?? []) counts.set(lang, (counts.get(lang) ?? 0) + 1);
+  const ranked = [...counts].sort((a, b) => b[1] - a[1]);
+  if (!ranked.length || ranked[0][1] < 3 || ranked[0][1] === ranked[1]?.[1]) return fallback;
+  return ranked[0][0];
 }
 
 export function formatMinutes(words: number, wpm: number): string {

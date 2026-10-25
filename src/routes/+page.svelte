@@ -16,6 +16,7 @@
   import Welcome from '$lib/components/Welcome.svelte';
   import CommandPalette from '$lib/components/CommandPalette.svelte';
   import QuickOpen from '$lib/components/QuickOpen.svelte';
+  import Presentation from '$lib/components/Presentation.svelte';
   import { allCommands, handleShortcut, setMode } from '$lib/commands';
   import { installMenu, syncMenuState } from '$lib/menu';
   import { app, settings, session, isDirty, focusActive, type Mode } from '$lib/state.svelte';
@@ -190,6 +191,7 @@
         <button class="tb" onclick={() => saveDoc()} title="{t('top.save')}  {modKey}S" disabled={!isDirty()}><Icon name="save" /></button>
         <button class="tb" class:on={focusActive() && !app.zen} onclick={toggleFocusHighlight} title="{t('cmd.toggleFocus')}  {modKey}⌥L"><Icon name="focus" /></button>
         <button class="tb" onclick={toggleZen} title="{t('top.zen')}  {modKey}⇧↩"><Icon name="zen" /></button>
+        {#if !plain}<button class="tb" onclick={() => (app.presenting = true)} title="{t('cmd.present')}  {modKey}⌥↩"><Icon name="present" /></button>{/if}
       {/if}
       <button class="tb" onclick={toggleAppearance} title="{t('cmd.toggleAppearance')}  {modKey}⌥D"><Icon name={currentTheme().dark ? 'sun' : 'moon'} /></button>
       <button class="tb" onclick={() => (app.exportOpen = true)} title="{t('top.export')}  {modKey}⇧E"><Icon name="export" /></button>
@@ -241,6 +243,7 @@
   {#if app.exportOpen}<ExportDialog />{/if}
   {#if app.paletteOpen}<CommandPalette />{/if}
   {#if app.quickOpen}<QuickOpen />{/if}
+  {#if app.presenting}<Presentation />{/if}
   <PromptDialog />
 </div>
 

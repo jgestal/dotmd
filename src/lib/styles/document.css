@@ -250,3 +250,23 @@ main.markdown-body.theme-tractor { padding-top: 0.5in; padding-bottom: 0.5in; }
   text-align: center; font: 10px var(--font-ui, sans-serif); color: var(--fg-muted); letter-spacing: 0.04em;
 }
 .paged .page table { display: table; }
+
+/* Slides (presentation mode and slide PDFs): a 16:9 box whose type scales with its height. */
+.slide {
+  position: relative; box-sizing: border-box; width: var(--slide-w); height: var(--slide-h); overflow: hidden;
+  background: var(--paper, var(--bg)); color: var(--fg); display: flex; flex-direction: column;
+  padding: calc(var(--slide-h) * 0.08) calc(var(--slide-w) * 0.07);
+}
+.slide .slide-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: center; font-size: calc(var(--slide-h) / 24); line-height: 1.4; max-width: none; margin: 0; padding: 0; }
+.slide .slide-body > :first-child { margin-top: 0; }
+.slide .slide-body > :last-child { margin-bottom: 0; }
+.slide .slide-body h1 { font-size: 2em; border: 0; margin: 0 0 0.4em; }
+.slide .slide-body h2 { font-size: 1.5em; border: 0; margin: 0 0 0.5em; }
+.slide .slide-body h3 { font-size: 1.2em; }
+.slide .slide-body img, .slide .slide-body .mermaid-diagram svg { max-height: calc(var(--slide-h) * 0.6); object-fit: contain; }
+.slide .slide-body pre { font-size: 0.7em; }
+.slide .slide-body table { font-size: 0.8em; }
+.slide.title .slide-body { align-items: center; text-align: center; }
+.slide.title .slide-body h1 { font-size: 2.4em; }
+.slide.title .slide-body p { color: var(--fg-muted); font-size: 1.1em; }
+.slide .slide-num { position: absolute; right: calc(var(--slide-w) * 0.03); bottom: calc(var(--slide-h) * 0.03); font: calc(var(--slide-h) / 48) var(--font-ui); color: var(--fg-muted); }

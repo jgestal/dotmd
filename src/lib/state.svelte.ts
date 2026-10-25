@@ -1,3 +1,4 @@
+import type { Lang } from './i18n';
 import type { FormatAction } from './snippets';
 
 export type Mode = 'preview' | 'source' | 'split' | 'visual';
@@ -17,7 +18,7 @@ export type StatKey =
   | 'paragraphs' | 'lines' | 'reading' | 'speaking' | 'selection' | 'goal' | 'session';
 
 export interface Settings {
-  lang: 'en' | 'es';
+  lang: Lang;
   theme: string;
   /** Light/dark for the "Automatic" theme: follow the OS or force one. */
   appearance: 'system' | 'light' | 'dark';
@@ -159,7 +160,7 @@ function load<T>(key: string, fallback: T): T {
   }
 }
 
-function initialLang(): 'en' | 'es' {
+function initialLang(): Lang {
   return 'en'; // English by default; Spanish is opt-in from Settings.
 }
 
@@ -203,6 +204,8 @@ export const app = $state({
   /** Duration of the last pagination (diagnostics and performance tests). */
   paginateMs: 0,
   zen: false,
+  /** Slides from the open document are being presented full screen. */
+  presenting: false,
   /** Zen entered through "Focus writing": forces line focus and typewriter scrolling. */
   focusWriting: false,
   selection: '',

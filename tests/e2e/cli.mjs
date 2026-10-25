@@ -77,6 +77,14 @@ check('merges several files into one PDF', () => {
   assert(r.status === 0 && isPdf(path.join(work, 'book.pdf')), r.stderr);
   assert(pages(path.join(work, 'book.pdf')) >= 2, 'merged PDF should have at least two pages');
 });
+check('exports slides as 16:9 PDF pages', () => {
+  const r = run('--export', 'pdf', 'docs/deck.md', '--slides', '-o', 'deck.pdf');
+  const out = path.join(work, 'deck.pdf');
+  assert(r.status === 0 && isPdf(out), r.stderr);
+  assert(pages(out) === 4, `expected 4 slides, got ${pages(out)}`);
+  const box = fs.readFileSync(out).toString('latin1').match(/\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)/);
+  assert(box && Math.abs(box[1] / box[2] - 16 / 9) < 0.02, `expected a 16:9 page, got ${box?.slice(1)}`);
+});
 check('missing input fails cleanly', () => {
   const r = run('--export', 'html', 'nope.md');
   assert(r.status === 1, `status ${r.status}`);

@@ -1,0 +1,15 @@
+{
+  "settings": { "lang": "en" },
+  "actions": [
+    { "waitFor": "document.querySelector('.welcome h1')" },
+    { "assert": "document.querySelector('.welcome .sub').textContent.includes('Read, write and export Markdown')" },
+    { "eval": "{ window.__S = import('/src/lib/state.svelte.ts'); window.__S.then(m => { m.settings.lang = 'de'; }) }", "wait": 300 },
+    { "assert": "document.querySelector('.welcome .sub').textContent.includes('Markdown lesen') && document.documentElement.lang === 'de'" },
+    { "eval": "{ window.__S.then(m => { m.settings.lang = 'gl'; }) }", "wait": 300, "shot": "galego" },
+    { "assert": "document.querySelector('.welcome').textContent.includes('Abrir cartafol')" },
+    { "eval": "{ window.__S.then(m => { m.app.settingsOpen = true; }) }", "waitFor": "document.querySelector('.settings select')" },
+    { "assert": "[...document.querySelector('.settings select').options].map(o => o.value).join() === 'en,es,fr,de,it,pt,ca,gl'" },
+    { "reload": true, "waitFor": "document.querySelector('.welcome h1')" },
+    { "assert": "document.querySelector('.welcome .sub').textContent.includes('Le, escribe')" }
+  ]
+}

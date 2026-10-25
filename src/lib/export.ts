@@ -6,6 +6,7 @@ import { dirname, stem } from './path';
 import { settings } from './state.svelte';
 import { cssVars, fontsFor } from './appearance.svelte';
 import { paginate, PAPER_MM } from './paginate';
+import { fitSlide, splitSlides } from './slides';
 
 export interface ExportOptions {
   theme: Theme;
@@ -225,14 +226,56 @@ export async function exportHtmlFile(docs: { md: string; path: string | null }[]
   await services.exporter.writeHtml(out, html);
 }
 
-/** Returns false when no PDF engine is available (caller falls back to the print dialog). */
-export async function exportPdfFile(docs: { md: string; path: string | null }[], out: string, o: ExportOptions): Promise<boolean> {
-  const html = await buildDocument(docs, o, docs.length === 1 && docs[0].path ? stem(docs[0].path) : stem(out), true);
+/** The document as a deck: one 16:9 page per slide, text already fitted to each slide. */
+export async function buildSlides(md: string, path: string | null, theme: Theme, title: string): Promise<string> {
+  const host = await renderFragment(md, path, theme);
+  host.querySelector('.front-matter')?.remove();
+  const slides = splitSlides(host);
+  const [w, h] = PAPER_MM.Slides;
+  const staging = document.createElement('div');
+  for (const [k, v] of Object.entries(cssVars(theme))) staging.style.setProperty(k, v);
+  staging.style.cssText += `;position:fixed;left:-20000px;top:0;visibility:hidden;--slide-w:${w}mm;--slide-h:${h}mm`;
+  staging.className = `theme-${theme.kind}`;
+  staging.innerHTML = slides.map((s, i) =>
+    `<section class="slide ${s.kind}"><div class="slide-body markdown-body">${s.html}</div><footer class="slide-num">${i + 1} / ${slides.length}</footer></section>`).join('\n');
+  document.body.appendChild(staging);
+  try {
+    staging.querySelectorAll<HTMLElement>('.slide-body').forEach((b) => fitSlide(b));
+  } finally {
+    staging.remove();
+  }
+  return `<!doctype html>
+<html lang="${settings.lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="DotMD">
+<title>${escapeHtml(title)}</title>
+<style>${settings.exportEmbedFonts ? await embeddedFonts(theme) : ''}
+${themeCss(theme)}
+${documentCss}
+@page{size:${w}mm ${h}mm;margin:0}
+html,body{margin:0;background:#555}
+body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+:root{--slide-w:${w}mm;--slide-h:${h}mm}
+.deck .slide{margin:0 auto 8mm;break-after:page;page-break-after:always;height:calc(${h}mm - 0.3mm)}
+.deck .slide:last-child{break-after:auto;page-break-after:auto}
+@media print{html,body{background:var(--bg)}.deck .slide{margin:0}}
+</style>
+</head>
+<body>
+<main class="deck theme-${theme.kind}">
+${staging.innerHTML}
+</main>
+</body>
+</html>`;
+}
+
+async function printPdf(html: string, out: string, pageSize: string): Promise<boolean> {
   // System WebKit first (macOS), so no browser is needed; Chromium headless otherwise.
   if (settings.pdfEngine !== 'chromium') {
     try {
-      // Margins live inside the paginated sheets, so the print operation itself uses none.
-      await services.exporter.printPdfNative(html, out, o.pageSize, 0);
+      await services.exporter.printPdfNative(html, out, pageSize, 0);
       return true;
     } catch (e) {
       if ((e as Error).message !== 'unsupported') console.warn('Native PDF export failed, trying Chromium:', e);
@@ -245,4 +288,21 @@ export async function exportPdfFile(docs: { md: string; path: string | null }[],
     if ((e as { code?: string }).code === 'no-engine') return false;
     throw e;
   }
+}
+
+/** Slides as a PDF (one landscape page each) or a self-contained HTML deck. */
+export async function exportSlidesFile(md: string, path: string | null, out: string, theme: Theme): Promise<boolean> {
+  const html = await buildSlides(md, path, theme, path ? stem(path) : stem(out));
+  if (out.toLowerCase().endsWith('.html')) {
+    await services.exporter.writeHtml(out, html);
+    return true;
+  }
+  return printPdf(html, out, 'Slides');
+}
+
+/** Returns false when no PDF engine is available (caller falls back to the print dialog). */
+export async function exportPdfFile(docs: { md: string; path: string | null }[], out: string, o: ExportOptions): Promise<boolean> {
+  const html = await buildDocument(docs, o, docs.length === 1 && docs[0].path ? stem(docs[0].path) : stem(out), true);
+  // Margins live inside the paginated sheets, so the print operation itself uses none.
+  return printPdf(html, out, o.pageSize);
 }

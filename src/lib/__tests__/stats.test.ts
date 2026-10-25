@@ -53,6 +53,10 @@ describe('helpers', () => {
     expect(guessLang('El perro de la casa es grande y los gatos son de la vecina.', 'en')).toBe('es');
     expect(guessLang('The dog of the house is big and the cats are on the roof with it.', 'es')).toBe('en');
     expect(guessLang('ok', 'es')).toBe('es');
+    expect(guessLang('Le chat est dans la maison et les enfants sont avec une amie qui ne parle pas pour le moment.', 'en')).toBe('fr');
+    expect(guessLang('Der Hund und die Katze sind nicht im Haus, das ist auch mit einer Frau von hier und sich selbst.', 'en')).toBe('de');
+    expect(guessLang('O can non está na casa, xa saíu coma sempre e tamén unha nena vai polo camiño ao río, moi cedo.', 'en')).toBe('gl');
+    expect(guessLang('El gos i els gats són amb la mare, això és perquè aquest matí molt d’hora van sortir dels camps.', 'en')).toBe('ca');
   });
   it('formats reading time', () => {
     expect(formatMinutes(100, 230)).toBe('<1');
