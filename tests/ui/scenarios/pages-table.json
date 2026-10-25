@@ -1,0 +1,13 @@
+{
+  "open": "$FIX/table.md",
+  "settings": { "theme": "modern" },
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body table')" },
+    { "chord": ["Mod", "Alt", "KeyP"], "waitFor": "document.querySelectorAll('.page').length >= 3", "wait": 600 },
+    { "assert": "document.querySelectorAll('.page table').length >= 3 && [...document.querySelectorAll('.page table')].every(t => t.tHead && t.tHead.textContent.includes('Price'))" },
+    { "assert": "[...document.querySelectorAll('.page tbody tr')].length === 120 && new Set([...document.querySelectorAll('.page tbody tr td:first-child')].map(td => td.textContent)).size === 120" },
+    { "assert": "[...document.querySelectorAll('.page-inner')].every(p => p.scrollHeight <= p.clientHeight + 1)" },
+    { "eval": "{ document.querySelector('.preview-scroll').scrollTop = document.querySelectorAll('.page')[1].offsetTop - 20 }", "wait": 300, "shot": "second-page" },
+    { "assert": "document.querySelector('.page:last-child').textContent.includes('After the table.')" }
+  ]
+}

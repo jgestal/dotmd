@@ -21,14 +21,21 @@ function newPage(container: HTMLElement): HTMLElement {
   return inner;
 }
 
-interface Box { node: Node; top: number; bottom: number; heading: boolean; brk: boolean }
+interface Box {
+  top: number;
+  bottom: number;
+  heading: boolean;
+  brk: boolean;
+  /** Extra height this box needs when it opens a page (a repeated table header). */
+  lead?: number;
+}
 
 /**
  * Assigns blocks to pages from their measured positions (pure arithmetic, so it is unit-testable).
  * A block that does not fit starts the next page; a heading is never left alone at the bottom of a
  * page; page breaks force a new page; a block taller than a page gets a page of its own.
  */
-export function assignPages(boxes: Omit<Box, 'node'>[], pageHeight: number): number[] {
+export function assignPages(boxes: Box[], pageHeight: number): number[] {
   const page: number[] = [];
   let current = 0;
   let start = -1; // top of the first block on the current page
@@ -40,13 +47,13 @@ export function assignPages(boxes: Omit<Box, 'node'>[], pageHeight: number): num
       page.push(-1);
       continue;
     }
-    if (start < 0) start = b.top;
+    if (start < 0) start = b.top - (b.lead ?? 0);
     // A block taller than any page stays under the heading that introduces it.
     const tallAfterHeading = onlyHeadings && b.bottom - b.top > pageHeight;
     if (b.bottom - start > pageHeight + 1 && b.top > start && !tallAfterHeading) {
       onlyHeadings = true;
       current++;
-      start = b.top;
+      start = b.top - (b.lead ?? 0);
       // Keep a heading with the block it introduces.
       const prev = i - 1;
       if (prev >= 0 && boxes[prev].heading && page[prev] === current - 1 && prev > 0 && page[prev - 1] === current - 1) {
@@ -60,9 +67,13 @@ export function assignPages(boxes: Omit<Box, 'node'>[], pageHeight: number): num
   return page;
 }
 
+/** A unit of layout: a whole block, or one row of a table that may continue on the next page. */
+interface Unit { node: Node; table?: HTMLTableElement; row?: HTMLTableRowElement }
+
 /**
  * Moves `nodes` into page sheets appended to `container` (which must be in the DOM). All blocks are
  * measured in one layout pass, as print engines do, then distributed without further reflows.
+ * Tables are split between rows and their header is repeated on every page they continue on.
  * Returns the number of pages.
  */
 export function paginate(container: HTMLElement, nodes: Node[]): number {
@@ -75,19 +86,60 @@ export function paginate(container: HTMLElement, nodes: Node[]): number {
   sheet.style.height = 'auto';
   measure.style.height = 'auto';
   for (const n of blocks) measure.appendChild(n);
-  const boxes = blocks.map((n) => {
-    if (!(n instanceof HTMLElement)) return { top: 0, bottom: 0, heading: false, brk: false };
-    return { top: n.offsetTop, bottom: n.offsetTop + n.offsetHeight, heading: HEADING.test(n.tagName), brk: n.classList.contains('page-break') };
-  });
+
+  const units: Unit[] = [];
+  const boxes: Box[] = [];
+  const base = measure.getBoundingClientRect().top;
+  for (const n of blocks) {
+    if (!(n instanceof HTMLElement)) {
+      units.push({ node: n });
+      boxes.push({ top: 0, bottom: 0, heading: false, brk: false });
+      continue;
+    }
+    const top = n.offsetTop, bottom = n.offsetTop + n.offsetHeight;
+    const table = n instanceof HTMLTableElement ? n : null;
+    const rows = table ? [...table.querySelectorAll<HTMLTableRowElement>(':scope > tbody > tr')] : [];
+    if (table && rows.length > 1 && bottom - top > pageHeight / 3) {
+      const headH = table.tHead?.getBoundingClientRect().height ?? 0;
+      rows.forEach((row, i) => {
+        const r = row.getBoundingClientRect();
+        const rTop = r.top - base + measure.offsetTop, rBottom = r.bottom - base + measure.offsetTop;
+        units.push({ node: table, table, row });
+        boxes.push({ top: i === 0 ? top : rTop, bottom: i === rows.length - 1 ? bottom : rBottom, heading: false, brk: false, lead: i === 0 ? 0 : headH });
+      });
+      continue;
+    }
+    units.push({ node: n });
+    boxes.push({ top, bottom, heading: HEADING.test(n.tagName), brk: n.classList.contains('page-break') });
+  }
   const assignment = assignPages(boxes, pageHeight);
   sheet.remove();
 
   const inners: HTMLElement[] = [];
-  blocks.forEach((n, i) => {
+  const pageOf = (p: number) => { while (inners.length <= p) inners.push(newPage(container)); return inners[p]; };
+  // Table pieces: the first keeps the original element, later pages get a shell with a copy of the header.
+  const pieces = new Map<string, HTMLTableSectionElement>();
+  units.forEach((u, i) => {
     const p = assignment[i];
     if (p < 0) return; // page breaks are consumed
-    while (inners.length <= p) inners.push(newPage(container));
-    inners[p].appendChild(n);
+    if (!u.table || !u.row) return void pageOf(p).appendChild(u.node);
+    const key = `${units.indexOf(units.find((x) => x.table === u.table)!)}:${p}`;
+    let body = pieces.get(key);
+    if (!body) {
+      const first = ![...pieces.keys()].some((k) => k.startsWith(key.split(':')[0] + ':'));
+      const shell = first ? u.table : (u.table.cloneNode(false) as HTMLTableElement);
+      if (first) {
+        // Detach the rows; they are re-added page by page below.
+        for (const r of [...u.table.querySelectorAll(':scope > tbody > tr')]) r.remove();
+      } else {
+        if (u.table.tHead) shell.appendChild(u.table.tHead.cloneNode(true));
+        shell.classList.add('table-continued');
+      }
+      body = shell.tBodies[0] ?? shell.appendChild(document.createElement('tbody'));
+      pageOf(p).appendChild(shell);
+      pieces.set(key, body);
+    }
+    body.appendChild(u.row);
   });
   if (!inners.length) inners.push(newPage(container));
   const total = inners.length;

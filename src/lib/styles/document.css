@@ -81,7 +81,12 @@
   break-inside: avoid;
 }
 .markdown-body pre code { background: none; padding: 0; color: var(--fg); font-size: 1em; border-radius: 0; }
-@media print { .markdown-body pre { white-space: pre-wrap; overflow: visible; } }
+@media print {
+  .markdown-body pre { white-space: pre-wrap; overflow: visible; }
+  /* Long tables continue on the next page with their header repeated (print engines do this for real tables). */
+  .markdown-body table { display: table; width: 100%; overflow: visible; }
+  .markdown-body thead { display: table-header-group; }
+}
 
 .markdown-body table { border-collapse: collapse; display: block; width: max-content; max-width: 100%; overflow: auto; font-variant-numeric: tabular-nums; break-inside: auto; }
 .markdown-body th, .markdown-body td { border: 1px solid var(--border); padding: 0.4em 0.8em; }
@@ -183,3 +188,17 @@
 .theme-tractor .cm-cursor { border-left: 0.6em solid var(--accent) !important; opacity: 0.45; }
 main.markdown-body.theme-tractor { padding-top: 0.5in; padding-bottom: 0.5in; }
 .theme-tractor .visual .ProseMirror { min-height: calc(100vh - 140px); }
+
+/* Page sheets (page view and paginated PDF export); --page-w/-h/-m are set by the container. */
+.paged .page {
+  position: relative; box-sizing: border-box; width: var(--page-w); height: var(--page-h); padding: var(--page-m);
+  margin: 0 auto 28px; background: var(--paper, var(--bg)); border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 10px 30px rgba(0, 0, 0, 0.22);
+}
+.paged .page-inner { height: 100%; overflow: visible; }
+.paged .page-inner > :first-child { margin-top: 0; }
+.paged .page::after {
+  content: attr(data-page); position: absolute; left: 0; right: 0; bottom: calc(var(--page-m) * 0.4);
+  text-align: center; font: 10px var(--font-ui, sans-serif); color: var(--fg-muted); letter-spacing: 0.04em;
+}
+.paged .page table { display: table; }

@@ -57,6 +57,12 @@ check('exports one file to PDF', () => {
     assert(!(r.stdout + r.stderr).includes('Native PDF export failed'), `native PDF failed:\n${(r.stdout + r.stderr).slice(-600)}`);
   }
 });
+check('a long table continues over several PDF pages', () => {
+  const r = run('--export', 'pdf', 'docs/table.md', '-o', 'table.pdf');
+  const out = path.join(work, 'table.pdf');
+  assert(r.status === 0 && isPdf(out), r.stderr);
+  assert(pages(out) >= 4, `expected the 120-row table to span ≥4 pages, got ${pages(out)}`);
+});
 check('exports a folder to HTML, keeping sub-folders', () => {
   const r = run('--export', 'html', 'docs', '-o', 'site');
   assert(r.status === 0, r.stderr);
@@ -76,7 +82,11 @@ check('missing input fails cleanly', () => {
   assert(r.status === 1, `status ${r.status}`);
 });
 
-if (process.platform !== 'win32') {
+// Single-instance tests need DotMD not to be running already (it would receive the test's files).
+const alreadyRunning = process.platform !== 'win32' && spawnSync('pgrep', ['-f', 'MacOS/dotmd|/dotmd$'], { encoding: 'utf8' }).stdout.trim() !== '';
+if (alreadyRunning) console.log('- skipped window/single-instance tests: quit DotMD to run them');
+
+if (process.platform !== 'win32' && !alreadyRunning) {
   check('a second launch hands its file to the running instance', () => {
     const log = path.join(work, 'first.log');
     const first = spawnSync('sh', ['-c', `"${EXE}" docs/README.md >"${log}" 2>&1 & echo $!`], { cwd: work, encoding: 'utf8' });
@@ -95,7 +105,7 @@ if (process.platform !== 'win32') {
   });
 }
 
-if (process.platform === 'darwin') {
+if (process.platform === 'darwin' && !alreadyRunning) {
   check('a normal launch shows its window', () => {
     const first = spawnSync('sh', ['-c', `"${EXE}" >/dev/null 2>&1 & echo $!`], { cwd: work, encoding: 'utf8' });
     const pid = first.stdout.trim();

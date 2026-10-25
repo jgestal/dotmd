@@ -228,17 +228,6 @@
   .desk { background: color-mix(in srgb, var(--bg) 82%, #000); }
   :global(.dark) .desk { background: color-mix(in srgb, var(--bg) 70%, #000); }
   .preview.paged { max-width: none; padding: 28px 0 40vh; }
-  .preview.paged :global(.page) {
-    position: relative; box-sizing: border-box; width: var(--page-w); height: var(--page-h); padding: var(--page-m);
-    margin: 0 auto 28px; background: var(--paper, var(--bg)); border-radius: 2px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), 0 10px 30px rgba(0, 0, 0, 0.22);
-  }
-  .preview.paged :global(.page-inner) { height: 100%; overflow: visible; }
-  .preview.paged :global(.page-inner > :first-child) { margin-top: 0; }
-  .preview.paged :global(.page::after) {
-    content: attr(data-page); position: absolute; left: 0; right: 0; bottom: calc(var(--page-m) * 0.4);
-    text-align: center; font: 10px var(--font-ui); color: var(--fg-muted); letter-spacing: 0.04em;
-  }
   :global(.markdown-body pre.has-copy .copy-code) {
     position: absolute; top: 6px; right: 6px; font: 11px var(--font-ui); color: var(--fg-muted);
     background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 2px 7px; opacity: 0.0;

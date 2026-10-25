@@ -5,6 +5,7 @@ import { THEMES, type Theme } from './themes';
 import { dirname, stem } from './path';
 import { settings } from './state.svelte';
 import { cssVars, fontsFor } from './appearance.svelte';
+import { paginate, PAPER_MM } from './paginate';
 
 export interface ExportOptions {
   theme: Theme;
@@ -85,6 +86,16 @@ async function embeddedFonts(theme: Theme): Promise<string> {
   return out.join('\n');
 }
 
+/** For paginated PDFs: one sheet per printed page, margins already inside each sheet. */
+function pagedCss(o: ExportOptions): string {
+  const [w, h] = PAPER_MM[o.pageSize] ?? PAPER_MM.A4;
+  return `@page{size:${w}mm ${h}mm;margin:0}
+:root{--page-w:${w}mm;--page-h:${h}mm;--page-m:${o.margin}mm}
+main.markdown-body.paged{max-width:none;margin:0;padding:0}
+.paged .page{margin:0;box-shadow:none;border-radius:0;overflow:hidden;height:calc(${h}mm - 0.3mm);break-after:page;page-break-after:always}
+.paged .page:last-child{break-after:auto;page-break-after:auto}`;
+}
+
 function printCss(o: ExportOptions): string {
   return `@page{size:${o.pageSize};margin:${o.margin}mm}
 html,body{background:var(--bg);color:var(--fg);margin:0}
@@ -92,6 +103,9 @@ body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 main.markdown-body{max-width:var(--doc-width);margin:0 auto;padding:40px 24px}
 @media print{main.markdown-body{max-width:none;padding:0}}
 .doc-break{break-after:page}
+.markdown-body table{display:table;width:auto;max-width:100%;overflow:visible}
+.markdown-body thead{display:table-header-group}
+.markdown-body tr{break-inside:avoid}
 .mdv-toc{border-bottom:1px solid var(--border);margin-bottom:2em;padding-bottom:1em}
 .mdv-toc ol{list-style:none;padding-left:1em}.mdv-toc>ol{padding-left:0}
 .mdv-toc a{color:var(--fg);text-decoration:none}`;
@@ -150,12 +164,40 @@ export async function richHtml(md: string, path: string | null, theme: Theme): P
   return `<div style="font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.55;color:#1f2328">${frag.innerHTML}</div>`;
 }
 
-export async function buildDocument(docs: { md: string; path: string | null }[], o: ExportOptions, title: string): Promise<string> {
+/**
+ * Lays a rendered fragment out on page sheets exactly as page view does (tables split with repeated
+ * headers, headings kept with their text, page numbers). Print engines such as WebKit cannot repeat
+ * table headers, so PDFs are made from these sheets: what page view shows is what gets printed.
+ */
+function paginateFragment(frag: HTMLElement, o: ExportOptions): string {
+  const [w, h] = PAPER_MM[o.pageSize] ?? PAPER_MM.A4;
+  const staging = document.createElement('div');
+  staging.className = `markdown-body paged theme-${o.theme.kind}`;
+  for (const [k, v] of Object.entries(cssVars(o.theme))) staging.style.setProperty(k, v);
+  staging.style.setProperty('--page-w', `${w}mm`);
+  staging.style.setProperty('--page-h', `${h}mm`);
+  staging.style.setProperty('--page-m', `${o.margin}mm`);
+  staging.style.cssText += ';position:fixed;left:-20000px;top:0;visibility:hidden';
+  document.body.appendChild(staging);
+  try {
+    paginate(staging, [...frag.childNodes]);
+    return staging.innerHTML;
+  } finally {
+    staging.remove();
+  }
+}
+
+export async function buildDocument(docs: { md: string; path: string | null }[], o: ExportOptions, title: string, paged = false): Promise<string> {
   const parts: string[] = [];
   for (let i = 0; i < docs.length; i++) {
     const frag = await renderFragment(docs[i].md, docs[i].path, o.theme);
     const toc = o.toc ? tocHtml(frag) : '';
-    parts.push(`<section class="${i < docs.length - 1 ? 'doc-break' : ''}">${toc}${frag.innerHTML}</section>`);
+    if (paged) {
+      if (toc) frag.insertAdjacentHTML('afterbegin', toc);
+      parts.push(paginateFragment(frag, o));
+    } else {
+      parts.push(`<section class="${i < docs.length - 1 ? 'doc-break' : ''}">${toc}${frag.innerHTML}</section>`);
+    }
   }
   return `<!doctype html>
 <html lang="${settings.lang}">
@@ -167,10 +209,11 @@ export async function buildDocument(docs: { md: string; path: string | null }[],
 <style>${settings.exportEmbedFonts ? await embeddedFonts(o.theme) : ''}
 ${themeCss(o.theme)}
 ${documentCss}
-${printCss(o)}</style>
+${printCss(o)}
+${paged ? pagedCss(o) : ''}</style>
 </head>
 <body>
-<main class="markdown-body theme-${o.theme.kind}">
+<main class="markdown-body theme-${o.theme.kind}${paged ? ' paged' : ''}">
 ${parts.join('\n')}
 </main>
 </body>
@@ -184,11 +227,12 @@ export async function exportHtmlFile(docs: { md: string; path: string | null }[]
 
 /** Returns false when no PDF engine is available (caller falls back to the print dialog). */
 export async function exportPdfFile(docs: { md: string; path: string | null }[], out: string, o: ExportOptions): Promise<boolean> {
-  const html = await buildDocument(docs, o, docs.length === 1 && docs[0].path ? stem(docs[0].path) : stem(out));
+  const html = await buildDocument(docs, o, docs.length === 1 && docs[0].path ? stem(docs[0].path) : stem(out), true);
   // System WebKit first (macOS), so no browser is needed; Chromium headless otherwise.
   if (settings.pdfEngine !== 'chromium') {
     try {
-      await invoke('export_pdf_native', { html, out, pageSize: o.pageSize, marginMm: o.margin });
+      // Margins live inside the paginated sheets, so the print operation itself uses none.
+      await invoke('export_pdf_native', { html, out, pageSize: o.pageSize, marginMm: 0 });
       return true;
     } catch (e) {
       if (String(e) !== 'unsupported') console.warn('Native PDF export failed, trying Chromium:', e);

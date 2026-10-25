@@ -26,3 +26,13 @@ describe('assignPages', () => {
     expect(assignPages(boxes, 100)).toEqual([0, -1, 1]);
   });
 });
+
+describe('assignPages with table rows', () => {
+  it('reserves room for the repeated header on continuation pages', () => {
+    // A table: first unit includes the 20px header; each row is 30px; rows carry lead = header height.
+    const rows = [box(0, 50), ...Array.from({ length: 5 }, (_, i) => ({ ...box(50 + i * 30, 30), lead: 20 }))];
+    // 100px pages. Page 1: header+row1 (0–50) and row2 (50–80); row3 (80–110) overflows.
+    // Page 2 starts 20px above row3 for the repeated header (60): rows 3–4 end at 140 (80px), row 5 at 170 (110px) → page 3.
+    expect(assignPages(rows, 100)).toEqual([0, 0, 1, 1, 2, 2]);
+  });
+});
