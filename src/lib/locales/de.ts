@@ -308,7 +308,7 @@ const de: Record<Key, string> = {
   'about.tagline': 'Markdown-Viewer und -Editor',
   'about.author': 'Erstellt von',
   'about.license': 'MIT-Lizenz',
-  'about.fonts': 'Schriften: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro und Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend und Source Serif 4 (SIL Open Font License); IBM VGA aus The Ultimate Oldschool PC Font Pack von VileR (CC BY-SA 4.0).',
+  'about.fonts': 'Schriften: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro und Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend, EB Garamond, IM Fell English, Caveat, Patrick Hand, Fredericka the Great, Press Start 2P, Pixelify Sans und Source Serif 4 (SIL Open Font License); IBM VGA aus The Ultimate Oldschool PC Font Pack von VileR (CC BY-SA 4.0).',
   'about.libs': 'Erstellt mit Tauri, Svelte, CodeMirror, Milkdown, comrak, Mermaid und KaTeX.',
   'tabs.closeRight': 'Tabs rechts schließen',
   'tabs.closeLeft': 'Tabs links schließen',

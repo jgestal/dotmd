@@ -207,9 +207,73 @@
 .theme-screenplay .markdown-body hr::after, .markdown-body.theme-screenplay hr::after { content: '* * *'; }
 .theme-screenplay .preview:not(.paged), main.markdown-body.theme-screenplay { background: var(--paper); }
 
+/* Notebook: ruled lines that follow the text's line height, and a red margin line. */
+.theme-notebook .preview:not(.paged), .theme-notebook .cm-content {
+  background-image:
+    linear-gradient(to right, transparent 0 44px, var(--margin-line) 44px 45px, transparent 45px),
+    repeating-linear-gradient(to bottom, transparent 0 calc(1lh - 1px), var(--rule) calc(1lh - 1px) 1lh);
+  background-attachment: local;
+}
+.theme-notebook .cm-content { padding-left: 64px !important; }
+.theme-notebook .preview:not(.paged) { padding-left: 72px !important; }
+.theme-notebook .markdown-body :is(h1, h2, h3), .markdown-body.theme-notebook :is(h1, h2, h3) { border: 0; font-weight: 600; color: #1f4fa8; }
+.theme-notebook .markdown-body h1, .markdown-body.theme-notebook h1 { font-size: 2.3em; }
+.theme-notebook .markdown-body h2, .markdown-body.theme-notebook h2 { font-size: 1.8em; }
+
+/* E-ink: grey scale, no motion, crisp. */
+.theme-eink .markdown-body img, .markdown-body.theme-eink img { filter: grayscale(1) contrast(1.05); }
+.sheet.theme-eink, .sheet.theme-eink * { transition: none !important; }
+.theme-eink .markdown-body :is(h1, h2), .markdown-body.theme-eink :is(h1, h2) { border-bottom-color: #9a9a94; }
+
+/* Accessible: generous spacing, short lines, strong underlines (helps with dyslexia and low vision). */
+.theme-accessible .markdown-body, .markdown-body.theme-accessible, .theme-accessible .cm-content {
+  line-height: max(var(--line-height, 1.6), 1.8); letter-spacing: 0.02em; word-spacing: 0.08em;
+}
+.theme-accessible .markdown-body, .markdown-body.theme-accessible { max-width: min(var(--doc-width), 68ch); }
+.theme-accessible .markdown-body p, .markdown-body.theme-accessible p { margin: 0 0 1.1em; text-align: left; hyphens: manual; }
+.theme-accessible .markdown-body a, .markdown-body.theme-accessible a { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* Chalkboard: a dusty slate and slightly soft chalk strokes. */
+.sheet.theme-chalk { background-image: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.05), transparent 55%), radial-gradient(ellipse at 75% 80%, rgba(255, 255, 255, 0.04), transparent 50%); }
+.theme-chalk .markdown-body, .markdown-body.theme-chalk, .theme-chalk .cm-content { text-shadow: 0 0 1px rgba(244, 241, 230, 0.55); font-size: calc(var(--doc-size, 16px) * 1.12); }
+.theme-chalk .markdown-body :is(h1, h2, h3), .markdown-body.theme-chalk :is(h1, h2, h3) { font-weight: 400; border-bottom: 2px dashed rgba(244, 241, 230, 0.35); color: var(--accent); }
+.theme-chalk .markdown-body code, .markdown-body.theme-chalk code { background: transparent; }
+
+/* Game Boy: four greens, pixel headings, a faint LCD grid. */
+.sheet.theme-gameboy { background-image: linear-gradient(rgba(15, 56, 15, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(15, 56, 15, 0.05) 1px, transparent 1px); background-size: 3px 3px; }
+.theme-gameboy .markdown-body :is(h1, h2, h3), .markdown-body.theme-gameboy :is(h1, h2, h3) { font-weight: 400; line-height: 1.5; border-bottom: 4px solid var(--border); }
+.theme-gameboy .markdown-body h1, .markdown-body.theme-gameboy h1 { font-size: 1.5em; }
+.theme-gameboy .markdown-body h2, .markdown-body.theme-gameboy h2 { font-size: 1.15em; }
+.theme-gameboy .markdown-body h3, .markdown-body.theme-gameboy h3 { font-size: 0.95em; border: 0; }
+.theme-gameboy .markdown-body img, .markdown-body.theme-gameboy img { image-rendering: pixelated; filter: grayscale(1) sepia(1) hue-rotate(40deg) saturate(2.2) brightness(0.85); }
+.theme-gameboy .markdown-body :is(pre, table, blockquote), .markdown-body.theme-gameboy :is(pre, table, blockquote) { border: 3px solid var(--border); border-radius: 0; }
+
+/* Teletype: telex paper with a punched tape edge, capital headings. */
+.theme-teletype .preview:not(.paged), main.markdown-body.theme-teletype:not(.paged) {
+  background: radial-gradient(circle, var(--bg) 0 2.5px, transparent 3px) 14px 0 / 16px 16px repeat-y, var(--paper);
+  padding-left: calc(40px + 0.5in) !important;
+}
+.theme-teletype .markdown-body :is(h1, h2, h3, h4), .markdown-body.theme-teletype :is(h1, h2, h3, h4) { text-transform: uppercase; letter-spacing: 0.08em; border: 0; font-weight: 700; }
+.theme-teletype .markdown-body h1::after, .markdown-body.theme-teletype h1::after { content: ' +++'; color: var(--fg-muted); }
+
+/* Parchment: aged edges, iron-gall ink and a drop cap after the title. */
+.sheet.theme-parchment { background-image: radial-gradient(ellipse at center, transparent 55%, rgba(110, 70, 20, 0.22) 100%); }
+.theme-parchment .markdown-body :is(h1, h2, h3), .markdown-body.theme-parchment :is(h1, h2, h3) { font-weight: 400; border: 0; color: var(--accent); }
+.theme-parchment .markdown-body h1, .markdown-body.theme-parchment h1 { text-align: center; font-size: 2.2em; }
+.theme-parchment .markdown-body h1 + p::first-letter, .markdown-body.theme-parchment h1 + p::first-letter {
+  float: left; font-family: var(--font-heading); font-size: 3.4em; line-height: 0.85; padding: 0.06em 0.08em 0 0; color: var(--accent);
+}
+.theme-parchment .markdown-body p, .markdown-body.theme-parchment p { text-align: justify; hyphens: auto; }
+
+/* Single-palette sheets: callouts take the theme's ink instead of GitHub's blue, green, red… */
+:is(.theme-gameboy, .theme-eink, .theme-chalk, .theme-teletype, .theme-parchment) .markdown-alert,
+.markdown-body:is(.theme-gameboy, .theme-eink, .theme-chalk, .theme-teletype, .theme-parchment) .markdown-alert { --alert: var(--accent); }
+.theme-gameboy .markdown-alert, .markdown-body.theme-gameboy .markdown-alert { --alert: var(--fg); border-radius: 0; }
+.theme-parchment .markdown-body h1 + p::first-letter, .markdown-body.theme-parchment h1 + p::first-letter { padding-right: 0.04em; }
+
 /* Book (output format): serif, justified and hyphenated, indented paragraphs, quiet headings. */
 .theme-book .markdown-body p, .markdown-body.theme-book p { text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
-.theme-book .markdown-body p + p, .markdown-body.theme-book p + p { text-indent: 1.4em; margin-top: 0; }
+.theme-book .markdown-body > p + p, .markdown-body.theme-book > p + p, .theme-book .paged .page-inner > p + p, .markdown-body.theme-book .page-inner > p + p { text-indent: 1.4em; margin-top: 0; }
 .theme-book .markdown-body :is(h1, h2, h3), .markdown-body.theme-book :is(h1, h2, h3) { border: 0; font-weight: 600; }
 .theme-book .markdown-body h1, .markdown-body.theme-book h1 { text-align: center; font-size: 1.8em; margin: 1.2em 0 1em; }
 .theme-book .markdown-body h2, .markdown-body.theme-book h2 { font-variant: small-caps; letter-spacing: 0.04em; font-size: 1.3em; }

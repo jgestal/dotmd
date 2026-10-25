@@ -307,7 +307,7 @@ const en = {
   'about.tagline': 'Markdown Viewer & Editor',
   'about.author': 'Created by',
   'about.license': 'MIT License',
-  'about.fonts': 'Fonts: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro & Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend and Source Serif 4 (SIL Open Font License); IBM VGA from The Ultimate Oldschool PC Font Pack by VileR (CC BY-SA 4.0).',
+  'about.fonts': 'Fonts: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro & Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend, EB Garamond, IM Fell English, Caveat, Patrick Hand, Fredericka the Great, Press Start 2P, Pixelify Sans and Source Serif 4 (SIL Open Font License); IBM VGA from The Ultimate Oldschool PC Font Pack by VileR (CC BY-SA 4.0).',
   'about.libs': 'Built with Tauri, Svelte, CodeMirror, Milkdown, comrak, Mermaid and KaTeX.',
   'tabs.closeRight': 'Close tabs to the right',
   'tabs.closeLeft': 'Close tabs to the left',

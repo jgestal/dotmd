@@ -308,7 +308,7 @@ const it: Record<Key, string> = {
   'about.tagline': 'Visualizzatore ed editor Markdown',
   'about.author': 'Creato da',
   'about.license': 'Licenza MIT',
-  'about.fonts': 'Font: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro e Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend e Source Serif 4 (SIL Open Font License); IBM VGA da The Ultimate Oldschool PC Font Pack di VileR (CC BY-SA 4.0).',
+  'about.fonts': 'Font: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro e Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend, EB Garamond, IM Fell English, Caveat, Patrick Hand, Fredericka the Great, Press Start 2P, Pixelify Sans e Source Serif 4 (SIL Open Font License); IBM VGA da The Ultimate Oldschool PC Font Pack di VileR (CC BY-SA 4.0).',
   'about.libs': 'Realizzato con Tauri, Svelte, CodeMirror, Milkdown, comrak, Mermaid e KaTeX.',
   'tabs.closeRight': 'Chiudi le schede a destra',
   'tabs.closeLeft': 'Chiudi le schede a sinistra',

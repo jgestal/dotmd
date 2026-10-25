@@ -308,7 +308,7 @@ const ca: Record<Key, string> = {
   'about.tagline': 'Visor i editor de Markdown',
   'about.author': 'Creat per',
   'about.license': 'Llicència MIT',
-  'about.fonts': 'Tipus de lletra: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro i Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend i Source Serif 4 (SIL Open Font License); IBM VGA de The Ultimate Oldschool PC Font Pack, de VileR (CC BY-SA 4.0).',
+  'about.fonts': 'Tipus de lletra: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro i Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend, EB Garamond, IM Fell English, Caveat, Patrick Hand, Fredericka the Great, Press Start 2P, Pixelify Sans i Source Serif 4 (SIL Open Font License); IBM VGA de The Ultimate Oldschool PC Font Pack, de VileR (CC BY-SA 4.0).',
   'about.libs': 'Fet amb Tauri, Svelte, CodeMirror, Milkdown, comrak, Mermaid i KaTeX.',
   'tabs.closeRight': 'Tanca les pestanyes de la dreta',
   'tabs.closeLeft': 'Tanca les pestanyes de l’esquerra',

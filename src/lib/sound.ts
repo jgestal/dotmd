@@ -4,7 +4,7 @@ import { settings } from './state.svelte';
 import { currentTheme } from './appearance.svelte';
 
 /** The sound that actually plays: "theme" resolves to the active theme's suggestion. */
-export function effectiveSound(): 'off' | 'typewriter' | 'mechanical' | 'soft' {
+export function effectiveSound(): 'off' | 'typewriter' | 'mechanical' | 'soft' | 'chalk' | 'quill' {
   const s = settings.typingSound;
   return s === 'theme' ? currentTheme().sound ?? 'soft' : s;
 }
@@ -171,7 +171,14 @@ export function keySound(key: string, column = -1) {
 
   const enter = key === 'Enter';
   const space = key === ' ';
-  if (kind === 'mechanical') {
+  if (kind === 'chalk') {
+    // A dry, scratchy stroke of chalk on slate.
+    burst(space ? 1800 : 3200 + Math.random() * 800, 2.5, 0.06, 0.45);
+    burst(5200, 4, 0.035, 0.18, 0.015);
+  } else if (kind === 'quill') {
+    // A short scratch of a nib on paper.
+    burst(6500 + Math.random() * 1500, 5, space ? 0.02 : 0.045, 0.22);
+  } else if (kind === 'mechanical') {
     burst(space ? 900 : 2600, 1.5, 0.035, 0.7);
     burst(space ? 350 : 700, 3, 0.05, 0.4, 0.012);
   } else {

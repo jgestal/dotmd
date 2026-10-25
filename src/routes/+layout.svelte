@@ -22,6 +22,16 @@
   import '@fontsource/source-serif-4/400.css';
   import '@fontsource/source-serif-4/400-italic.css';
   import '@fontsource/source-serif-4/600.css';
+  import '@fontsource/fredericka-the-great/400.css';
+  import '@fontsource/patrick-hand/400.css';
+  import '@fontsource/press-start-2p/400.css';
+  import '@fontsource/pixelify-sans/400.css';
+  import '@fontsource/im-fell-english/400.css';
+  import '@fontsource/im-fell-english/400-italic.css';
+  import '@fontsource/eb-garamond/400.css';
+  import '@fontsource/eb-garamond/400-italic.css';
+  import '@fontsource/eb-garamond/600.css';
+  import '@fontsource/caveat/600.css';
   import '../fonts.css';
   import 'katex/dist/katex.min.css';
   import '$lib/styles/document.css';

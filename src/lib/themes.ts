@@ -1,12 +1,13 @@
 // Themes are data, not CSS, so the same values can style the app, Mermaid and exported files.
 
-export type ThemeKind = 'normal' | 'typewriter' | 'crt' | 'tractor' | 'calm' | 'dos' | 'terminal' | 'aqua' | 'screenplay' | 'book';
+export type ThemeKind = 'normal' | 'typewriter' | 'crt' | 'tractor' | 'calm' | 'dos' | 'terminal' | 'aqua' | 'screenplay' | 'book'
+  | 'notebook' | 'eink' | 'accessible' | 'chalk' | 'gameboy' | 'teletype' | 'parchment';
 
 /** Optional visual effects; Settings only offers the ones the active theme supports. */
 export type ThemeEffect = 'scanlines' | 'glow' | 'flicker' | 'curvature' | 'paper' | 'ink';
 
 /** Typing sound a theme suggests (played when "Use the theme's sounds" is on). */
-export type ThemeSound = 'typewriter' | 'mechanical' | 'soft';
+export type ThemeSound = 'typewriter' | 'mechanical' | 'soft' | 'chalk' | 'quill';
 
 export interface Theme {
   id: string;
@@ -64,6 +65,13 @@ export const FONTS: Record<string, { label: string; stack: string }> = {
   jetbrains: { label: 'JetBrains Mono', stack: '"JetBrains Mono", ui-monospace, monospace' },
   vga: { label: 'IBM VGA (MS-DOS)', stack: '"Px437 IBM VGA", VT323, ui-monospace, monospace' },
   lucida: { label: 'Lucida Grande', stack: '"Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Helvetica, sans-serif' },
+  ebGaramond: { label: 'EB Garamond', stack: '"EB Garamond", Garamond, Georgia, serif' },
+  imFell: { label: 'IM Fell English', stack: '"IM Fell English", "EB Garamond", Georgia, serif' },
+  caveat: { label: 'Caveat (handwriting)', stack: 'Caveat, "Patrick Hand", cursive' },
+  patrickHand: { label: 'Patrick Hand', stack: '"Patrick Hand", "Atkinson Hyperlegible Next", sans-serif' },
+  fredericka: { label: 'Fredericka the Great (chalk)', stack: '"Fredericka the Great", "Patrick Hand", cursive' },
+  pressStart: { label: 'Press Start 2P (pixel)', stack: '"Press Start 2P", "Pixelify Sans", monospace' },
+  pixelify: { label: 'Pixelify Sans', stack: '"Pixelify Sans", "JetBrains Mono", monospace' },
   mono: { label: 'System Mono', stack: 'ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, "DejaVu Sans Mono", monospace' },
 };
 
@@ -189,6 +197,30 @@ export const THEMES: Theme[] = [
     vars: light({ '--bg': '#ffffff', '--bg-elev': '#e8e8e8', '--bg-hover': 'rgba(56,117,215,.10)', '--bg-active': 'rgba(56,117,215,.18)', '--fg': '#000000', '--fg-muted': '#5a5a5a', '--border': '#a5a5a5', '--accent': '#3875d7', '--link': '#1d5bd1', '--code-bg': '#f2f2f2', '--code-fg': '#000000', '--quote': '#b5b5b5', '--sel': '#b5d5ff', '--shadow': '0 8px 24px rgba(0,0,0,.35), 0 0 0 1px rgba(0,0,0,.25)' }),
   },
   {
+    id: 'chalkboard', group: 'retro', name: 'Chalkboard', dark: true, kind: 'chalk', sound: 'chalk',
+    caret: { shape: 'bar', blink: 'smooth', width: '3px', color: '#f4f1e6', rate: 1200 },
+    fonts: { ui: F('system'), doc: F('patrickHand'), heading: F('fredericka'), code: F('patrickHand') },
+    vars: dark({ '--bg': '#233a2e', '--bg-elev': '#2a4436', '--fg': '#f4f1e6', '--fg-muted': '#cfd8c8', '--fg-dim': 'rgba(244,241,230,.25)', '--border': '#4c6b58', '--accent': '#ffe28a', '--accent-fg': '#233a2e', '--link': '#ffe28a', '--code-bg': 'rgba(255,255,255,.07)', '--code-fg': '#bfe3ff', '--quote': '#6c8c78', '--sel': 'rgba(255,226,138,.22)', '--mark': '#7a6a2a', '--syn-keyword': '#ffe28a', '--syn-string': '#bfe3ff', '--syn-number': '#ffb3c1', '--syn-comment': '#a9bfae', '--syn-func': '#f4f1e6', '--syn-type': '#ffd0a6' }),
+  },
+  {
+    id: 'gameboy', group: 'retro', name: 'Game Boy', dark: false, kind: 'gameboy', sound: 'soft', display: F('pressStart'),
+    caret: { shape: 'block', blink: 'steps', color: '#0f380f', rate: 800 },
+    fonts: { ui: F('system'), doc: F('jetbrains'), heading: F('pressStart'), code: F('jetbrains') },
+    vars: light({ '--bg': '#b2cc55', '--bg-elev': '#a2bc45', '--bg-hover': 'rgba(15,56,15,.1)', '--fg': '#0f380f', '--fg-muted': '#1d4a1d', '--fg-dim': 'rgba(15,56,15,.35)', '--border': '#306230', '--accent': '#0f380f', '--accent-fg': '#9bbc0f', '--link': '#0f380f', '--code-bg': '#a2bc45', '--code-fg': '#0f380f', '--quote': '#306230', '--sel': 'rgba(15,56,15,.22)', '--mark': '#c4d96a', '--syn-keyword': '#0f380f', '--syn-string': '#0f380f', '--syn-number': '#0f380f', '--syn-comment': '#1d4a1d', '--syn-func': '#0f380f', '--syn-type': '#0f380f', '--shadow': 'none' }),
+  },
+  {
+    id: 'teletype', group: 'retro', name: 'Teletype', dark: false, kind: 'teletype', sound: 'mechanical', effects: ['ink'],
+    caret: { shape: 'block', blink: 'none', color: 'color-mix(in srgb, var(--fg) 35%, transparent)' },
+    fonts: { ui: F('system'), doc: F('courier'), heading: F('courier'), code: F('courier') },
+    vars: light({ '--bg': '#e9e2c6', '--bg-elev': '#e0d8b8', '--paper': '#f6efcf', '--fg': '#23201a', '--fg-muted': '#544c3c', '--border': '#cfc39a', '--accent': '#23201a', '--link': '#23201a', '--code-bg': 'transparent', '--code-fg': '#23201a', '--quote': '#bfb187', '--sel': 'rgba(35,32,26,.15)', '--perf': '#cbbd8e' }),
+  },
+  {
+    id: 'parchment', group: 'retro', name: 'Parchment', dark: false, kind: 'parchment', sound: 'quill', effects: ['paper', 'ink'],
+    caret: { shape: 'bar', blink: 'smooth', width: '2px', color: '#5a2d0c', rate: 1400 },
+    fonts: { ui: F('system'), doc: F('ebGaramond'), heading: F('imFell'), code: F('plexMono') },
+    vars: light({ '--bg': '#efe0bd', '--bg-elev': '#e6d4ac', '--fg': '#2b1d0e', '--fg-muted': '#5a4428', '--border': '#cdb68a', '--accent': '#7a2e0c', '--link': '#6b280b', '--code-bg': 'rgba(90,45,12,.08)', '--code-fg': '#4a250a', '--quote': '#b89a66', '--sel': 'rgba(122,46,12,.16)', '--mark': '#e8c873' }),
+  },
+  {
     id: 'crt-green', group: 'retro', display: F('vt323'), caret: { shape: 'block', blink: 'smooth', glow: true, color: 'var(--fg)', rate: 1000 }, name: 'CRT Phosphor', dark: true, kind: 'crt', effects: ['scanlines', 'glow', 'flicker', 'curvature'], sound: 'mechanical',
     fonts: { ui: F('system'), doc: F('plexMono'), heading: F('vt323'), code: F('plexMono') },
     vars: dark({ '--bg': '#040b05', '--bg-elev': '#071209', '--bg-hover': 'rgba(51,255,102,.08)', '--bg-active': 'rgba(51,255,102,.16)', '--fg': '#3dff73', '--fg-muted': '#22a849', '--fg-dim': 'rgba(61,255,115,.25)', '--border': '#0f3a19', '--accent': '#3dff73', '--accent-fg': '#021004', '--link': '#a6ffbf', '--code-bg': '#08200d', '--code-fg': '#a6ffbf', '--quote': '#1b6b30', '--sel': 'rgba(61,255,115,.25)', '--mark': '#1d6b33', '--glow': 'rgba(61,255,115,.55)', '--syn-keyword': '#a6ffbf', '--syn-string': '#7dffa0', '--syn-number': '#d4ffe0', '--syn-comment': '#1f8a3e', '--syn-func': '#5cff8a', '--syn-type': '#c3ffd4' }),
@@ -197,6 +229,36 @@ export const THEMES: Theme[] = [
     id: 'crt-amber', group: 'retro', display: F('vt323'), caret: { shape: 'block', blink: 'smooth', glow: true, color: 'var(--fg)', rate: 1000 }, name: 'CRT Amber', dark: true, kind: 'crt', effects: ['scanlines', 'glow', 'flicker', 'curvature'], sound: 'mechanical',
     fonts: { ui: F('system'), doc: F('plexMono'), heading: F('vt323'), code: F('plexMono') },
     vars: dark({ '--bg': '#0d0800', '--bg-elev': '#140c01', '--bg-hover': 'rgba(255,176,0,.08)', '--bg-active': 'rgba(255,176,0,.16)', '--fg': '#ffb000', '--fg-muted': '#b07a00', '--fg-dim': 'rgba(255,176,0,.25)', '--border': '#3d2a00', '--accent': '#ffb000', '--accent-fg': '#140c00', '--link': '#ffd27a', '--code-bg': '#221600', '--code-fg': '#ffd27a', '--quote': '#7a5400', '--sel': 'rgba(255,176,0,.25)', '--mark': '#6b4a00', '--glow': 'rgba(255,176,0,.5)', '--crt-hue': '0deg', '--syn-keyword': '#ffd27a', '--syn-string': '#ffc54d', '--syn-number': '#ffe6b0', '--syn-comment': '#8a6000', '--syn-func': '#ffbf33', '--syn-type': '#ffdd99' }),
+  },
+  {
+    id: 'notebook', group: 'writing', name: 'Notebook', dark: false, kind: 'notebook',
+    caret: { shape: 'bar', blink: 'steps', width: '2px', color: '#1f4fa8' },
+    fonts: { ui: F('system'), doc: F('atkinson'), heading: F('caveat'), code: F('plexMono') },
+    vars: light({ '--bg': '#fbfaf4', '--bg-elev': '#f2f0e6', '--fg': '#1d2433', '--fg-muted': '#4f5a6e', '--border': '#dcd8c8', '--accent': '#1f4fa8', '--link': '#1f4fa8', '--code-bg': 'rgba(31,79,168,.06)', '--code-fg': '#7a1f4a', '--quote': '#c8d3e8', '--sel': 'rgba(31,79,168,.16)', '--rule': 'rgba(90,130,200,.22)', '--margin-line': 'rgba(214,72,72,.45)' }),
+  },
+  {
+    id: 'manuscript', group: 'writing', name: 'Manuscript', dark: false, kind: 'book', pair: 'sepia-night',
+    caret: { shape: 'bar', blink: 'smooth', width: '2px', color: '#8b1e1e', rate: 1300 },
+    fonts: { ui: F('system'), doc: F('literata'), heading: F('literata'), code: F('plexMono') },
+    vars: light({ '--bg': '#fbf8f1', '--bg-elev': '#f3eee2', '--fg': '#1e1b16', '--fg-muted': '#5c554a', '--border': '#e2dac8', '--accent': '#8b1e1e', '--link': '#7a1c1c', '--code-bg': '#f1ebdd', '--code-fg': '#5a2b10', '--quote': '#d6cbb2', '--sel': 'rgba(139,30,30,.14)' }),
+  },
+  {
+    id: 'sepia-night', group: 'writing', name: 'Sepia Night', dark: true, kind: 'book', pair: 'manuscript',
+    caret: { shape: 'bar', blink: 'smooth', width: '2px', color: '#e0a458', rate: 1300 },
+    fonts: { ui: F('system'), doc: F('literata'), heading: F('literata'), code: F('plexMono') },
+    vars: dark({ '--bg': '#1e1912', '--bg-elev': '#241e16', '--fg': '#e9dbc2', '--fg-muted': '#b6a68a', '--fg-dim': 'rgba(233,219,194,.22)', '--border': '#3a3125', '--accent': '#e0a458', '--accent-fg': '#1e1912', '--link': '#e8b878', '--code-bg': '#2a2319', '--code-fg': '#f0c992', '--quote': '#5a4b36', '--sel': 'rgba(224,164,88,.25)', '--mark': '#5c4519', '--syn-keyword': '#e0a458', '--syn-string': '#c8b27c', '--syn-number': '#e8b878', '--syn-comment': '#9a8a70', '--syn-func': '#e9dbc2', '--syn-type': '#d9a27a' }),
+  },
+  {
+    id: 'eink', group: 'writing', name: 'E-ink', dark: false, kind: 'eink',
+    caret: { shape: 'bar', blink: 'none', width: '2px', color: '#000000' },
+    fonts: { ui: F('system'), doc: F('literata'), heading: F('literata'), code: F('plexMono') },
+    vars: light({ '--bg': '#f1f1ec', '--bg-elev': '#e8e8e2', '--fg': '#111111', '--fg-muted': '#4a4a4a', '--fg-dim': 'rgba(17,17,17,.3)', '--border': '#c9c9c2', '--accent': '#111111', '--accent-fg': '#f1f1ec', '--link': '#111111', '--code-bg': '#e4e4de', '--code-fg': '#111111', '--quote': '#9a9a94', '--sel': 'rgba(0,0,0,.14)', '--mark': '#d6d6cf', '--syn-keyword': '#111111', '--syn-string': '#333333', '--syn-number': '#333333', '--syn-comment': '#5c5c5c', '--syn-func': '#111111', '--syn-type': '#333333', '--shadow': 'none' }),
+  },
+  {
+    id: 'accessible', group: 'writing', name: 'Accessible', dark: false, kind: 'accessible',
+    caret: { shape: 'bar', blink: 'none', width: '3px', color: '#0b4fd6' },
+    fonts: { ui: F('system'), doc: F('atkinson'), heading: F('atkinson'), code: F('jetbrains') },
+    vars: light({ '--bg': '#fdfbf3', '--bg-elev': '#f5f2e6', '--fg': '#141414', '--fg-muted': '#3f3f3f', '--border': '#d8d3c2', '--accent': '#0b4fd6', '--link': '#0b4fd6', '--code-bg': '#efebdd', '--code-fg': '#141414', '--quote': '#b9b3a0', '--sel': 'rgba(11,79,214,.18)', '--mark': '#ffe27a' }),
   },
   {
     id: 'nord', group: 'writing', name: 'Nord', dark: true, kind: 'normal',
