@@ -59,7 +59,7 @@ const it: Record<Key, string> = {
   'tb.date': 'Inserisci data',
   'tb.more': 'Altro',
   'tb.plain': 'Testo semplice',
-  'top.zen': 'Modalità zen',
+  'top.zen': 'Modalità senza distrazioni',
   'top.export': 'Esporta…',
   'top.settings': 'Impostazioni',
   'top.save': 'Salva',
@@ -95,7 +95,7 @@ const it: Record<Key, string> = {
   'stats.medium': 'Standard',
   'stats.hard': 'Difficile',
   'stats.setGoal': 'Obiettivo di parole (0 = disattivato)',
-  'zen.exit': 'Premi Esc per uscire dalla modalità zen',
+  'zen.exit': 'Premi Esc per uscire dalla modalità senza distrazioni',
   'dlg.unsavedTitle': 'Modifiche non salvate',
   'dlg.unsavedBody': 'Salvare le modifiche a «{name}» prima di continuare?',
   'dlg.save': 'Salva',
@@ -367,6 +367,10 @@ const it: Record<Key, string> = {
   'theme.group.retro': 'Retrò',
   'theme.group.paper': 'Carta e stampa',
   'theme.paperHint': 'I temi carta servono per leggere ed esportare: l’editor resta una superficie di scrittura pulita e la carta si vede in lettura, nella vista a pagine e nelle esportazioni.',
+  'set.interface': 'Interfaccia',
+  'set.sheetTheme': 'Tema del foglio',
+  'set.sheetHint': 'Veste solo il foglio dove leggi e scrivi: font, colori, effetti e cursore. Il resto dell’app resta neutro.',
+  'set.decorativeBody': 'Usa il font decorativo anche per il testo (meno leggibile)',
 };
 
 export default it;

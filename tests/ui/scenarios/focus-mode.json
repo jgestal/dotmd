@@ -1,0 +1,20 @@
+{
+  "open": "$FIX/notes/second.md",
+  "settings": { "theme": "terminal", "zenFullscreen": false },
+  "actions": [
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')" },
+    { "eval": "{ document.querySelector('.cm-content').focus() }", "wait": 300 },
+    { "assert": "(() => { const c = document.querySelector('.content').classList; return c.contains('caret-block') && c.contains('blink-smooth') && c.contains('caret-glow'); })()" },
+    { "assert": "(() => { const cur = document.querySelector('.cm-cursor'); const layer = document.querySelector('.cm-cursorLayer'); return parseFloat(getComputedStyle(cur).borderLeftWidth) > 6 && getComputedStyle(cur).boxShadow !== 'none' && getComputedStyle(layer).animationTimingFunction.includes('ease-in-out'); })()", "shot": "terminal-caret" },
+    { "chord": ["Mod", "Shift", "Enter"], "wait": 400 },
+    { "assert": "!document.querySelector('.topbar') && !document.querySelector('.sidebar') && !document.querySelector('.toolbar') && !document.querySelector('.tabbar')" },
+    { "assert": "getComputedStyle(document.querySelector('.zen-bar')).opacity === '0'" },
+    { "eval": "{ window.dispatchEvent(new MouseEvent('mousemove', { clientX: 400, clientY: 20 })) }", "wait": 400, "shot": "bar" },
+    { "assert": "getComputedStyle(document.querySelector('.zen-bar')).opacity === '1' && /\\d+ words/.test(document.querySelector('.zen-words').textContent)" },
+    { "eval": "{ document.querySelector('.cm-content').focus() }" },
+    { "type": "abc", "wait": 400 },
+    { "assert": "getComputedStyle(document.querySelector('.zen-bar')).opacity === '0' && document.querySelector('.app').classList.contains('typing')" },
+    { "keys": "Escape", "wait": 300 },
+    { "assert": "!!document.querySelector('.topbar')" }
+  ]
+}

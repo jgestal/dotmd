@@ -7,7 +7,7 @@
   import { t } from '../i18n';
   import { dirname } from '../path';
   import { renderHtml, postProcess } from '../render';
-  import { currentTheme } from '../appearance.svelte';
+  import { currentTheme, sheet, sheetClass } from '../appearance.svelte';
   import { fitSlide, slideAt, splitSlides, type Slide } from '../slides';
 
   let slides = $state<Slide[]>([]);
@@ -81,7 +81,7 @@
   });
 </script>
 
-<div class="presentation" class:with-notes={showNotes} role="presentation" onclick={(e) => { if (!(e.target as HTMLElement).closest('.notes')) go(index + (e.clientX < window.innerWidth / 4 ? -1 : 1)); }}>
+<div class="presentation {sheetClass()}" use:sheet class:with-notes={showNotes} role="presentation" onclick={(e) => { if (!(e.target as HTMLElement).closest('.notes')) go(index + (e.clientX < window.innerWidth / 4 ? -1 : 1)); }}>
   {#if ready && !slides.length}
     <p class="empty">{t('slides.empty')}</p>
   {:else if slide}

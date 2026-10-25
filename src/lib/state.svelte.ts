@@ -71,6 +71,8 @@ export interface Settings {
   inkVariation: boolean;
   /** Strength of the theme effects (scanlines, glow, vignette), 0–100. */
   effectStrength: number;
+  /** Use the theme's decorative face (dot matrix, VT323, VGA) for body text too, not only headings. */
+  decorativeBody: boolean;
   pdfPageSize: 'A4' | 'Letter' | 'A5' | 'Legal';
   pdfMargin: number;
   /** 'current' or any theme id. */
@@ -123,7 +125,7 @@ export const DEFAULT_SETTINGS: Settings = {
   typewriterScroll: true,
   typewriterOnlyZen: true,
   zenFullscreen: true,
-  zenShowStats: true,
+  zenShowStats: false,
   typingSound: 'off',
   soundVolume: 0.5,
   soundOnlyZen: false,
@@ -137,6 +139,7 @@ export const DEFAULT_SETTINGS: Settings = {
   paperTexture: true,
   inkVariation: true,
   effectStrength: 55,
+  decorativeBody: false,
   pdfPageSize: 'A4',
   pdfMargin: 18,
   exportTheme: 'current',

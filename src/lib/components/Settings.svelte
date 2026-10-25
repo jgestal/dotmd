@@ -4,7 +4,7 @@
   import { t, LANGUAGES, type Key } from '../i18n';
   import { THEMES, THEME_GROUPS, FONTS, EFFECT_SETTING, type ThemeEffect } from '../themes';
   import { keySound, bellSound, effectiveSound } from '../sound';
-  import { currentTheme } from '../appearance.svelte';
+  import { currentTheme, sheet, sheetClass } from '../appearance.svelte';
   import { preferences } from '../container';
   import { getVersion } from '@tauri-apps/api/app';
   import { openUrl } from '@tauri-apps/plugin-opener';
@@ -73,14 +73,25 @@
           </select>
         </div>
         <div class="row">
-          <span>{t('set.appearanceMode')}</span>
+          <span>{t('set.interface')}</span>
           <div class="seg">
             {#each [['system', 'set.system'], ['light', 'set.light'], ['dark', 'set.dark']] as [v, l]}
               <button class:on={settings.appearance === v} onclick={() => (settings.appearance = v as any)}>{t(l as Key)}</button>
             {/each}
           </div>
         </div>
-        <h3>{t('set.theme')}</h3>
+        <h3>{t('set.sheetTheme')}</h3>
+        <p class="hint">{t('set.sheetHint')}</p>
+        <!-- Live sample of the sheet: fonts, colours, effects and the theme's caret. -->
+        <div class="sheet-sample {sheetClass()}" use:sheet>
+          <div class="markdown-body">
+            <h2>{theme.name}</h2>
+            <p>{t('set.preview')} <code>code()</code> <a href="#top" onclick={(e) => e.preventDefault()}>{t('tb.link')}</a><span class="fake-caret" aria-hidden="true"></span></p>
+          </div>
+        </div>
+        {#if theme.display}
+          <label class="check"><input type="checkbox" bind:checked={settings.decorativeBody} /> {t('set.decorativeBody')}</label>
+        {/if}
         {#each THEME_GROUPS as g, gi}
         <h4 class="group">{t(`theme.group.${g}` as Key)}</h4>
         <div class="themes" data-group={g}>
@@ -92,7 +103,7 @@
           {/if}
           {#each THEMES.filter((x) => x.group === g) as th}
             <button class="theme-card" class:on={settings.theme === th.id} onclick={() => (settings.theme = th.id)}>
-              <span class="swatch" style="background:{th.vars['--bg']};color:{th.vars['--fg']};font-family:{th.fonts.doc};border-color:{th.vars['--border']}">
+              <span class="swatch" style="background:{th.vars['--paper'] ?? th.vars['--bg']};color:{th.vars['--fg']};font-family:{th.fonts.doc};border-color:{th.vars['--border']}">
                 <b style="font-family:{th.fonts.heading}">Aa</b>
                 <i style="background:{th.vars['--accent']}"></i>
                 {#if th.kind === 'crt'}<em class="scan"></em>{/if}
@@ -133,7 +144,7 @@
         </div>
 
       {:else if section === 'typography'}
-        <div class="sample markdown-body" class:justify={settings.justify}>
+        <div class="sample markdown-body {sheetClass()}" use:sheet class:justify={settings.justify}>
           <h3>Lorem ipsum</h3>
           <p>{t('set.preview')} {t('set.preview')} <code>code()</code></p>
         </div>
@@ -298,6 +309,10 @@
   .row b { color: var(--fg-muted); font-weight: 500; margin-left: 6px; font-variant-numeric: tabular-nums; }
   .check { display: flex; align-items: center; gap: 8px; min-height: 28px; }
   .check.indent { padding-left: 24px; color: var(--fg-muted); }
+  .sheet-sample { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
+  .sheet-sample .markdown-body { padding: 14px 18px; max-width: none; font-size: 15px; }
+  .sheet-sample h2 { margin: 0 0 6px; font-size: 1.3em; }
+  .sheet-sample p { margin: 0; }
   .group { margin: 14px 0 8px; font: 600 11px var(--font-ui); color: var(--fg-muted); }
   .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
   .theme-card { display: grid; gap: 6px; border: 0; background: none; color: var(--fg); font: 12px var(--font-ui); padding: 0; text-align: center; cursor: default; }

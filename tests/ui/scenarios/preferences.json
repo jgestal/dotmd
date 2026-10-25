@@ -7,7 +7,7 @@
     { "assert": "document.querySelector('[data-sync-folder]').textContent === 'Not syncing'" },
     { "eval": "{ window.__savePath = window.__FIX + '/prefs.json'; [...document.querySelectorAll('.settings .btn')].find(b => b.textContent === 'Export…').click() }", "waitFor": "document.querySelector('.toast')?.textContent.includes('exported')" },
     { "eval": "{ window.__S.then(m => { m.settings.theme = 'modern'; m.settings.fontSize = 14; }) }", "wait": 200 },
-    { "eval": "{ window.__openPath = window.__FIX + '/prefs.json'; [...document.querySelectorAll('.settings .btn')].find(b => b.textContent === 'Import…').click() }", "waitFor": "document.documentElement.classList.contains('theme-terminal')" },
+    { "eval": "{ window.__openPath = window.__FIX + '/prefs.json'; [...document.querySelectorAll('.settings .btn')].find(b => b.textContent === 'Import…').click() }", "waitFor": "document.documentElement.dataset.theme === 'terminal'" },
     { "assert": "getComputedStyle(document.documentElement).getPropertyValue('--doc-size').trim() === '19px'" },
     { "eval": "{ window.__openPath = window.__FIX; [...document.querySelectorAll('.settings .btn')].find(b => b.textContent === 'Choose…').click() }", "waitFor": "document.querySelector('[data-sync-folder]').textContent === window.__FIX", "wait": 300, "shot": "sync" },
     { "assert": "[...document.querySelectorAll('.settings .btn')].some(b => b.textContent === 'Stop syncing')" },

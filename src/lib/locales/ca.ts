@@ -59,7 +59,7 @@ const ca: Record<Key, string> = {
   'tb.date': 'Insereix la data',
   'tb.more': 'Més',
   'tb.plain': 'Text sense format',
-  'top.zen': 'Mode zen',
+  'top.zen': 'Mode sense distraccions',
   'top.export': 'Exporta…',
   'top.settings': 'Configuració',
   'top.save': 'Desa',
@@ -95,7 +95,7 @@ const ca: Record<Key, string> = {
   'stats.medium': 'Normal',
   'stats.hard': 'Difícil',
   'stats.setGoal': 'Objectiu de paraules (0 = desactivat)',
-  'zen.exit': 'Prem Esc per sortir del mode zen',
+  'zen.exit': 'Prem Esc per sortir del mode sense distraccions',
   'dlg.unsavedTitle': 'Canvis sense desar',
   'dlg.unsavedBody': 'Vols desar els canvis a «{name}» abans de continuar?',
   'dlg.save': 'Desa',
@@ -367,6 +367,10 @@ const ca: Record<Key, string> = {
   'theme.group.retro': 'Retro',
   'theme.group.paper': 'Paper i impressió',
   'theme.paperHint': 'Els temes de paper són per llegir i exportar: l’editor continua sent una superfície d’escriptura neta i el paper es veu en mode lectura, a la vista de pàgines i en exportar.',
+  'set.interface': 'Interfície',
+  'set.sheetTheme': 'Tema del full',
+  'set.sheetHint': 'Només vesteix el full on llegeixes i escrius: tipus de lletra, colors, efectes i cursor. La resta de l’app es manté neutra.',
+  'set.decorativeBody': 'Fes servir el tipus de lletra decoratiu també al text (menys llegible)',
 };
 
 export default ca;

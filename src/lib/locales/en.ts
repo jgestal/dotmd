@@ -58,7 +58,7 @@ const en = {
   'tb.date': 'Insert date',
   'tb.more': 'More',
   'tb.plain': 'Plain text',
-  'top.zen': 'Zen mode',
+  'top.zen': 'Distraction-free mode',
   'top.export': 'Export…',
   'top.settings': 'Settings',
   'top.save': 'Save',
@@ -94,7 +94,7 @@ const en = {
   'stats.medium': 'Standard',
   'stats.hard': 'Difficult',
   'stats.setGoal': 'Word goal (0 = off)',
-  'zen.exit': 'Press Esc to leave Zen mode',
+  'zen.exit': 'Press Esc to leave distraction-free mode',
   'dlg.unsavedTitle': 'Unsaved changes',
   'dlg.unsavedBody': 'Save changes to “{name}” before continuing?',
   'dlg.save': 'Save',
@@ -366,6 +366,10 @@ const en = {
   'theme.group.retro': 'Retro',
   'theme.group.paper': 'Paper and print',
   'theme.paperHint': 'Paper themes are meant for reading and exporting: the editor stays a plain writing surface and the paper shows in Read mode, page view and exports.',
+  'set.interface': 'Interface',
+  'set.sheetTheme': 'Sheet theme',
+  'set.sheetHint': 'Dresses only the sheet where you read and write: fonts, colours, effects and the cursor. The rest of the app stays neutral.',
+  'set.decorativeBody': 'Use the decorative font for body text too (less legible)',
 };
 
 export default en;

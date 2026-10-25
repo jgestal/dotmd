@@ -59,7 +59,7 @@ const fr: Record<Key, string> = {
   'tb.date': 'Insérer la date',
   'tb.more': 'Plus',
   'tb.plain': 'Texte brut',
-  'top.zen': 'Mode zen',
+  'top.zen': 'Mode sans distraction',
   'top.export': 'Exporter…',
   'top.settings': 'Réglages',
   'top.save': 'Enregistrer',
@@ -95,7 +95,7 @@ const fr: Record<Key, string> = {
   'stats.medium': 'Standard',
   'stats.hard': 'Difficile',
   'stats.setGoal': 'Objectif de mots (0 = désactivé)',
-  'zen.exit': 'Appuyez sur Échap pour quitter le mode zen',
+  'zen.exit': 'Appuyez sur Échap pour quitter le mode sans distraction',
   'dlg.unsavedTitle': 'Modifications non enregistrées',
   'dlg.unsavedBody': 'Enregistrer les modifications de « {name} » avant de continuer ?',
   'dlg.save': 'Enregistrer',
@@ -367,6 +367,10 @@ const fr: Record<Key, string> = {
   'theme.group.retro': 'Rétro',
   'theme.group.paper': 'Papier et impression',
   'theme.paperHint': 'Les thèmes papier sont faits pour lire et exporter : l’éditeur reste une surface d’écriture épurée et le papier apparaît en lecture, en vue en pages et à l’export.',
+  'set.interface': 'Interface',
+  'set.sheetTheme': 'Thème de la feuille',
+  'set.sheetHint': 'N’habille que la feuille où vous lisez et écrivez : polices, couleurs, effets et curseur. Le reste de l’app reste neutre.',
+  'set.decorativeBody': 'Utiliser aussi la police décorative pour le texte (moins lisible)',
 };
 
 export default fr;

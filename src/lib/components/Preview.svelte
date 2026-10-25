@@ -226,7 +226,7 @@
   .preview { max-width: var(--doc-width); margin: 0 auto; padding: 36px 32px 30vh; user-select: text; -webkit-user-select: text; cursor: auto; }
   :global(.zen) .preview { padding-top: 12vh; }
   .desk { background: color-mix(in srgb, var(--bg) 82%, #000); }
-  :global(.dark) .desk { background: color-mix(in srgb, var(--bg) 70%, #000); }
+  :global(.sheet-dark) .desk { background: color-mix(in srgb, var(--bg) 70%, #000); }
   .preview.paged { max-width: none; padding: 28px 0 40vh; }
   :global(.markdown-body pre.has-copy .copy-code) {
     position: absolute; top: 6px; right: 6px; font: 11px var(--font-ui); color: var(--fg-muted);

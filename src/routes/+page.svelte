@@ -20,10 +20,11 @@
   import { allCommands, handleShortcut, setMode } from '$lib/commands';
   import { installMenu, syncMenuState } from '$lib/menu';
   import { app, settings, session, isDirty, focusActive, type Mode } from '$lib/state.svelte';
-  import { startAppearance, currentTheme, toggleAppearance } from '$lib/appearance.svelte';
+  import { startAppearance, isDarkPreferred, sheet, sheetClass, toggleAppearance } from '$lib/appearance.svelte';
   import { toggleFocusHighlight } from '$lib/actions';
   import { preloadSounds } from '$lib/sound';
   import { forwardConsole } from '$lib/log';
+  import { countWords } from '$lib/stats';
   import { runCliExport } from '$lib/cli';
   import { scheduleUpdateCheck } from '$lib/updates';
   import { warnAboutMissing, isFavorite, toggleFavorite } from '$lib/workspace.svelte';
@@ -62,9 +63,27 @@
     e.preventDefault();
   }
 
+  // Distraction-free mode: the little bar shows while the mouse moves, and hides as soon as you type.
+  let zenUi = $state(false);
+  let zenHover = $state(false);
+  let zenTyping = $state(false);
+  let zenTimer: ReturnType<typeof setTimeout> | undefined;
+  const zenWords = $derived(app.zen ? `${countWords(app.content).toLocaleString(settings.lang)} ${t('stats.words')}` : '');
+  function zenMouse() {
+    if (!app.zen) return;
+    zenTyping = false;
+    zenUi = true;
+    clearTimeout(zenTimer);
+    zenTimer = setTimeout(() => { if (!zenHover) zenUi = false; }, 1800);
+  }
+  $effect(() => {
+    if (!app.zen) { zenUi = false; zenTyping = false; }
+  });
+
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Escape' && app.zen && !app.settingsOpen && !app.exportOpen && !app.paletteOpen && !app.quickOpen) { toggleZen(); return; }
     if (e.key === 'F11') { e.preventDefault(); toggleZen(); return; }
+    if (app.zen && !e.metaKey && !e.ctrlKey && e.key.length === 1) { zenTyping = true; zenUi = false; }
     handleShortcut(e);
   }
 
@@ -160,9 +179,9 @@
   });
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<svelte:window onkeydown={onKeydown} onmousemove={zenMouse} />
 
-<div class="app" class:zen={app.zen} class:mac={isMac} class:no-sidebar={!app.sidebar}>
+<div class="app" class:zen={app.zen} class:typing={app.zen && zenTyping} class:mac={isMac} class:no-sidebar={!app.sidebar}>
   {#if !app.zen}
     <header class="topbar chrome" data-tauri-drag-region>
       <button class="tb" class:on={app.sidebar} onclick={() => (app.sidebar = !app.sidebar)} title={`${t('sidebar.toggle')}  ${modKey}\\`}><Icon name="sidebar" /></button>
@@ -190,10 +209,10 @@
         {/if}
         <button class="tb" onclick={() => saveDoc()} title="{t('top.save')}  {modKey}S" disabled={!isDirty()}><Icon name="save" /></button>
         <button class="tb" class:on={focusActive() && !app.zen} onclick={toggleFocusHighlight} title="{t('cmd.toggleFocus')}  {modKey}⌥L"><Icon name="focus" /></button>
-        <button class="tb" onclick={toggleZen} title="{t('top.zen')}  {modKey}⇧↩"><Icon name="zen" /></button>
+        <button class="tb" onclick={toggleZen} title="{t('top.zen')}  {modKey}⇧↩"><Icon name="fullscreen" /></button>
         {#if !plain}<button class="tb" onclick={() => (app.presenting = true)} title="{t('cmd.present')}  {modKey}⌥↩"><Icon name="present" /></button>{/if}
       {/if}
-      <button class="tb" onclick={toggleAppearance} title="{t('cmd.toggleAppearance')}  {modKey}⌥D"><Icon name={currentTheme().dark ? 'sun' : 'moon'} /></button>
+      <button class="tb" onclick={toggleAppearance} title="{t('cmd.toggleAppearance')}  {modKey}⌥D"><Icon name={isDarkPreferred() ? 'sun' : 'moon'} /></button>
       <button class="tb" onclick={() => (app.exportOpen = true)} title="{t('top.export')}  {modKey}⇧E"><Icon name="export" /></button>
       <button class="tb" onclick={() => (app.settingsOpen = true)} title="{t('top.settings')}  {modKey},"><Icon name="settings" /></button>
     </header>
@@ -205,7 +224,7 @@
       {#if app.tabs.length > 1 && !app.zen}<TabBar />{/if}
       {#if app.docOpen}
         {#if editing && !plain && settings.showToolbar && !app.zen}<Toolbar />{/if}
-        <div class="content mode-{app.mode}" bind:this={contentEl} style:--split="{settings.splitRatio * 100}%">
+        <div class="content mode-{app.mode} {sheetClass()}" use:sheet bind:this={contentEl} style:--split="{settings.splitRatio * 100}%">
           {#if app.mode === 'source'}
             <SourceEditor />
           {:else if app.mode === 'split'}
@@ -228,7 +247,11 @@
   </div>
 
   {#if app.zen}
-    <div class="zen-exit chrome">
+    <!-- Only the sheet is left; moving the mouse brings back a small bar, typing hides it again. -->
+    <div class="zen-bar chrome" class:shown={zenUi} onmouseenter={() => (zenHover = true)} onmouseleave={() => (zenHover = false)} role="toolbar" tabindex="-1">
+      <button class="tb" class:on={focusActive()} onclick={toggleFocusHighlight} title={t('cmd.toggleFocus')}><Icon name="focus" /></button>
+      <button class="tb" class:on={settings.typewriterScroll} onclick={() => (settings.typewriterScroll = !settings.typewriterScroll)} title={t('set.typewriterScroll')}><Icon name="target" /></button>
+      <span class="zen-words">{zenWords}</span>
       <button class="tb" onclick={toggleZen} title={t('zen.exit')}><Icon name="x" /></button>
     </div>
     <div class="zen-hint chrome">{t('zen.exit')}</div>
@@ -281,11 +304,17 @@
   .divider:hover { background: var(--accent); }
   .preview-pane :global(.preview) { padding-left: 28px; padding-right: 28px; }
 
-  .zen .main { background: var(--bg); }
-  .zen-exit { position: fixed; top: 10px; right: 12px; opacity: 0; transition: opacity 0.25s; z-index: 20; }
-  .zen-exit:hover { opacity: 1; }
+  .zen .main { background: transparent; }
+  .zen.typing { cursor: none; }
+  .zen-bar {
+    position: fixed; top: 10px; left: 50%; transform: translate(-50%, -6px); z-index: 20; display: flex; align-items: center; gap: 2px;
+    padding: 3px 6px; border-radius: 10px; background: color-mix(in srgb, var(--bg-elev) 92%, transparent); border: 1px solid var(--border);
+    box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
+  }
+  .zen-bar.shown { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+  .zen-words { font: 12px var(--font-ui); color: var(--fg-muted); padding: 0 8px; font-variant-numeric: tabular-nums; }
   .zen-hint {
-    position: fixed; top: 16px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--fg-muted);
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--fg-muted);
     background: var(--bg-elev); padding: 6px 12px; border-radius: 20px; animation: hint 3s forwards; pointer-events: none;
   }
   @keyframes hint { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }

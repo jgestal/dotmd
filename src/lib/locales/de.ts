@@ -59,7 +59,7 @@ const de: Record<Key, string> = {
   'tb.date': 'Datum einfügen',
   'tb.more': 'Mehr',
   'tb.plain': 'Reiner Text',
-  'top.zen': 'Zen-Modus',
+  'top.zen': 'Ablenkungsfreier Modus',
   'top.export': 'Exportieren…',
   'top.settings': 'Einstellungen',
   'top.save': 'Speichern',
@@ -95,7 +95,7 @@ const de: Record<Key, string> = {
   'stats.medium': 'Mittel',
   'stats.hard': 'Schwer',
   'stats.setGoal': 'Wortziel (0 = aus)',
-  'zen.exit': 'Esc drücken, um den Zen-Modus zu verlassen',
+  'zen.exit': 'Esc drücken, um den ablenkungsfreien Modus zu verlassen',
   'dlg.unsavedTitle': 'Ungespeicherte Änderungen',
   'dlg.unsavedBody': 'Änderungen an „{name}“ vor dem Fortfahren speichern?',
   'dlg.save': 'Speichern',
@@ -367,6 +367,10 @@ const de: Record<Key, string> = {
   'theme.group.retro': 'Retro',
   'theme.group.paper': 'Papier und Druck',
   'theme.paperHint': 'Papier-Designs sind zum Lesen und Exportieren gedacht: Der Editor bleibt eine schlichte Schreibfläche, das Papier erscheint im Lesemodus, in der Seitenansicht und beim Export.',
+  'set.interface': 'Oberfläche',
+  'set.sheetTheme': 'Blatt-Design',
+  'set.sheetHint': 'Gestaltet nur das Blatt, auf dem du liest und schreibst: Schriften, Farben, Effekte und Cursor. Der Rest der App bleibt neutral.',
+  'set.decorativeBody': 'Dekorative Schrift auch für den Fließtext verwenden (weniger gut lesbar)',
 };
 
 export default de;

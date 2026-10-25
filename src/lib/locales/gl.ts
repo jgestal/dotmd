@@ -59,7 +59,7 @@ const gl: Record<Key, string> = {
   'tb.date': 'Inserir a data',
   'tb.more': 'Máis',
   'tb.plain': 'Texto sen formato',
-  'top.zen': 'Modo zen',
+  'top.zen': 'Modo sen distraccións',
   'top.export': 'Exportar…',
   'top.settings': 'Axustes',
   'top.save': 'Gardar',
@@ -95,7 +95,7 @@ const gl: Record<Key, string> = {
   'stats.medium': 'Normal',
   'stats.hard': 'Difícil',
   'stats.setGoal': 'Obxectivo de palabras (0 = desactivado)',
-  'zen.exit': 'Preme Esc para saír do modo zen',
+  'zen.exit': 'Preme Esc para saír do modo sen distraccións',
   'dlg.unsavedTitle': 'Cambios sen gardar',
   'dlg.unsavedBody': 'Queres gardar os cambios en «{name}» antes de continuar?',
   'dlg.save': 'Gardar',
@@ -367,6 +367,10 @@ const gl: Record<Key, string> = {
   'theme.group.retro': 'Retro',
   'theme.group.paper': 'Papel e impresión',
   'theme.paperHint': 'Os temas de papel están pensados para ler e exportar: o editor segue sendo unha superficie de escritura limpa e o papel vese en lectura, na vista de páxinas e ao exportar.',
+  'set.interface': 'Interface',
+  'set.sheetTheme': 'Tema da folla',
+  'set.sheetHint': 'Só viste a folla onde les e escribes: tipos de letra, cores, efectos e cursor. O resto da app mantense neutro.',
+  'set.decorativeBody': 'Usar o tipo de letra decorativo tamén no texto (menos lexible)',
 };
 
 export default gl;

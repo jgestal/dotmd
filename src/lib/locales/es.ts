@@ -59,7 +59,7 @@ const es: Record<Key, string> = {
   'tb.date': 'Insertar fecha',
   'tb.more': 'Más',
   'tb.plain': 'Texto plano',
-  'top.zen': 'Modo zen',
+  'top.zen': 'Modo sin distracciones',
   'top.export': 'Exportar…',
   'top.settings': 'Ajustes',
   'top.save': 'Guardar',
@@ -95,7 +95,7 @@ const es: Record<Key, string> = {
   'stats.medium': 'Normal',
   'stats.hard': 'Difícil',
   'stats.setGoal': 'Objetivo de palabras (0 = desactivado)',
-  'zen.exit': 'Pulsa Esc para salir del modo zen',
+  'zen.exit': 'Pulsa Esc para salir del modo sin distracciones',
   'dlg.unsavedTitle': 'Cambios sin guardar',
   'dlg.unsavedBody': '¿Guardar los cambios de «{name}» antes de continuar?',
   'dlg.save': 'Guardar',
@@ -367,6 +367,10 @@ const es: Record<Key, string> = {
   'theme.group.retro': 'Retro',
   'theme.group.paper': 'Papel e impresión',
   'theme.paperHint': 'Los temas de papel están pensados para leer y exportar: el editor sigue siendo una superficie de escritura limpia y el papel se ve en Lectura, en la vista de páginas y al exportar.',
+  'set.interface': 'Interfaz',
+  'set.sheetTheme': 'Tema de la hoja',
+  'set.sheetHint': 'Solo viste la hoja donde lees y escribes: fuentes, colores, efectos y cursor. El resto de la app se mantiene neutro.',
+  'set.decorativeBody': 'Usar la fuente decorativa también en el texto (menos legible)',
 };
 
 export default es;

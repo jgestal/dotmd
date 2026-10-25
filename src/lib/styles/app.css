@@ -1,4 +1,5 @@
-/* App chrome. Colors come from the theme variables set on :root (see appearance.svelte.ts). */
+/* App chrome. Colors come from the neutral interface palette set on :root (appearance.svelte.ts);
+   sheet themes only apply inside `.sheet` elements. */
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; overflow: hidden; }
@@ -79,84 +80,80 @@ kbd { font: 11px var(--font-ui); color: var(--fg-muted); }
 @keyframes fade { from { opacity: 0; } }
 @keyframes rise { from { opacity: 0; transform: translateY(8px) scale(0.985); } }
 
-/* ---- Typewriter theme: paper grain, slightly uneven ink ---- */
-html.paper body {
-  background-color: var(--bg);
+/* ==== Sheets ==== The sheet theme only dresses elements with `use:sheet` (the reading and writing
+   viewport, presentations, previews); the interface around them keeps its neutral palette. */
+.sheet { position: relative; background: var(--bg); color: var(--fg); isolation: isolate; }
+/* Native widgets inside the sheet (checkboxes, scroll bars) follow the sheet, not the interface. */
+.sheet.sheet-light { color-scheme: light; }
+.sheet.sheet-dark { color-scheme: dark; }
+
+/* Caret: shape, colour and blink come from the theme (--caret-color, --caret-w, --caret-rate). */
+.sheet .cm-cursor { border-left: var(--caret-w) solid var(--caret-color) !important; }
+.sheet.caret-block .cm-cursor { border-left-width: 0.62em !important; }
+.sheet.caret-underline .cm-cursor { border-left: 0 !important; border-bottom: 0.16em solid var(--caret-color) !important; width: 0.62em; }
+.sheet.caret-glow .cm-cursor { box-shadow: 0 0 6px 1px var(--caret-color), 0 0 14px 2px color-mix(in srgb, var(--caret-color) 45%, transparent); }
+.sheet .cm-cursorLayer { animation-duration: var(--caret-rate) !important; }
+/* A glowing prompt: fades in and out instead of switching on and off. */
+.sheet.blink-smooth .cm-cursorLayer { animation-timing-function: ease-in-out !important; }
+.sheet.blink-none .cm-cursorLayer { animation: none !important; }
+.sheet .ProseMirror { caret-color: var(--caret-color); }
+
+/* The caret drawn in previews (Settings), styled like the editor's. */
+.sheet .fake-caret { display: inline-block; width: var(--caret-w); height: 1.15em; margin-left: 2px; vertical-align: text-bottom; background: var(--caret-color); animation: crt-blink var(--caret-rate) steps(1) infinite; }
+.sheet.caret-block .fake-caret { width: 0.62em; }
+.sheet.caret-underline .fake-caret { width: 0.62em; height: 0.16em; vertical-align: baseline; }
+.sheet.caret-glow .fake-caret { box-shadow: 0 0 6px 1px var(--caret-color), 0 0 14px 2px color-mix(in srgb, var(--caret-color) 45%, transparent); }
+.sheet.blink-smooth .fake-caret { animation-timing-function: ease-in-out; }
+.sheet.blink-none .fake-caret { animation: none; }
+
+/* Paper themes: the editors are a plain paper surface; the ornaments are for reading and output. */
+.sheet.paper-surface .source, .sheet.paper-surface .visual { background: var(--paper); }
+
+/* ---- Typewriter: paper grain, slightly uneven ink ---- */
+.sheet.paper {
   background-image:
     radial-gradient(circle at 20% 30%, rgba(120, 90, 40, 0.06) 0, transparent 40%),
     radial-gradient(circle at 80% 70%, rgba(120, 90, 40, 0.05) 0, transparent 45%),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .15 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-html.paper .main, html.paper .toolbar, html.paper .statusbar { background: transparent !important; }
-html.ink .markdown-body, html.ink .cm-content {
+.sheet.paper .cm-editor, .sheet.paper .preview-scroll, .sheet.paper .visual { background: transparent; }
+.sheet.ink .markdown-body, .sheet.ink .cm-content {
   text-shadow: 0.25px 0.2px 0 color-mix(in srgb, var(--fg) 55%, transparent), -0.2px 0 0.8px color-mix(in srgb, var(--fg) 25%, transparent);
 }
-html.theme-typewriter .cm-cursor { border-left-width: 0.55em !important; opacity: 0.35; }
 
-/* ---- CRT theme: scanlines, glow, flicker, tube vignette. --fx (0–1) is "Effect strength";
-   the glow stays tight so VT323 remains crisp and readable. ---- */
-html.glow body { text-shadow: 0 0 calc(1.5px * var(--fx, .55)) color-mix(in srgb, var(--glow) calc(var(--fx, .55) * 70%), transparent); }
-html.glow .markdown-body, html.glow .cm-content {
-  text-shadow: 0 0 calc(2px * var(--fx, .55)) color-mix(in srgb, var(--glow) calc(var(--fx, .55) * 80%), transparent),
-    0 0 calc(9px * var(--fx, .55)) color-mix(in srgb, var(--glow) calc(var(--fx, .55) * 35%), transparent);
+/* ---- CRT: scanlines, glow, flicker and vignette over the sheet only. --fx (0–1) is "Effect
+   strength"; the glow stays tight so text remains crisp. ---- */
+.sheet.glow .markdown-body, .sheet.glow .cm-content {
+  text-shadow: 0 0 calc(2px * var(--fx, .55)) color-mix(in srgb, var(--glow) calc(var(--fx, .55) * 70%), transparent),
+    0 0 calc(8px * var(--fx, .55)) color-mix(in srgb, var(--glow) calc(var(--fx, .55) * 30%), transparent);
 }
-html.theme-crt body { font-size: 16px; }
-html.theme-crt .cm-content { font-size: 1.25em; letter-spacing: 0.03em; }
-html.theme-crt .cm-cursor { border-left: 0.6em solid var(--fg) !important; opacity: 0.8; animation: crt-blink 1s steps(1) infinite; }
+.sheet.theme-crt.decorative-body .cm-content { font-size: 1.25em; letter-spacing: 0.03em; }
 @keyframes crt-blink { 50% { opacity: 0; } }
-html.scanlines body::after {
-  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1000;
+.sheet.scanlines::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 5;
   background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 2px, rgba(0, 0, 0, 0.3) 3px, rgba(0, 0, 0, 0) 4px);
-  mix-blend-mode: multiply; opacity: calc(var(--fx, .55) * 0.75);
+  mix-blend-mode: multiply; opacity: calc(var(--fx, .55) * 0.6);
 }
-html.curvature body::before {
-  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1001;
-  background: radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, 0.55) 100%); opacity: var(--fx, .55);
+.sheet.curvature::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 6;
+  background: radial-gradient(ellipse at center, transparent 62%, rgba(0, 0, 0, 0.5) 100%); opacity: var(--fx, .55);
 }
-html.flicker .app { animation: crt-flicker 6s infinite; }
+.sheet.flicker { animation: crt-flicker 6s infinite; }
 @keyframes crt-flicker {
-  0%, 100% { opacity: 1; } 3% { opacity: 0.93; } 6% { opacity: 1; } 42% { opacity: 0.97; } 43% { opacity: 1; } 77% { opacity: 0.95; } 78% { opacity: 1; }
+  0%, 100% { opacity: 1; } 3% { opacity: 0.95; } 6% { opacity: 1; } 42% { opacity: 0.98; } 43% { opacity: 1; } 77% { opacity: 0.96; } 78% { opacity: 1; }
 }
-@media (prefers-reduced-motion: reduce) { html.flicker .app { animation: none; } }
-
-/* ---- Decorative paper themes: the editors use the theme's writing font, the preview the paper ---- */
-html.writing-font .source.md, html.writing-font .source { --font-editor: var(--font-writing); --font-heading: var(--font-writing); --font-code: var(--font-writing); }
-html.writing-font .source, html.writing-font .visual { --font-heading: var(--font-writing); --font-code: var(--font-writing); background: var(--paper, var(--bg)); }
-html.writing-font .visual .ProseMirror, html.writing-font .visual .ProseMirror :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) { font-family: var(--font-writing); }
-
-/* ---- Calm: quiet chrome, nothing competes with the text (iA Writer-like) ---- */
-html.theme-calm .toolbar, html.theme-calm .statusbar, html.theme-calm .tabbar { border-color: transparent !important; }
-html.theme-calm .toolbar .tb { opacity: 0.55; transition: opacity 0.15s; }
-html.theme-calm .toolbar:hover .tb { opacity: 1; }
-html.theme-calm .cm-cursor { border-left: 2px solid var(--accent) !important; }
-
-/* ---- MS-DOS: VGA text mode, no font smoothing, blinking underline cursor ---- */
-html.theme-dos { -webkit-font-smoothing: none; font-smooth: never; }
-html.theme-dos body { font-size: 16px; }
-html.theme-dos .cm-content { font-size: 1.15em; }
-html.theme-dos .cm-cursor { border-left: 0 !important; border-bottom: 0.18em solid var(--fg) !important; width: 0.6em; animation: crt-blink 0.53s steps(1) infinite; }
-html.theme-dos .sidebar, html.theme-dos .toolbar, html.theme-dos .statusbar { background: #00aaaa !important; color: #000 !important; --fg: #000; --fg-muted: #0000aa; }
-html.theme-dos .dialog, html.theme-dos .menu { border: 3px double var(--fg) !important; border-radius: 0 !important; }
-html.theme-dos button, html.theme-dos input, html.theme-dos select { border-radius: 0 !important; }
-
-/* ---- Terminal: block cursor, monospace everything ---- */
-html.theme-terminal .cm-cursor { border-left: 0.6em solid var(--accent) !important; opacity: 0.75; animation: crt-blink 1.06s steps(1) infinite; }
-html.theme-terminal .dialog, html.theme-terminal .menu, html.theme-terminal button { border-radius: 3px !important; }
-
-/* ---- Mac OS X Aqua: pinstripes, gel buttons, brushed toolbar ---- */
-html.theme-aqua body, html.theme-aqua .sidebar { background: repeating-linear-gradient(to bottom, #ececec 0 2px, #f6f6f6 2px 4px) !important; }
-html.theme-aqua .toolbar, html.theme-aqua .tabbar { background: linear-gradient(#f0f0f0, #c9c9c9) !important; border-bottom: 1px solid #8e8e8e !important; }
-html.theme-aqua .statusbar { background: linear-gradient(#e6e6e6, #cfcfcf) !important; }
-html.theme-aqua .main, html.theme-aqua .cm-editor, html.theme-aqua .preview { background: #fff; }
-html.theme-aqua .btn.primary, html.theme-aqua .seg button.on {
-  background: linear-gradient(#cfe5ff 0%, #78b2f8 48%, #3d8ef0 50%, #7fc0ff 100%) !important; color: #00204d !important;
-  border: 1px solid #2f63b0 !important; border-radius: 12px !important; box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.8), 0 1px 2px rgba(0, 0, 0, 0.3);
+@media (prefers-reduced-motion: reduce) {
+  .sheet.flicker { animation: none; }
+  .sheet .cm-cursorLayer { animation: none !important; }
 }
-html.theme-aqua .btn:not(.primary) { background: linear-gradient(#ffffff, #dcdcdc 50%, #cfcfcf 51%, #f2f2f2) !important; border: 1px solid #8e8e8e !important; border-radius: 12px !important; }
-html.theme-aqua ::-webkit-scrollbar-thumb { background: linear-gradient(to right, #78b2f8, #3d8ef0 50%, #7fc0ff) !important; border-radius: 8px; }
 
-/* ---- Screenplay: one Courier page, typed ---- */
-html.theme-screenplay .cm-cursor { border-left-width: 0.55em !important; opacity: 0.35; }
+/* ---- MS-DOS: crisp VGA headings (only at whole multiples of 16 px) ---- */
+.sheet.theme-dos .markdown-body :is(h1, h2, h3, h4), .sheet.theme-dos.decorative-body .markdown-body { -webkit-font-smoothing: none; }
+.sheet.theme-dos.decorative-body .cm-content { -webkit-font-smoothing: none; }
+
+/* ---- Aqua: white writing surface ---- */
+.sheet.theme-aqua .cm-editor, .sheet.theme-aqua .preview { background: #fff; }
+.sheet.theme-aqua ::-webkit-scrollbar-thumb { background: linear-gradient(to right, #78b2f8, #3d8ef0 50%, #7fc0ff); border-radius: 8px; }
 
 /* ---- Printing (fallback when no PDF engine is installed) ---- */
 @media print {
