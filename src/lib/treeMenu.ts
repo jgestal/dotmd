@@ -3,11 +3,11 @@ import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { app, toast } from './state.svelte';
 import { t } from './i18n';
 import { askFields } from './prompt.svelte';
-import { dirname, join } from './path';
+import { dirname, join, relative } from './path';
 import { openFolder, openPath, renamePath, trashPath } from './actions';
 import { exportRequest } from './exportRequest.svelte';
 import { files } from './container';
-import { isFavorite, removeFolder, toggleFavorite, workspaceFolders } from './workspace.svelte';
+import { folderOf, isFavorite, removeFolder, toggleFavorite, workspaceFolders } from './workspace.svelte';
 
 interface Entry { name: string; path: string; is_dir: boolean }
 
@@ -40,11 +40,21 @@ export async function treeContextMenu(entry: Entry) {
           { id: 'sep2', item: 'Separator' as const },
         ]
       : []),
+    ...(!entry.is_dir ? [{ id: 'dup', text: t('ctx.duplicate'), action: () => files.duplicate(entry.path) }] : []),
     { id: 'reveal', text: t('ctx.reveal'), action: () => revealItemInDir(entry.path) },
     ...(!workspaceFolders().includes(entry.path) ? [{ id: 'trash', text: t('ctx.trash'), action: () => trashPath(entry.path) }] : []),
     {
       id: 'copy', text: t('ctx.copyPath'),
       action: async () => { await navigator.clipboard.writeText(entry.path); toast(t('toast.copied'), 1000); },
+    },
+    {
+      // Relative to the open document (ready to paste as a link), else to its workspace folder.
+      id: 'copyRel', text: t('ctx.copyRelative'),
+      action: async () => {
+        const from = app.path && app.path !== entry.path ? dirname(app.path) : folderOf(entry.path) ?? dirname(entry.path);
+        await navigator.clipboard.writeText(relative(from, entry.path).replace(/\\/g, '/'));
+        toast(t('toast.copied'), 1000);
+      },
     },
   ];
   const menu = await Menu.new({

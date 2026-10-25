@@ -26,6 +26,7 @@
   import { preloadSounds } from '$lib/sound';
   import { forwardConsole } from '$lib/log';
   import { countWords } from '$lib/stats';
+  import { addWritingTime } from '$lib/domain/documents';
   import { runCliExport } from '$lib/cli';
   import { scheduleUpdateCheck } from '$lib/updates';
   import { warnAboutMissing, isFavorite, toggleFavorite } from '$lib/workspace.svelte';
@@ -69,7 +70,10 @@
   let zenHover = $state(false);
   let zenTyping = $state(false);
   let zenTimer: ReturnType<typeof setTimeout> | undefined;
-  const zenWords = $derived(app.zen ? `${countWords(app.content).toLocaleString(settings.lang)} ${t('stats.words')}` : '');
+  const zenCount = $derived(app.zen ? countWords(app.content) : 0);
+  const zenWords = $derived(app.zen ? (settings.wordGoal > 0
+    ? `${zenCount.toLocaleString(settings.lang)} / ${settings.wordGoal.toLocaleString(settings.lang)} ${t('stats.words')}`
+    : `${zenCount.toLocaleString(settings.lang)} ${t('stats.words')}`) : '');
   function zenMouse() {
     if (!app.zen) return;
     zenTyping = false;
@@ -85,6 +89,12 @@
     if (e.key === 'Escape' && app.zen && !app.settingsOpen && !app.exportOpen && !app.paletteOpen && !app.quickOpen) { toggleZen(); return; }
     if (e.key === 'F11') { e.preventDefault(); toggleZen(); return; }
     if (app.zen && !e.metaKey && !e.ctrlKey && e.key.length === 1) { zenTyping = true; zenUi = false; }
+    // Writing time: keystrokes that change text while editing.
+    if (app.docOpen && app.mode !== 'preview' && !e.metaKey && !e.ctrlKey && (e.key.length === 1 || e.key === 'Enter' || e.key === 'Backspace')) {
+      const now = Date.now();
+      app.writingMs = addWritingTime(app.writingMs, app.lastEditAt, now);
+      app.lastEditAt = now;
+    }
     handleShortcut(e);
   }
 
@@ -258,6 +268,7 @@
       <button class="tb" class:on={focusActive()} onclick={toggleFocusHighlight} title={t('cmd.toggleFocus')}><Icon name="focus" /></button>
       <button class="tb" class:on={settings.typewriterScroll} onclick={() => (settings.typewriterScroll = !settings.typewriterScroll)} title={t('set.typewriterScroll')}><Icon name="target" /></button>
       <span class="zen-words">{zenWords}</span>
+      {#if settings.wordGoal > 0}<span class="zen-goal" title={t('stats.goal')}><i style:width="{Math.min(100, (zenCount / settings.wordGoal) * 100)}%"></i></span>{/if}
       <button class="tb" onclick={toggleZen} title={t('zen.exit')}><Icon name="x" /></button>
     </div>
     <div class="zen-hint chrome">{t('zen.exit')}</div>
@@ -319,6 +330,8 @@
     box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
   }
   .zen-bar.shown { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+  .zen-goal { width: 70px; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; margin-right: 6px; }
+  .zen-goal i { display: block; height: 100%; background: var(--accent); transition: width 0.3s; }
   .zen-words { font: 12px var(--font-ui); color: var(--fg-muted); padding: 0 8px; font-variant-numeric: tabular-nums; }
   .zen-hint {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); font-size: 12px; color: var(--fg-muted);

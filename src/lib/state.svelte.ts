@@ -73,6 +73,8 @@ export interface Settings {
   effectStrength: number;
   /** Use the theme's decorative face (dot matrix, VT323, VGA) for body text too, not only headings. */
   decorativeBody: boolean;
+  /** File tree order. */
+  treeSort: 'name' | 'modified';
   pdfPageSize: 'A4' | 'Letter' | 'A5' | 'Legal';
   pdfMargin: number;
   /** Output format id (themes.EXPORT_STYLES), 'sheet' for the sheet theme, or a theme id. */
@@ -140,6 +142,7 @@ export const DEFAULT_SETTINGS: Settings = {
   inkVariation: true,
   effectStrength: 55,
   decorativeBody: false,
+  treeSort: 'name',
   pdfPageSize: 'A4',
   pdfMargin: 18,
   exportTheme: 'document',
@@ -224,6 +227,9 @@ export const app = $state({
   dragOver: false,
   treeVersion: 0,
   sessionStartWords: -1,
+  /** Active writing time this session (pauses over a minute don't count), and the last edit. */
+  writingMs: 0,
+  lastEditAt: 0,
   toast: '' as string,
   systemDark: false,
   /** Line the editor/preview should reveal (outline clicks). */

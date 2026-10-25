@@ -16,7 +16,7 @@ import type { FormatAction } from './snippets';
 import {
   newDoc, openFileDialog, openFolder, saveDoc, toggleZen, toggleTypewriterMode, insertLink, insertImage,
   toggleFocusHighlight, updateToc, closeTab, closeOtherTabs, closeTabsToLeft, closeTabsToRight, cycleTab, goBack, goForward, canGoBack, canGoForward, toggleFocusWriting, copyRichText,
-  typewriterModeOn, renamePath, revertDoc,
+  typewriterModeOn, renamePath, revertDoc, reopenClosedTab, canReopenClosed,
 } from './actions';
 import { focusWriting } from './state.svelte';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -88,7 +88,7 @@ const EDIT_GROUP: Record<string, Key> = {
   sortLines: 'menu.lines', sortLinesDesc: 'menu.lines', uniqueLines: 'menu.lines', trimTrailing: 'menu.lines', joinLines: 'menu.lines',
   upper: 'menu.transform', lower: 'menu.transform', title: 'menu.transform',
 };
-const INSERT = new Set(['fmt.link', 'fmt.image', 'fmt.table', 'fmt.codeblock', 'fmt.mermaid', 'fmt.math', 'fmt.footnote', 'fmt.hr', 'fmt.date', 'fmt.pagebreak']);
+const INSERT = new Set(['fmt.link', 'fmt.image', 'fmt.table', 'fmt.codeblock', 'fmt.mermaid', 'fmt.math', 'fmt.footnote', 'fmt.hr', 'fmt.date', 'fmt.dateLong', 'fmt.pagebreak']);
 
 function base(): Command[] {
   return [
@@ -98,6 +98,7 @@ function base(): Command[] {
     { id: 'file.quickOpen', label: L('cmd.quickOpen'), shortcut: 'CmdOrCtrl+P', menu: 'file', run: () => (app.quickOpen = true) },
     { id: 'file.openFolder', label: L('cmd.openFolder'), shortcut: 'CmdOrCtrl+Shift+O', menu: 'file', run: () => openFolder() },
     { id: 'tab.close', label: L('tabs.close'), shortcut: 'CmdOrCtrl+W', menu: 'file', separator: true, enabled: hasDoc, run: () => closeTab() },
+    { id: 'tab.reopen', label: L('tabs.reopen'), shortcut: 'CmdOrCtrl+Shift+T', menu: 'file', enabled: canReopenClosed, run: reopenClosedTab },
     { id: 'file.favorite', label: L('fav.toggle'), shortcut: 'CmdOrCtrl+Alt+B', menu: 'file', enabled: () => !!app.path, run: () => toggleFavorite(app.path) },
     { id: 'tab.closeOthers', label: L('tabs.closeOthers'), menu: 'file', enabled: () => app.tabs.length > 1, run: () => closeOtherTabs() },
     { id: 'tab.closeRight', label: L('tabs.closeRight'), menu: 'file', enabled: () => app.activeTab < app.tabs.length - 1, run: () => closeTabsToRight() },
@@ -151,13 +152,14 @@ function base(): Command[] {
     { id: 'fmt.link', label: L('tb.link'), shortcut: 'CmdOrCtrl+K', editorKey: true, menu: 'format', separator: true, enabled: editing, run: insertLink },
     { id: 'fmt.image', label: L('tb.image'), menu: 'format', enabled: editing, run: insertImage },
     { id: 'fmt.table', label: L('tb.table'), menu: 'format', enabled: editing, run: fmt({ type: 'table', rows: 3, cols: 3 }) },
-    { id: 'fmt.formatTable', label: L('tb.tableFormat'), shortcut: 'CmdOrCtrl+Shift+T', editorKey: true, menu: 'format', separator: true, enabled: editing, run: fmt({ type: 'formatTable' }) },
+    { id: 'fmt.formatTable', label: L('tb.tableFormat'), shortcut: 'CmdOrCtrl+Alt+Shift+T', editorKey: true, menu: 'format', separator: true, enabled: editing, run: fmt({ type: 'formatTable' }) },
     { id: 'fmt.codeblock', label: L('tb.codeblock'), menu: 'format', enabled: editing, run: fmt({ type: 'codeblock', lang: '' }) },
     { id: 'fmt.mermaid', label: L('tb.mermaid'), menu: 'format', enabled: editing, run: fmt({ type: 'mermaid', template: 'flowchart' }) },
     { id: 'fmt.math', label: L('tb.math'), menu: 'format', enabled: editing, run: fmt({ type: 'math' }) },
     { id: 'fmt.footnote', label: L('tb.footnote'), menu: 'format', enabled: editing, run: fmt({ type: 'footnote' }) },
     { id: 'fmt.hr', label: L('tb.hr'), menu: 'format', enabled: editing, run: fmt({ type: 'hr' }) },
     { id: 'fmt.date', label: L('tb.date'), menu: 'format', enabled: editing, run: fmt({ type: 'date' }) },
+    { id: 'fmt.dateLong', label: L('tb.dateLong'), menu: 'format', enabled: editing, run: fmt({ type: 'date', long: true }) },
 
     // View
     ...(['preview', 'source', 'split', 'visual'] as Mode[]).map((m, i) => ({

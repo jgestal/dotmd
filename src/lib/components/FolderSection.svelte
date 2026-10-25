@@ -7,6 +7,7 @@
   import { t } from '../i18n';
   import { basename } from '../path';
   import { treeContextMenu } from '../treeMenu';
+  import { sortEntries } from '../domain/workspace';
   import { missing, removeFolder, resolveMissing } from '../workspace.svelte';
 
   interface Entry { name: string; path: string; is_dir: boolean }
@@ -19,9 +20,10 @@
   $effect(() => {
     app.treeVersion;
     const all = settings.showAllFiles;
+    const by = settings.treeSort;
     if (collapsed || gone) return;
     services.fs.listDir(root, all)
-      .then((e) => (entries = e))
+      .then((e) => (entries = sortEntries(e, by)))
       .catch(() => { entries = []; missing[root] = true; });
   });
 

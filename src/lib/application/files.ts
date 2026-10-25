@@ -2,7 +2,7 @@
 // images pasted or dropped into a document.
 import type { Services } from '../ports';
 import { toAppError, errorMessage } from '../domain/errors';
-import { isUnder } from '../domain/documents';
+import { duplicateName, isUnder } from '../domain/documents';
 import type { Documents } from './documents';
 import type { Workspace } from './workspace';
 
@@ -53,6 +53,21 @@ export function createFiles(d: FilesDeps) {
     /** Renames in place, keeping tabs and favourites pointed at it. */
     renameTo(from: string, name: string) {
       return rename(from, d.join(d.dirname(from), name), name);
+    },
+    /** Copies a text file next to itself ("notes copy.md") and returns the new path. */
+    async duplicate(path: string): Promise<string | null> {
+      const dir = d.dirname(path);
+      try {
+        const names = new Set((await s.fs.listDir(dir, true)).map((e) => e.name.toLowerCase()));
+        const name = duplicateName(d.basename(path), (n) => names.has(n.toLowerCase()), s.t('ctx.copySuffix'));
+        const target = d.join(dir, name);
+        await s.fs.writeText(target, await s.fs.readText(path));
+        state.treeVersion++;
+        return target;
+      } catch (e) {
+        report(e, d.basename(path));
+        return null;
+      }
     },
     /** Moves to the system trash after confirmation; closes its tabs without asking to save. */
     async trash(path: string) {

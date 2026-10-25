@@ -6,6 +6,8 @@ pub struct Entry {
     name: String,
     path: String,
     is_dir: bool,
+    /// Last modification, in milliseconds since the Unix epoch (0 if unknown), for sorting by date.
+    modified: u64,
 }
 
 /// Extensions DotMD opens as documents: Markdown, plain text, data and source code.
@@ -96,7 +98,13 @@ pub fn list_dir(path: String, all: bool) -> Result<Vec<Entry>, String> {
             if !is_dir && !all && !is_text_file(&p) {
                 return None;
             }
-            Some(Entry { name, path: p.to_string_lossy().into_owned(), is_dir })
+            let modified = d
+                .metadata()
+                .and_then(|m| m.modified())
+                .ok()
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map_or(0, |d| d.as_millis() as u64);
+            Some(Entry { name, path: p.to_string_lossy().into_owned(), is_dir, modified })
         })
         .collect();
     out.sort_by(|a, b| {

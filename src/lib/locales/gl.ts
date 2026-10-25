@@ -400,6 +400,14 @@ const gl: Record<Key, string> = {
   'dlg.revert': 'Volver á gardada',
   'edit.findNext': 'Buscar seguinte',
   'edit.findPrevious': 'Buscar anterior',
+  'tabs.reopen': 'Volver abrir a lapela pechada',
+  'tb.dateLong': 'Inserir a data (longa)',
+  'ctx.duplicate': 'Duplicar',
+  'ctx.copyRelative': 'Copiar a ruta relativa',
+  'ctx.copySuffix': 'copia',
+  'sidebar.sortName': 'Orde: por nome (preme para os máis recentes primeiro)',
+  'sidebar.sortModified': 'Orde: máis recentes primeiro (preme para por nome)',
+  'stats.writingTime': '{m} min escribindo',
 };
 
 export default gl;

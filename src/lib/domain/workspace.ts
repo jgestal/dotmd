@@ -25,3 +25,14 @@ export const replaced = (list: string[], from: string, to: string) => list.map((
 export function pushRecent(list: string[], item: string, max: number): string[] {
   return [item, ...list.filter((p) => p !== item)].slice(0, max);
 }
+
+export type TreeSort = 'name' | 'modified';
+
+/** Folders first, then by name (natural order) or by last modification, newest first. */
+export function sortEntries<T extends { name: string; is_dir: boolean; modified?: number }>(entries: T[], by: TreeSort): T[] {
+  const byName = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
+  return [...entries].sort((a, b) =>
+    Number(b.is_dir) - Number(a.is_dir)
+    || (by === 'modified' ? (b.modified ?? 0) - (a.modified ?? 0) : 0)
+    || byName.compare(a.name, b.name));
+}

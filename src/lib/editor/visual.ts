@@ -11,7 +11,7 @@ import {
 import { toggleStrikethroughCommand, insertTableCommand } from '@milkdown/kit/preset/gfm';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import katex from 'katex';
-import { blockMarkdown, today, type FormatAction } from '../snippets';
+import { blockMarkdown, longDate, today, type FormatAction } from '../snippets';
 import { isAbsolute, join } from '../path';
 import { mermaidSvg } from '../render';
 import type { Theme } from '../themes';
@@ -144,7 +144,7 @@ export async function createVisual(root: HTMLElement, o: VisualOptions) {
         else run(insert(`[${a.text || a.url}](${a.url})`, true));
         break;
       }
-      case 'date': run(insert(today(), true)); break;
+      case 'date': run(insert(a.long ? longDate() : today(), true)); break;
       case 'footnote': run(insert('[^1]', true)); break;
       case 'formatTable': break;
       default: {

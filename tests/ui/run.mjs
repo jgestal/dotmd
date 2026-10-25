@@ -56,7 +56,7 @@ const handlers = {
   list_dir: ({ path: p, all }) =>
     fs.readdirSync(p, { withFileTypes: true })
       .filter((d) => !d.name.startsWith('.') && (d.isDirectory() || all || TEXT.test(d.name)))
-      .map((d) => ({ name: d.name, path: path.join(p, d.name), is_dir: d.isDirectory() }))
+      .map((d) => ({ name: d.name, path: path.join(p, d.name), is_dir: d.isDirectory(), modified: fs.statSync(path.join(p, d.name)).mtimeMs }))
       .sort((a, b) => b.is_dir - a.is_dir || a.name.localeCompare(b.name)),
   list_tree: ({ path: p }) => fs.readdirSync(p, { recursive: true }).filter((f) => TEXT.test(f)).sort().map((f) => path.join(p, f)),
   take_pending_open: () => { const p = pendingOpen; pendingOpen = []; return p; },

@@ -400,6 +400,14 @@ const ca: Record<Key, string> = {
   'dlg.revert': 'Torna a la desada',
   'edit.findNext': 'Cerca el següent',
   'edit.findPrevious': 'Cerca l’anterior',
+  'tabs.reopen': 'Torna a obrir la pestanya tancada',
+  'tb.dateLong': 'Insereix la data (llarga)',
+  'ctx.duplicate': 'Duplica',
+  'ctx.copyRelative': 'Copia el camí relatiu',
+  'ctx.copySuffix': 'còpia',
+  'sidebar.sortName': 'Ordre: per nom (clic per als més recents primer)',
+  'sidebar.sortModified': 'Ordre: més recents primer (clic per nom)',
+  'stats.writingTime': '{m} min escrivint',
 };
 
 export default ca;

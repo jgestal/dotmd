@@ -5,6 +5,7 @@
   import { app, session, settings } from '../state.svelte';
   import { insertFileLink, movePath, openPath } from '../actions';
   import { pointerDrag } from '../drag';
+  import { sortEntries } from '../domain/workspace';
   import { docKind, isTextPath } from '../path';
 
   const fileIcon = (p: string) =>
@@ -20,7 +21,7 @@
 
   async function load() {
     try {
-      children = await services.fs.listDir(entry.path, settings.showAllFiles);
+      children = sortEntries(await services.fs.listDir(entry.path, settings.showAllFiles), settings.treeSort);
     } catch {
       children = [];
     }
@@ -29,6 +30,7 @@
   $effect(() => {
     app.treeVersion;
     settings.showAllFiles;
+    settings.treeSort;
     if (expanded) load();
   });
 

@@ -400,6 +400,14 @@ const fr: Record<Key, string> = {
   'dlg.revert': 'Revenir',
   'edit.findNext': 'Rechercher le suivant',
   'edit.findPrevious': 'Rechercher le précédent',
+  'tabs.reopen': 'Rouvrir l’onglet fermé',
+  'tb.dateLong': 'Insérer la date (longue)',
+  'ctx.duplicate': 'Dupliquer',
+  'ctx.copyRelative': 'Copier le chemin relatif',
+  'ctx.copySuffix': 'copie',
+  'sidebar.sortName': 'Tri : par nom (clic pour les plus récents d’abord)',
+  'sidebar.sortModified': 'Tri : plus récents d’abord (clic pour par nom)',
+  'stats.writingTime': '{m} min d’écriture',
 };
 
 export default fr;

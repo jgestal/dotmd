@@ -44,7 +44,7 @@
       ['lines', `${fmt(s.lines)} ${t('stats.lines')}`],
       ['reading', `${formatMinutes(s.words, settings.readingWpm)} ${t('stats.reading')}`],
       ['speaking', `${formatMinutes(s.words, 130)} ${t('stats.speaking')}`],
-      ['session', `${sessionWords >= 0 ? '+' : ''}${fmt(sessionWords)} ${t('stats.session')}`],
+      ['session', `${sessionWords >= 0 ? '+' : ''}${fmt(sessionWords)} ${t('stats.session')}${app.writingMs >= 60_000 ? ` · ${t('stats.writingTime', { m: Math.round(app.writingMs / 60_000) })}` : ''}`],
     ];
     return all.filter(([k]) => settings.stats[k]);
   });

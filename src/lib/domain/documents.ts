@@ -95,3 +95,27 @@ export function retargetPath(p: string, from: string, to: string): string {
 }
 
 export const isUnder = (p: string, dir: string) => p === dir || p.startsWith(dir + '/') || p.startsWith(dir + '\\');
+
+/** "notes.md" → "notes copy.md", then "notes copy 2.md"… (the first name `taken` says is free). */
+export function duplicateName(name: string, taken: (candidate: string) => boolean, suffix = 'copy'): string {
+  const dot = name.lastIndexOf('.');
+  const [base, ext] = dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ''];
+  for (let n = 1; ; n++) {
+    const candidate = `${base} ${suffix}${n > 1 ? ` ${n}` : ''}${ext}`;
+    if (!taken(candidate)) return candidate;
+  }
+}
+
+/** Closed documents, newest last, without duplicates (File ▸ Reopen Closed Tab). */
+export function pushClosed(list: string[], path: string, max = 20): string[] {
+  return [...list.filter((p) => p !== path), path].slice(-max);
+}
+
+/**
+ * Active writing time: the gap since the previous edit counts only when it is short (you were
+ * still writing); longer pauses are breaks.
+ */
+export function addWritingTime(totalMs: number, lastEditAt: number, now: number, idleMs = 60_000): number {
+  const gap = now - lastEditAt;
+  return lastEditAt > 0 && gap > 0 && gap < idleMs ? totalMs + gap : totalMs;
+}

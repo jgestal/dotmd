@@ -5,7 +5,8 @@ import { app, settings, getEditorApi } from './state.svelte';
 import { askFields } from './prompt.svelte';
 import { preloadSounds } from './sound';
 import { t } from './i18n';
-import { dirname, relative, stem } from './path';
+import { dirname, isAbsolute, join, relative, stem } from './path';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { documents, files, services, workspace } from './container';
 
 export const {
@@ -18,6 +19,17 @@ export { APP_TITLE } from './application/documents';
 export const saveDoc = (as = false) => documents.save(as);
 export const restoreTabs = () => documents.restore();
 export const revertDoc = () => documents.revert();
+export const reopenClosedTab = () => documents.reopenClosed();
+export const canReopenClosed = () => documents.canReopenClosed();
+
+/** Follows a link written in the open document: web/mail links in the browser, files in DotMD. */
+export async function followLink(href: string) {
+  if (href.startsWith('#')) return;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href)) return openUrl(href);
+  if (!app.path) return;
+  const file = decodeURI(href.split('#')[0]);
+  await openPath(isAbsolute(file) ? file : join(dirname(app.path), file));
+}
 
 /** Adds a folder to the sidebar workspace (several can be open at once); asks when none is given. */
 export async function openFolder(path?: string) {

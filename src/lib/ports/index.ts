@@ -8,6 +8,8 @@ export interface DirEntry {
   name: string;
   path: string;
   is_dir: boolean;
+  /** Last modification (ms since epoch), when known. */
+  modified?: number;
 }
 
 /** Files on disk. Errors are AppError (see domain/errors.ts). */

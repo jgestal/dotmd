@@ -400,6 +400,14 @@ const de: Record<Key, string> = {
   'dlg.revert': 'Zurücksetzen',
   'edit.findNext': 'Weitersuchen',
   'edit.findPrevious': 'Rückwärts suchen',
+  'tabs.reopen': 'Geschlossenen Tab wieder öffnen',
+  'tb.dateLong': 'Datum einfügen (lang)',
+  'ctx.duplicate': 'Duplizieren',
+  'ctx.copyRelative': 'Relativen Pfad kopieren',
+  'ctx.copySuffix': 'Kopie',
+  'sidebar.sortName': 'Sortierung: nach Name (klicken für neueste zuerst)',
+  'sidebar.sortModified': 'Sortierung: neueste zuerst (klicken für nach Name)',
+  'stats.writingTime': '{m} Min. geschrieben',
 };
 
 export default de;

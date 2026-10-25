@@ -12,7 +12,7 @@ import { search, searchKeymap, highlightSelectionMatches } from '@codemirror/sea
 import { closeBrackets, closeBracketsKeymap } from '@codemirror/autocomplete';
 import { htmlToMarkdown, linkFromPaste, shouldConvertHtml } from '../paste';
 import { tags as t } from '@lezer/highlight';
-import { blockMarkdown, formatTable, today, type FormatAction } from '../snippets';
+import { blockMarkdown, formatTable, longDate, today, type FormatAction } from '../snippets';
 import type { FocusMode } from '../state.svelte';
 
 const mdHighlight = HighlightStyle.define([
@@ -316,7 +316,8 @@ export function execSource(view: EditorView, a: FormatAction) {
     }
     case 'date': {
       const r = view.state.selection.main;
-      view.dispatch({ changes: { from: r.from, to: r.to, insert: today() }, selection: { anchor: r.from + 10 } });
+      const text = a.long ? longDate() : today();
+      view.dispatch({ changes: { from: r.from, to: r.to, insert: text }, selection: { anchor: r.from + text.length } });
       break;
     }
     case 'formatTable': formatTableAtCursor(view); break;
@@ -347,6 +348,19 @@ export interface SourceOptions {
   onImages: (files: File[]) => void;
   /** Convert rich-text (HTML) pastes to Markdown: only for Markdown documents. */
   markdownPaste: () => boolean;
+  /** ⌘-click (Ctrl-click) on a link or URL in the text. */
+  onOpenLink?: (href: string) => void;
+}
+
+/** The link target under a column of a line: [text](target), <url> or a bare URL. */
+export function linkAt(line: string, col: number): string | null {
+  const patterns = [/\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g, /<((?:https?|mailto):[^>\s]+)>/g, /\b((?:https?:\/\/|www\.)[^\s<>()\]]+[^\s<>()\].,;:!?'"])/g];
+  for (const re of patterns) {
+    for (const m of line.matchAll(re)) {
+      if (col >= m.index! && col <= m.index! + m[0].length) return m[1].startsWith('www.') ? `https://${m[1]}` : m[1];
+    }
+  }
+  return null;
 }
 
 export function createSource(parent: HTMLElement, o: SourceOptions) {
@@ -399,7 +413,7 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
           { key: 'Mod-Shift-c', run: fmt({ type: 'code' }) },
           ...[1, 2, 3, 4, 5, 6].map((level) => ({ key: `Mod-Alt-${level}`, run: fmt({ type: 'heading', level }) })),
           { key: 'Mod-Alt-0', run: fmt({ type: 'paragraph' }) },
-          { key: 'Mod-Shift-t', run: fmt({ type: 'formatTable' }) },
+          { key: 'Mod-Alt-Shift-t', run: fmt({ type: 'formatTable' }) },
           { key: 'Mod-Alt-ArrowUp', run: (v) => runSourceCommand(v, 'cursorAbove') },
           { key: 'Mod-Alt-ArrowDown', run: (v) => runSourceCommand(v, 'cursorBelow') },
           { key: 'Mod-Shift-d', run: (v) => runSourceCommand(v, 'duplicateLine') },
@@ -421,6 +435,17 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
           }
         }),
         EditorView.domEventHandlers({
+          mousedown: (e, view) => {
+            if (!o.onOpenLink || !(e.metaKey || e.ctrlKey) || e.button !== 0) return false;
+            const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+            if (pos == null) return false;
+            const line = view.state.doc.lineAt(pos);
+            const href = linkAt(line.text, pos - line.from);
+            if (!href) return false;
+            e.preventDefault();
+            o.onOpenLink(href);
+            return true;
+          },
           paste: (e, view) => {
             const data = e.clipboardData;
             if (!data) return false;

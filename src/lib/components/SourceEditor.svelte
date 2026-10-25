@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { recallScroll, rememberScroll } from '../scrollMemory';
+  import { followLink } from '../actions';
   import { onMount, untrack } from 'svelte';
   import { createSource, execSource } from '../editor/source';
   import { runSourceCommand } from '../editor/commands';
@@ -33,7 +35,11 @@
       onScroll: (line) => performance.now() > quietUntil && onScrollLine?.(line),
       onImages: (files) => void insertImageFiles(files),
       markdownPaste: () => docKind(app.path) === 'markdown',
+      onOpenLink: (href) => void followLink(href),
     });
+    // Remember this tab's scroll position; restore it when the tab comes back.
+    const scrollEl = host.querySelector<HTMLElement>('.cm-scroller');
+    scrollEl?.addEventListener('scroll', () => rememberScroll('source', scrollEl.scrollTop), { passive: true });
     const view = ed.view;
     setEditorApi({
       exec: (a) => execSource(view, a),
@@ -55,7 +61,11 @@
   // Content replaced from outside (file opened, reloaded, task toggled in preview).
   $effect(() => {
     app.extVersion;
-    untrack(() => ed?.setDoc(app.content));
+    untrack(() => {
+      ed?.setDoc(app.content);
+      const top = recallScroll('source');
+      requestAnimationFrame(() => { const el = host?.querySelector<HTMLElement>('.cm-scroller'); if (el) el.scrollTop = top; });
+    });
   });
   $effect(() => {
     const p = { lineNumbers: lineNumbers(), wrap: settings.lineWrap, spellcheck: settings.spellcheck && md() };

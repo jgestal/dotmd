@@ -16,7 +16,7 @@ export type FormatAction =
   | { type: 'alert'; kind: string }
   | { type: 'details' }
   | { type: 'pagebreak' }
-  | { type: 'date' }
+  | { type: 'date'; long?: boolean }
   | { type: 'formatTable' };
 
 export function tableMarkdown(rows: number, cols: number, header = 'Column'): string {
@@ -62,6 +62,9 @@ export function blockMarkdown(a: FormatAction): string | null {
 }
 
 export const today = () => new Date().toISOString().slice(0, 10);
+/** Today written out in the UI language ("25 de octubre de 2026", "October 25, 2026"). */
+export const longDate = (lang = typeof document !== 'undefined' ? document.documentElement.lang || undefined : undefined) =>
+  new Intl.DateTimeFormat(lang, { dateStyle: 'long' }).format(new Date());
 
 /** Re-aligns a GFM table so every column has the same width. */
 export function formatTable(lines: string[]): string[] {

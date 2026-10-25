@@ -226,6 +226,29 @@ describe('workspace', () => {
   });
 });
 
+describe('quick wins', () => {
+  it('reopens closed tabs, newest first', async () => {
+    const w = setup({ '/p/a.md': 'a', '/p/b.md': 'b' });
+    await w.documents.openPath('/p/a.md');
+    await w.documents.openPath('/p/b.md');
+    await w.documents.closeTab();
+    await w.documents.closeTab();
+    expect(w.state.tabs.length).toBe(0);
+    expect(await w.documents.reopenClosed()).toBe(true);
+    expect(w.state.path).toBe('/p/a.md');
+    expect(await w.documents.reopenClosed()).toBe(true);
+    expect(w.state.path).toBe('/p/b.md');
+    expect(await w.documents.reopenClosed()).toBe(false);
+  });
+
+  it('duplicates a file next to itself', async () => {
+    const w = setup({ '/p/a.md': 'text', '/p/a ctx.copySuffix.md': 'old' });
+    const copy = await w.files.duplicate('/p/a.md');
+    expect(copy).toBe('/p/a ctx.copySuffix 2.md');
+    expect(w.services.fs.files.get(copy!)).toBe('text');
+  });
+});
+
 describe('revert to saved', () => {
   it('asks before dropping edits, then reloads the file', async () => {
     const w = setup({ '/p/a.md': 'disk' });

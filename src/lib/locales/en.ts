@@ -399,6 +399,14 @@ const en = {
   'dlg.revert': 'Revert',
   'edit.findNext': 'Find Next',
   'edit.findPrevious': 'Find Previous',
+  'tabs.reopen': 'Reopen closed tab',
+  'tb.dateLong': 'Insert date (long)',
+  'ctx.duplicate': 'Duplicate',
+  'ctx.copyRelative': 'Copy relative path',
+  'ctx.copySuffix': 'copy',
+  'sidebar.sortName': 'Sort: by name (click for newest first)',
+  'sidebar.sortModified': 'Sort: newest first (click for by name)',
+  'stats.writingTime': '{m} min writing',
 };
 
 export default en;

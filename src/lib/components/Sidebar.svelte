@@ -78,6 +78,8 @@
   {#if app.sidebarTab === 'files'}
     <div class="files-bar">
       <input class="filter" placeholder={t('sidebar.filter')} bind:value={filter} spellcheck="false" />
+      <button class="tb small" class:on={settings.treeSort === 'modified'} title={settings.treeSort === 'modified' ? t('sidebar.sortModified') : t('sidebar.sortName')}
+        onclick={() => (settings.treeSort = settings.treeSort === 'name' ? 'modified' : 'name')} data-sort={settings.treeSort}><Icon name={settings.treeSort === 'modified' ? 'clock' : 'sort'} size={14} /></button>
       <button class="tb small" title={t('sidebar.allFiles')} class:on={settings.showAllFiles} onclick={() => (settings.showAllFiles = !settings.showAllFiles)}><Icon name="file" size={14} /></button>
       <button class="tb small" title={t('ws.add')} onclick={() => openFolder()}><Icon name="plus" size={14} /></button>
     </div>

@@ -4,7 +4,7 @@
 import type { FileFilter, Services } from '../ports';
 import { AppError, errorMessage, toAppError } from '../domain/errors';
 import {
-  NavigationHistory, cycleIndex, fromDisk, indexAfterClose, isPristine, isTabDirty, modeForOpen, retargetPath, tabsToClose, toDisk, toggleTask,
+  NavigationHistory, cycleIndex, fromDisk, indexAfterClose, isPristine, isTabDirty, modeForOpen, pushClosed, retargetPath, tabsToClose, toDisk, toggleTask,
   type Mode, type Tab,
 } from '../domain/documents';
 import { pushRecent } from '../domain/workspace';
@@ -148,10 +148,15 @@ export function createDocuments(d: DocumentDeps) {
     return saveIt ? save() : true;
   }
 
+  /** Recently closed files, for File ▸ Reopen Closed Tab. */
+  let closed: string[] = [];
+
   async function closeTab(i = state.activeTab): Promise<boolean> {
     if (!state.tabs[i]) return true;
     if (i !== state.activeTab) activateTab(i);
     if (!(await confirmDiscard())) return false;
+    const gone = state.tabs[i].path;
+    if (gone) closed = pushClosed(closed, gone);
     state.tabs.splice(i, 1);
     state.activeTab = -1;
     const next = indexAfterClose(i, state.tabs.length);
@@ -237,6 +242,18 @@ export function createDocuments(d: DocumentDeps) {
     closeTabsToLeft: (i?: number) => closeTabs('left', i),
     onExternalChange,
     replaceContent,
+    canReopenClosed: () => closed.length > 0,
+    /** Reopens the most recently closed tab (skipping files that are open again or gone). */
+    async reopenClosed() {
+      while (closed.length) {
+        const path = closed.pop()!;
+        if (state.tabs.some((x) => x.path === path)) continue;
+        if ((await s.fs.kind(path)) !== 'file') continue;
+        await openPath(path);
+        return true;
+      }
+      return false;
+    },
     /** A new untitled document (optionally with content, e.g. the Markdown guide, opened to read). */
     newDoc(content = '', mode?: Mode) {
       addTab({ path: null, content, saved: content, mode: mode ?? (d.settings.defaultMode === 'preview' ? 'source' : d.settings.defaultMode), crlf: false }, false);

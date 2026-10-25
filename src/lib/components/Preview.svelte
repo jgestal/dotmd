@@ -1,11 +1,14 @@
 <script lang="ts">
-  import { openUrl } from '@tauri-apps/plugin-opener';
+  import { recallScroll, rememberScroll } from '../scrollMemory';
+  import { followLink } from '../actions';
   import { app, settings, toast } from '../state.svelte';
   import { postProcess, renderDocument } from '../render';
   import { paginate, PAPER_MM } from '../paginate';
   import { currentTheme } from '../appearance.svelte';
   import { dirname, isAbsolute, join } from '../path';
-  import { openPath, toggleTaskLine } from '../actions';
+  import { toggleTaskLine } from '../actions';
+  import { services } from '../container';
+  import { isTextPath } from '../path';
   import { t } from '../i18n';
 
   let { syncLine = 0, onScrollLine }: { syncLine?: number; onScrollLine?: (line: number) => void } = $props();
@@ -42,7 +45,8 @@
       body.replaceChildren(...next.childNodes);
     }
     if (path !== lastPath) {
-      scroller.scrollTop = 0;
+      // Another tab: back to where it was left.
+      scroller.scrollTop = recallScroll('preview');
       lastPath = path;
     } else scroller.scrollTop = keep;
     if (pendingReveal) {
@@ -112,6 +116,7 @@
 
   function onScroll() {
     if (!body) return;
+    rememberScroll('preview', scroller.scrollTop);
     if (!onScrollLine) {
       if (app.mode === 'preview') app.viewLine = topLine();
       return;
@@ -174,6 +179,46 @@
     await menu.popup();
   }
 
+  // Hovering a link to another note shows its beginning, without leaving the document.
+  let peek = $state<{ html: string; x: number; y: number; name: string } | null>(null);
+  let peekTimer: ReturnType<typeof setTimeout> | undefined;
+  let peekFor = '';
+  function notePath(a: HTMLAnchorElement): string | null {
+    const href = a.getAttribute('href') ?? '';
+    if (!app.path || !href || href.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(href)) return null;
+    const file = decodeURI(href.split('#')[0]);
+    const abs = isAbsolute(file) ? file : join(dirname(app.path), file);
+    return isTextPath(abs) ? abs : null;
+  }
+  function onOver(e: Event) {
+    const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href]');
+    const path = a && notePath(a);
+    if (!a || !path) return;
+    if (path === peekFor) return;
+    peekFor = path;
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(async () => {
+      try {
+        const text = await services.fs.readText(path);
+        // The first part of the note is enough to recognise it.
+        const html = await renderDocument(text.slice(0, 2400), path);
+        if (peekFor !== path) return;
+        const r = a.getBoundingClientRect();
+        const below = r.bottom + 8 + 260 < window.innerHeight;
+        peek = { html, x: Math.max(12, Math.min(r.left, window.innerWidth - 432)), y: below ? r.bottom + 8 : r.top - 268, name: path.split(/[\\/]/).pop()! };
+      } catch {
+        peek = null;
+      }
+    }, 450);
+  }
+  function onOut(e: Event) {
+    const to = (e as MouseEvent | FocusEvent).relatedTarget as HTMLElement | null;
+    if (to?.closest('a[href]') || to?.closest('.peek')) return;
+    clearTimeout(peekTimer);
+    peekFor = '';
+    peek = null;
+  }
+
   async function onClick(e: MouseEvent) {
     const target = e.target as HTMLElement;
     const copy = target.closest<HTMLButtonElement>('button.copy-code');
@@ -197,13 +242,7 @@
       const id = decodeURIComponent(href.slice(1));
       const el = body.querySelector(`[id="${CSS.escape(id)}"]`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else if (/^[a-z][a-z0-9+.-]*:/i.test(href)) {
-      await openUrl(href);
-    } else if (app.path) {
-      const file = decodeURI(href.split('#')[0]);
-      const abs = isAbsolute(file) ? file : join(dirname(app.path), file);
-      await openPath(abs);
-    }
+    } else await followLink(href);
   }
 </script>
 
@@ -217,11 +256,30 @@
     bind:this={body}
     onclick={onClick}
     oncontextmenu={onContextMenu}
+    onmouseover={onOver}
+    onmouseout={onOut}
+    onfocus={onOver}
+    onblur={onOut}
+    onfocusin={onOver}
+    onfocusout={onOut}
     role="presentation"
   ></article>
 </div>
+{#if peek}
+  <div class="peek markdown-body" style:left="{peek.x}px" style:top="{peek.y}px" role="tooltip" onmouseleave={() => { peek = null; peekFor = ''; }}>
+    <div class="peek-name">{peek.name}</div>
+    {@html peek.html}
+  </div>
+{/if}
 
 <style>
+  .peek {
+    position: fixed; z-index: 50; width: 420px; max-height: 260px; overflow: hidden; padding: 10px 14px; font-size: 13px;
+    background: var(--bg); color: var(--fg); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow);
+    -webkit-mask-image: linear-gradient(to bottom, #000 75%, transparent); mask-image: linear-gradient(to bottom, #000 75%, transparent);
+  }
+  .peek :global(h1) { font-size: 1.3em; margin-top: 0; }
+  .peek-name { font: 11px var(--font-ui); color: var(--fg-muted); margin-bottom: 6px; }
   .preview-scroll { height: 100%; overflow-y: auto; overflow-x: hidden; }
   .preview { max-width: var(--doc-width); margin: 0 auto; padding: 36px 32px 30vh; user-select: text; -webkit-user-select: text; cursor: auto; }
   :global(.zen) .preview { padding-top: 12vh; }
