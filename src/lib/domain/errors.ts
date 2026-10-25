@@ -1,6 +1,6 @@
 // One error type for the whole app, so failures are handled and reported in one predictable way.
 
-export type ErrorCode = 'binary' | 'exists' | 'not-found' | 'permission' | 'cancelled' | 'no-engine' | 'io';
+export type ErrorCode = 'binary' | 'exists' | 'not-found' | 'permission' | 'cancelled' | 'no-engine' | 'invalid' | 'io';
 
 export class AppError extends Error {
   constructor(

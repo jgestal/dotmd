@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { services } from '$lib/container';
+  import { preferences, services } from '$lib/container';
   import { listen } from '@tauri-apps/api/event';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { getCurrentWebview } from '@tauri-apps/api/webview';
@@ -16,8 +16,8 @@
   import Welcome from '$lib/components/Welcome.svelte';
   import CommandPalette from '$lib/components/CommandPalette.svelte';
   import QuickOpen from '$lib/components/QuickOpen.svelte';
-  import { handleShortcut, setMode } from '$lib/commands';
-  import { installMenu } from '$lib/menu';
+  import { allCommands, handleShortcut, setMode } from '$lib/commands';
+  import { installMenu, syncMenuState } from '$lib/menu';
   import { app, settings, session, isDirty, focusActive, type Mode } from '$lib/state.svelte';
   import { startAppearance, currentTheme, toggleAppearance } from '$lib/appearance.svelte';
   import { toggleFocusHighlight } from '$lib/actions';
@@ -67,12 +67,32 @@
     handleShortcut(e);
   }
 
-  // Native menu, rebuilt when the UI language changes.
+  // Native menu: rebuilt when its labels or lists change (language, recent files, open tabs)…
+  let menuReady: Promise<void> = Promise.resolve();
   $effect(() => {
     settings.lang;
-    session.recent.join('\n'); // rebuild "Open Recent"
+    session.recent.join('\n');
     (session.recentFolders ?? []).join('\n');
-    installMenu().catch((err) => console.warn('menu', err));
+    app.tabs.map((tb) => tb.path).join('\n');
+    app.activeTab;
+    menuReady = installMenu().catch((err) => console.warn('menu', err));
+  });
+  // …and only updated in place when enabled states or check marks change.
+  $effect(() => {
+    const snapshot = allCommands().map((c) => `${c.enabled?.() ?? 1}${c.checked?.() ?? ''}`).join();
+    void snapshot;
+    void menuReady.then(syncMenuState);
+  });
+
+  // Preferences in a synced folder: written a moment after a change, read back when the window
+  // regains focus (another computer may have changed them).
+  let prefsTimer: ReturnType<typeof setTimeout> | undefined;
+  $effect(() => {
+    const snapshot = JSON.stringify(settings);
+    if (!settings.syncFolder) return;
+    void snapshot;
+    clearTimeout(prefsTimer);
+    prefsTimer = setTimeout(() => void preferences.push(), 1200);
   });
 
   // Autosave a couple of seconds after typing stops.
@@ -104,6 +124,7 @@
         }
       }),
     );
+    unlisten.push(win.onFocusChanged(({ payload: focused }) => { if (focused && settings.syncFolder) void preferences.pull(); }));
     unlisten.push(
       win.onCloseRequested(async (e) => {
         if (!anyDirty()) return;
@@ -114,6 +135,7 @@
 
     (async () => {
       if (await runCliExport()) return;
+      if (settings.syncFolder) await preferences.pull().catch(() => false);
       try {
         const pending = await services.process.takePendingOpen();
         if (pending.length) await handleDroppedPaths(pending);

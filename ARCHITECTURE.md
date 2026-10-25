@@ -23,9 +23,9 @@ dependencies pointing inwards only.
 
 | Layer | Folder | May import | Contents |
 |---|---|---|---|
-| **Domain** | `src/lib/domain/` | nothing outside itself | Pure rules: tabs and documents (line endings, modes, closing, history, tasks, moves), workspace (folders, favourites), `AppError`. |
+| **Domain** | `src/lib/domain/` | nothing outside itself | Pure rules: tabs and documents (line endings, modes, closing, history, tasks, moves), workspace (folders, favourites), preferences files (validation, sync), `AppError`. |
 | **Ports** | `src/lib/ports/` | nothing (types only) | Interfaces the application needs: `FileSystem`, `Dialogs`, `AppWindow`, `FileWatcher`, `Notifier`, `Translate`, `MarkdownEngine`, `Exporter`, `SearchEngine`, `AppProcess`. |
-| **Application** | `src/lib/application/` | domain, ports | Use cases: open/save/close/restore documents, live reload, folders and favourites (missing items, locate), move/rename/trash, images. They work on plain state objects. |
+| **Application** | `src/lib/application/` | domain, ports | Use cases: open/save/close/restore documents, live reload, folders and favourites (missing items, locate), move/rename/trash, images, preferences (export, import, synced folder). They work on plain state objects. |
 | **Infrastructure** | `src/lib/infrastructure/` | ports, domain | `tauri/`: adapters over Rust commands and plugins. `memory/`: in-memory doubles with scripted answers for tests. |
 | **Presentation** | `components/`, `routes/`, `*.svelte.ts`, `commands.ts`, `menu.ts`, `actions.ts` | everything | Svelte components and stores, the command registry (shortcuts, palette, native menu), UI-only behaviour (zen, typewriter mode, editor insertions). |
 | **Composition root** | `src/lib/container.ts` | everything | The only place that picks adapters and builds the use cases (dependency injection). |

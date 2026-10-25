@@ -5,6 +5,7 @@
   import { THEMES, FONTS, EFFECT_SETTING, type ThemeEffect } from '../themes';
   import { keySound, bellSound, effectiveSound } from '../sound';
   import { currentTheme } from '../appearance.svelte';
+  import { preferences } from '../container';
   import { getVersion } from '@tauri-apps/api/app';
   import { openUrl } from '@tauri-apps/plugin-opener';
   import { toggleTypewriterMode, typewriterModeOn } from '../actions';
@@ -45,8 +46,8 @@
   const typewriterSound = $derived(effectiveSound() === 'typewriter');
 
   function resetAll() {
-    const lang = settings.lang;
-    Object.assign(settings, structuredClone(DEFAULT_SETTINGS), { lang });
+    const { lang, syncFolder } = settings;
+    Object.assign(settings, structuredClone(DEFAULT_SETTINGS), { lang, syncFolder });
   }
   function reset<K extends keyof Settings>(...keys: K[]) {
     for (const k of keys) (settings as any)[k] = structuredClone(DEFAULT_SETTINGS[k]);
@@ -255,6 +256,19 @@
           </p>
         </div>
       {:else}
+        <h3>{t('prefs.title')}</h3>
+        <p class="hint">{t('prefs.hint')}</p>
+        <div class="inline">
+          <button class="btn" onclick={() => preferences.exportTo()}>{t('prefs.export')}</button>
+          <button class="btn" onclick={() => preferences.importFrom()}>{t('prefs.import')}</button>
+        </div>
+        <div class="row sync">
+          <span>{t('prefs.syncFolder')}<br /><small class="hint" data-sync-folder>{settings.syncFolder ?? t('prefs.syncOff')}</small></span>
+          <span class="inline">
+            <button class="btn" onclick={() => preferences.chooseSyncFolder()}>{settings.syncFolder ? t('prefs.change') : t('prefs.choose')}</button>
+            {#if settings.syncFolder}<button class="btn" onclick={() => preferences.stopSync()}>{t('prefs.stop')}</button>{/if}
+          </span>
+        </div>
         <h3>{t('set.customCss')}</h3>
         <p class="hint">{t('set.customCssHint')}</p>
         <textarea bind:value={settings.customCss} rows="12" spellcheck="false" placeholder=".markdown-body h1 {'{'} color: tomato {'}'}"></textarea>
@@ -310,6 +324,9 @@
   .btn.small { margin: 0; padding: 3px 8px; font-size: 12px; }
   .inline { display: flex; align-items: center; gap: 8px; }
   .inline input[type=range] { width: 160px; }
+  .row.sync { margin-top: 14px; gap: 12px; }
+  .row.sync small { word-break: break-all; }
+  .inline .btn { white-space: nowrap; }
   .linkish { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; cursor: pointer; }
   .about { text-align: center; }
   .about img { margin: 4px auto 6px; display: block; }

@@ -5,6 +5,7 @@ import { app, settings, getEditorApi, toast, type Mode } from './state.svelte';
 import { services } from './container';
 import { t, type Key } from './i18n';
 import { isMac, isPlainText } from './path';
+import { LANGUAGES } from './i18n';
 import { THEMES } from './themes';
 import { toggleAppearance } from './appearance.svelte';
 import { toggleFavorite } from './workspace.svelte';
@@ -12,7 +13,9 @@ import type { FormatAction } from './snippets';
 import {
   newDoc, openFileDialog, openFolder, saveDoc, toggleZen, toggleTypewriterMode, insertLink, insertImage,
   toggleFocusHighlight, updateToc, closeTab, closeOtherTabs, closeTabsToLeft, closeTabsToRight, cycleTab, goBack, goForward, canGoBack, canGoForward, toggleFocusWriting, copyRichText,
+  typewriterModeOn,
 } from './actions';
+import { focusWriting } from './state.svelte';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { exportRequest } from './exportRequest.svelte';
 
@@ -28,6 +31,12 @@ export interface Command {
   menu?: MenuId;
   /** Starts a new group in its menu. */
   separator?: boolean;
+  /** Groups the command in a submenu of its menu (label key). */
+  submenu?: Key;
+  /** Shorter label inside its submenu ("Nord" instead of "Theme: Nord"). */
+  menuLabel?: () => string;
+  /** Shown with a check mark in the native menu when true. */
+  checked?: () => boolean;
   enabled?: () => boolean;
   run: () => unknown;
 }
@@ -54,6 +63,15 @@ export function registerCommands(cmds: Command[]) {
 }
 
 const L = (k: Key) => () => t(k);
+
+const EDIT_GROUP: Record<string, Key> = {
+  find: 'menu.find', replace: 'menu.find', gotoLine: 'menu.find',
+  selectNext: 'menu.selection', selectAllMatches: 'menu.selection', cursorAbove: 'menu.selection', cursorBelow: 'menu.selection', selectLine: 'menu.selection',
+  duplicateLine: 'menu.lines', deleteLine: 'menu.lines', moveLineUp: 'menu.lines', moveLineDown: 'menu.lines',
+  sortLines: 'menu.lines', sortLinesDesc: 'menu.lines', uniqueLines: 'menu.lines', trimTrailing: 'menu.lines', joinLines: 'menu.lines',
+  upper: 'menu.transform', lower: 'menu.transform', title: 'menu.transform',
+};
+const INSERT = new Set(['fmt.link', 'fmt.image', 'fmt.table', 'fmt.codeblock', 'fmt.mermaid', 'fmt.math', 'fmt.footnote', 'fmt.hr', 'fmt.date', 'fmt.pagebreak']);
 
 function base(): Command[] {
   return [
@@ -87,7 +105,8 @@ function base(): Command[] {
       ['trimTrailing', undefined, false], ['joinLines', undefined, false],
     ] as const).map(([cmd, shortcut, editorKey], i) => ({
       id: `edit.${cmd}`, label: L(`edit.${cmd}` as Key), shortcut, editorKey: editorKey || undefined, menu: 'edit' as const,
-      separator: ['find', 'selectNext', 'duplicateLine', 'upper', 'sortLines'].includes(cmd) || undefined,
+      separator: ['sortLines'].includes(cmd) || undefined,
+      submenu: EDIT_GROUP[cmd],
       enabled: () => !!getEditorApi()?.run, run: () => getEditorApi()?.run?.(cmd),
     })),
     { id: 'edit.copyRich', label: L('cmd.copyRich'), shortcut: 'CmdOrCtrl+Alt+C', menu: 'edit', enabled: hasDoc, run: copyRichText },
@@ -100,9 +119,9 @@ function base(): Command[] {
     { id: 'fmt.code', label: L('tb.code'), shortcut: 'CmdOrCtrl+Shift+C', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'code' }) },
     ...[1, 2, 3].map((level, i) => ({
       id: `fmt.h${level}`, label: () => `${t('tb.heading')} ${level}`, shortcut: `CmdOrCtrl+Alt+${level}`, editorKey: true,
-      menu: 'format' as const, separator: i === 0, enabled: editing, run: fmt({ type: 'heading', level }),
+      menu: 'format' as const, submenu: 'menu.heading' as Key, enabled: editing, run: fmt({ type: 'heading', level }),
     })),
-    { id: 'fmt.paragraph', label: L('tb.paragraph'), shortcut: 'CmdOrCtrl+Alt+0', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'paragraph' }) },
+    { id: 'fmt.paragraph', label: L('tb.paragraph'), shortcut: 'CmdOrCtrl+Alt+0', editorKey: true, menu: 'format', submenu: 'menu.heading', enabled: editing, run: fmt({ type: 'paragraph' }) },
     { id: 'fmt.quote', label: L('tb.quote'), menu: 'format', separator: true, enabled: editing, run: fmt({ type: 'quote' }) },
     { id: 'fmt.ul', label: L('tb.ul'), menu: 'format', enabled: editing, run: fmt({ type: 'ul' }) },
     { id: 'fmt.ol', label: L('tb.ol'), menu: 'format', enabled: editing, run: fmt({ type: 'ol' }) },
@@ -110,7 +129,7 @@ function base(): Command[] {
     { id: 'fmt.link', label: L('tb.link'), shortcut: 'CmdOrCtrl+K', editorKey: true, menu: 'format', separator: true, enabled: editing, run: insertLink },
     { id: 'fmt.image', label: L('tb.image'), menu: 'format', enabled: editing, run: insertImage },
     { id: 'fmt.table', label: L('tb.table'), menu: 'format', enabled: editing, run: fmt({ type: 'table', rows: 3, cols: 3 }) },
-    { id: 'fmt.formatTable', label: L('tb.tableFormat'), shortcut: 'CmdOrCtrl+Shift+T', editorKey: true, menu: 'format', enabled: editing, run: fmt({ type: 'formatTable' }) },
+    { id: 'fmt.formatTable', label: L('tb.tableFormat'), shortcut: 'CmdOrCtrl+Shift+T', editorKey: true, menu: 'format', separator: true, enabled: editing, run: fmt({ type: 'formatTable' }) },
     { id: 'fmt.codeblock', label: L('tb.codeblock'), menu: 'format', enabled: editing, run: fmt({ type: 'codeblock', lang: '' }) },
     { id: 'fmt.mermaid', label: L('tb.mermaid'), menu: 'format', enabled: editing, run: fmt({ type: 'mermaid', template: 'flowchart' }) },
     { id: 'fmt.math', label: L('tb.math'), menu: 'format', enabled: editing, run: fmt({ type: 'math' }) },
@@ -121,21 +140,21 @@ function base(): Command[] {
     // View
     ...(['preview', 'source', 'split', 'visual'] as Mode[]).map((m, i) => ({
       id: `view.${m}`, label: L(`mode.${m}` as Key), shortcut: `CmdOrCtrl+${i + 1}`, menu: 'view' as const,
-      enabled: () => hasDoc() && !(m === 'visual' && isPlainText(app.path)), run: () => setMode(m),
+      enabled: () => hasDoc() && !(m === 'visual' && isPlainText(app.path)), checked: () => hasDoc() && app.mode === m, run: () => setMode(m),
     })),
-    { id: 'view.pages', label: L('cmd.pages'), shortcut: 'CmdOrCtrl+Alt+P', menu: 'view', run: () => (settings.pageView = !settings.pageView) },
+    { id: 'view.pages', label: L('cmd.pages'), shortcut: 'CmdOrCtrl+Alt+P', menu: 'view', checked: () => settings.pageView, run: () => (settings.pageView = !settings.pageView) },
     { id: 'fmt.toc', label: L('tb.toc'), shortcut: 'CmdOrCtrl+Alt+T', menu: 'format', enabled: () => hasDoc() && !isPlainText(app.path), run: updateToc },
-    { id: 'view.wrap', label: L('cmd.toggleWrap'), shortcut: 'Alt+Z', menu: 'view', run: () => (settings.lineWrap = !settings.lineWrap) },
+    { id: 'view.wrap', label: L('cmd.toggleWrap'), shortcut: 'Alt+Z', menu: 'view', checked: () => settings.lineWrap, run: () => (settings.lineWrap = !settings.lineWrap) },
     { id: 'fmt.pagebreak', label: L('tb.pagebreak'), menu: 'format', enabled: editing, run: fmt({ type: 'pagebreak' }) },
     { id: 'view.toggleEdit', label: L('cmd.toggleEdit'), shortcut: 'CmdOrCtrl+E', menu: 'view', enabled: hasDoc, run: () => setMode(app.mode === 'preview' ? lastEditMode : 'preview') },
-    { id: 'view.sidebar', label: L('sidebar.toggle'), shortcut: 'CmdOrCtrl+\\', menu: 'view', separator: true, run: () => (app.sidebar = !app.sidebar) },
+    { id: 'view.sidebar', label: L('sidebar.toggle'), shortcut: 'CmdOrCtrl+\\', menu: 'view', separator: true, checked: () => app.sidebar, run: () => (app.sidebar = !app.sidebar) },
     { id: 'view.outline', label: L('cmd.outline'), menu: 'view', run: () => { app.sidebar = true; app.sidebarTab = 'outline'; } },
     { id: 'view.search', label: L('cmd.search'), shortcut: 'CmdOrCtrl+Shift+F', menu: 'view', run: () => { app.sidebar = true; app.sidebarTab = 'search'; app.searchFocus++; } },
-    { id: 'view.zen', label: L('top.zen'), shortcut: 'CmdOrCtrl+Shift+Enter', menu: 'view', separator: true, run: toggleZen },
-    { id: 'view.focusWriting', label: L('cmd.focusWriting'), shortcut: 'CmdOrCtrl+Alt+F', menu: 'view', run: toggleFocusWriting },
-    { id: 'view.focusToggle', label: L('cmd.toggleFocus'), shortcut: 'CmdOrCtrl+Alt+L', menu: 'view', run: toggleFocusHighlight },
+    { id: 'view.zen', label: L('top.zen'), shortcut: 'CmdOrCtrl+Shift+Enter', menu: 'view', separator: true, checked: () => app.zen, run: toggleZen },
+    { id: 'view.focusWriting', label: L('cmd.focusWriting'), shortcut: 'CmdOrCtrl+Alt+F', menu: 'view', checked: focusWriting, run: toggleFocusWriting },
+    { id: 'view.focusToggle', label: L('cmd.toggleFocus'), shortcut: 'CmdOrCtrl+Alt+L', menu: 'view', checked: () => settings.focusMode !== 'off' && !settings.focusOnlyZen, run: toggleFocusHighlight },
     { id: 'view.appearance', label: L('cmd.toggleAppearance'), shortcut: 'CmdOrCtrl+Alt+D', menu: 'view', run: toggleAppearance },
-    { id: 'view.typewriter', label: L('set.twMode'), menu: 'view', run: toggleTypewriterMode },
+    { id: 'view.typewriter', label: L('set.twMode'), menu: 'view', checked: typewriterModeOn, run: toggleTypewriterMode },
     { id: 'view.zoomIn', label: L('cmd.zoomIn'), shortcut: 'CmdOrCtrl+=', menu: 'view', separator: true, run: () => (settings.fontSize = Math.min(32, settings.fontSize + 1)) },
     { id: 'view.zoomOut', label: L('cmd.zoomOut'), shortcut: 'CmdOrCtrl+-', menu: 'view', run: () => (settings.fontSize = Math.max(10, settings.fontSize - 1)) },
     { id: 'view.zoomReset', label: L('cmd.zoomReset'), shortcut: 'CmdOrCtrl+0', menu: 'view', run: () => (settings.fontSize = 16) },
@@ -149,12 +168,17 @@ function base(): Command[] {
     { id: 'tab.prevAlt', label: L('tabs.prev'), shortcut: 'CmdOrCtrl+Alt+Left', enabled: () => app.tabs.length > 1, run: () => cycleTab(-1) },
     { id: 'app.settings', label: L('top.settings'), shortcut: 'CmdOrCtrl+,', run: () => (app.settingsOpen = !app.settingsOpen) },
 
-    // Themes and language are palette-only.
-    ...[{ id: 'auto', name: t('set.themeAuto') }, ...THEMES].map((th) => ({
-      id: `theme.${th.id}`, label: () => `${t('set.theme')}: ${th.id === 'auto' ? t('set.themeAuto') : th.name}`, run: () => (settings.theme = th.id),
+    // Themes and languages: View ▸ Theme / Language in the menu, "Theme: …" in the palette.
+    ...[{ id: 'auto', name: '' }, ...THEMES].map((th, i) => ({
+      id: `theme.${th.id}`, label: () => `${t('set.theme')}: ${th.id === 'auto' ? t('set.themeAuto') : th.name}`,
+      menuLabel: () => (th.id === 'auto' ? t('set.themeAuto') : th.name),
+      menu: 'view' as const, submenu: 'menu.theme' as Key, separator: i <= 1 || undefined,
+      checked: () => settings.theme === th.id, run: () => (settings.theme = th.id),
     })),
-    { id: 'lang.en', label: () => `${t('set.language')}: English`, run: () => (settings.lang = 'en') },
-    { id: 'lang.es', label: () => `${t('set.language')}: Español`, run: () => (settings.lang = 'es') },
+    ...LANGUAGES.map((l) => ({
+      id: `lang.${l.id}`, label: () => `${t('set.language')}: ${l.label}`, menuLabel: () => l.label,
+      menu: 'view' as const, submenu: 'menu.language' as Key, checked: () => settings.lang === l.id, run: () => (settings.lang = l.id),
+    })),
 
     // Help
     {
@@ -168,13 +192,43 @@ function base(): Command[] {
 }
 
 export function allCommands(): Command[] {
-  const list = base();
+  const list = base().map((c) => (INSERT.has(c.id) ? { ...c, submenu: 'menu.insert' as Key } : c));
   for (const e of extra) {
     const i = list.findIndex((c) => c.id === e.id);
     if (i >= 0) list[i] = e;
     else list.push(e);
   }
   return list;
+}
+
+export type MenuNode =
+  | { kind: 'command'; command: Command }
+  | { kind: 'separator' }
+  | { kind: 'submenu'; label: Key; items: MenuNode[] };
+
+/**
+ * Layout of one native menu: commands in registry order, those with a `submenu` gathered into it
+ * where the first of them appears, separators where a group starts (never leading or doubled).
+ */
+export function menuTree(commands: Command[], menu: MenuId): MenuNode[] {
+  const out: MenuNode[] = [];
+  const subs = new Map<Key, MenuNode[]>();
+  const push = (list: MenuNode[], c: Command) => {
+    if (c.separator && list.length && list[list.length - 1].kind !== 'separator') list.push({ kind: 'separator' });
+    list.push({ kind: 'command', command: c });
+  };
+  for (const c of commands.filter((c) => c.menu === menu)) {
+    if (!c.submenu) { push(out, c); continue; }
+    let items = subs.get(c.submenu);
+    if (!items) {
+      items = [];
+      subs.set(c.submenu, items);
+      if (c.separator && out.length && out[out.length - 1].kind !== 'separator') out.push({ kind: 'separator' });
+      out.push({ kind: 'submenu', label: c.submenu, items });
+      push(items, { ...c, separator: undefined });
+    } else push(items, c);
+  }
+  return out;
 }
 
 let lastRun = { id: '', at: 0 };

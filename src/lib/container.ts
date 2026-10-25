@@ -5,7 +5,8 @@ import { tauriDialogs, tauriExporter, tauriFileSystem, tauriMarkdown, tauriProce
 import { createDocuments } from './application/documents';
 import { createWorkspace } from './application/workspace';
 import { createFiles } from './application/files';
-import { app, missing, session, settings, toast } from './state.svelte';
+import { createPreferences } from './application/preferences';
+import { app, missing, session, settings, toast, DEFAULT_SETTINGS } from './state.svelte';
 import { t, type Key } from './i18n';
 import { basename, dirname, isPlainText, isTextPath, join } from './path';
 
@@ -51,3 +52,5 @@ export const documents = createDocuments({
 });
 
 export const files = createFiles({ services, documents, workspace, state: app, session, join, dirname, basename });
+
+export const preferences = createPreferences({ services, settings, defaults: DEFAULT_SETTINGS, syncState: session.prefsSync, join });

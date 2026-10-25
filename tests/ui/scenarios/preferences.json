@@ -1,0 +1,17 @@
+{
+  "settings": { "theme": "terminal", "fontSize": 19 },
+  "actions": [
+    { "waitFor": "document.querySelector('.welcome')" },
+    { "eval": "{ window.__S = import('/src/lib/state.svelte.ts'); window.__S.then(m => { m.app.settingsOpen = true; }) }", "waitFor": "document.querySelector('.settings')" },
+    { "eval": "{ [...document.querySelectorAll('.settings .nav-item')][6].click() }", "waitFor": "document.querySelector('[data-sync-folder]')" },
+    { "assert": "document.querySelector('[data-sync-folder]').textContent === 'Not syncing'" },
+    { "eval": "{ window.__savePath = window.__FIX + '/prefs.json'; [...document.querySelectorAll('.settings .btn')].find(b => b.textContent === 'Export…').click() }", "waitFor": "document.querySelector('.toast')?.textContent.includes('exported')" },
+    { "eval": "{ window.__S.then(m => { m.settings.theme = 'modern'; m.settings.fontSize = 14; }) }", "wait": 200 },
+    { "eval": "{ window.__openPath = window.__FIX + '/prefs.json'; [...document.querySelectorAll('.settings .btn')].find(b => b.textContent === 'Import…').click() }", "waitFor": "document.documentElement.classList.contains('theme-terminal')" },
+    { "assert": "getComputedStyle(document.documentElement).getPropertyValue('--doc-size').trim() === '19px'" },
+    { "eval": "{ window.__openPath = window.__FIX; [...document.querySelectorAll('.settings .btn')].find(b => b.textContent === 'Choose…').click() }", "waitFor": "document.querySelector('[data-sync-folder]').textContent === window.__FIX", "wait": 300, "shot": "sync" },
+    { "assert": "[...document.querySelectorAll('.settings .btn')].some(b => b.textContent === 'Stop syncing')" },
+    { "eval": "{ window.__TAURI_INTERNALS__.invoke('read_text', { path: window.__FIX + '/dotmd-preferences.json' }).then(t => (window.__synced = JSON.parse(t))) }", "waitFor": "window.__synced" },
+    { "assert": "window.__synced.settings.theme === 'terminal' && !('syncFolder' in window.__synced.settings)" }
+  ]
+}

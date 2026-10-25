@@ -269,7 +269,7 @@ async function runScenario(file, name) {
     }
     if (s.type) await page.keyboard.type(s.type, { delay: 5 });
     if (s.reload) await page.reload({ waitUntil: 'networkidle0' });
-    if (s.eval) await page.evaluate(s.eval).catch((e) => failed.push(`eval threw: ${e.message.split("\n")[0]}`));
+    if (s.eval) await page.evaluate(s.eval).catch((e) => failed.push(`eval threw: ${String(e?.message ?? e).split("\n")[0]}`));
     if (s.waitFor) {
       const ok = await page.waitForFunction(s.waitFor, { timeout: s.timeout ?? 15000 }).then(() => true, () => false);
       if (!ok) failed.push(`timed out waiting for ${s.waitFor}`);

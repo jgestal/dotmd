@@ -74,6 +74,8 @@ export interface Settings {
   pdfMargin: number;
   /** 'current' or any theme id. */
   exportTheme: string;
+  /** Folder (Google Drive, Dropbox, iCloud…) where preferences are kept in sync; local to this machine. */
+  syncFolder: string | null;
   /** Inline the theme's font files in exported HTML/PDF. */
   exportEmbedFonts: boolean;
   /** Read/Split preview laid out on paper sheets (export paper size and margins). */
@@ -142,6 +144,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoUpdate: true,
   pdfEngine: 'auto',
   customCss: '',
+  syncFolder: null,
 };
 
 function load<T>(key: string, fallback: T): T {
@@ -171,7 +174,9 @@ export const session = $state(
     /** Sidebar sections the user collapsed (folder paths or "favorites"). */
     collapsed: [] as string[],
     /** Relative heights of the folder sections (dragging the bars between them). */
-    sectionGrow: {} as Record<string, number> }),
+    sectionGrow: {} as Record<string, number>,
+    /** Last exchange with the synced preferences file. */
+    prefsSync: { lastSync: null as string | null, lastBody: null as string | null } }),
 );
 
 export const app = $state({
