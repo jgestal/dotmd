@@ -408,6 +408,7 @@ const fr: Record<Key, string> = {
   'sidebar.sortName': 'Tri : par nom (clic pour les plus récents d’abord)',
   'sidebar.sortModified': 'Tri : plus récents d’abord (clic pour par nom)',
   'stats.writingTime': '{m} min d’écriture',
+  'export.onePage': '1 page',
 };
 
 export default fr;

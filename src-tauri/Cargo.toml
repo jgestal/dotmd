@@ -1,6 +1,6 @@
 [package]
 name = "dotmd"
-version = "0.2.0"
+version = "0.3.0"
 description = "Fast, native-feeling Markdown viewer and editor"
 authors = ["Juan Gestal <juan@gestal.es>"]
 homepage = "https://gestal.es"

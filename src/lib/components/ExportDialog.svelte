@@ -163,7 +163,7 @@
         </div>
         <div class="preview-head">
           <span>{t('export.preview')}</span>
-          <span class="muted">{previewBusy ? '…' : previewPages ? t('export.pages', { n: previewPages }) : ''}</span>
+          <span class="muted">{previewBusy ? '…' : previewPages === 1 ? t('export.onePage') : previewPages ? t('export.pages', { n: previewPages }) : ''}</span>
         </div>
         <div class="preview" bind:this={previewEl}>
           {#if previewHtml}<iframe title={t('export.preview')} srcdoc={previewHtml} sandbox="allow-same-origin"></iframe>{/if}

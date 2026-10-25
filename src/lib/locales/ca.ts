@@ -408,6 +408,7 @@ const ca: Record<Key, string> = {
   'sidebar.sortName': 'Ordre: per nom (clic per als més recents primer)',
   'sidebar.sortModified': 'Ordre: més recents primer (clic per nom)',
   'stats.writingTime': '{m} min escrivint',
+  'export.onePage': '1 pàgina',
 };
 
 export default ca;

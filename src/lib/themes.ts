@@ -266,9 +266,36 @@ export const THEMES: Theme[] = [
     vars: dark({ '--bg': '#2e3440', '--bg-elev': '#3b4252', '--fg': '#e5e9f0', '--fg-muted': '#a3abba', '--fg-dim': 'rgba(229,233,240,.25)', '--border': '#434c5e', '--accent': '#88c0d0', '--accent-fg': '#2e3440', '--link': '#88c0d0', '--code-bg': '#3b4252', '--code-fg': '#ebcb8b', '--quote': '#4c566a', '--sel': 'rgba(136,192,208,.3)', '--syn-keyword': '#81a1c1', '--syn-string': '#a3be8c', '--syn-number': '#b48ead', '--syn-comment': '#616e88', '--syn-func': '#88c0d0', '--syn-type': '#8fbcbb' }),
   },
   {
-    id: 'solarized', group: 'writing', name: 'Solarized Light', dark: false, kind: 'normal', pair: 'nord',
+    id: 'solarized', group: 'writing', name: 'Solarized Light', dark: false, kind: 'normal', pair: 'solarized-dark',
     fonts: { ui: F('system'), doc: F('plexSerif'), heading: F('plexSerif'), code: F('plexMono') },
     vars: light({ '--bg': '#fdf6e3', '--bg-elev': '#eee8d5', '--fg': '#3c4a50', '--fg-muted': '#5f7176', '--fg-dim': 'rgba(60,74,80,.28)', '--border': '#e4dcc4', '--accent': '#268bd2', '--link': '#1a6aa6', '--code-bg': '#eee8d5', '--code-fg': '#a8296a', '--quote': '#d9cfb0', '--syn-keyword': '#859900', '--syn-string': '#2aa198', '--syn-number': '#d33682', '--syn-comment': '#93a1a1', '--syn-func': '#268bd2', '--syn-type': '#b58900' }),
+  },
+  {
+    id: 'gruvbox', group: 'writing', name: 'Gruvbox', dark: true, kind: 'normal', pair: 'gruvbox-light',
+    fonts: { ui: F('system'), doc: F('plexSerif'), heading: F('plexSerif'), code: F('jetbrains') },
+    vars: dark({ '--bg': '#282828', '--bg-elev': '#32302f', '--fg': '#ebdbb2', '--fg-muted': '#bdae93', '--fg-dim': 'rgba(235,219,178,.22)', '--border': '#504945', '--accent': '#fabd2f', '--accent-fg': '#282828', '--link': '#83a598', '--code-bg': '#3c3836', '--code-fg': '#fe8019', '--quote': '#665c54', '--sel': 'rgba(250,189,47,.22)', '--mark': '#6b5b1f', '--syn-keyword': '#fb4934', '--syn-string': '#b8bb26', '--syn-number': '#d3869b', '--syn-comment': '#a89984', '--syn-func': '#8ec07c', '--syn-type': '#fabd2f' }),
+  },
+  {
+    id: 'gruvbox-light', group: 'writing', name: 'Gruvbox Light', dark: false, kind: 'normal', pair: 'gruvbox',
+    fonts: { ui: F('system'), doc: F('plexSerif'), heading: F('plexSerif'), code: F('jetbrains') },
+    vars: light({ '--bg': '#fbf1c7', '--bg-elev': '#f2e5bc', '--fg': '#3c3836', '--fg-muted': '#5f5048', '--border': '#d5c4a1', '--accent': '#b57614', '--link': '#076678', '--code-bg': '#ebdbb2', '--code-fg': '#8f3f71', '--quote': '#bdae93', '--sel': 'rgba(181,118,20,.18)', '--syn-keyword': '#9d0006', '--syn-string': '#79740e', '--syn-number': '#8f3f71', '--syn-comment': '#7c6f64', '--syn-func': '#427b58', '--syn-type': '#b57614' }),
+  },
+  {
+    id: 'catppuccin', group: 'writing', name: 'Catppuccin Mocha', dark: true, kind: 'normal', pair: 'catppuccin-latte',
+    caret: { shape: 'bar', blink: 'smooth', width: '2px', color: '#f5c2e7', rate: 1100 },
+    fonts: { ui: F('system'), doc: F('inter'), heading: F('inter'), code: F('jetbrains') },
+    vars: dark({ '--bg': '#1e1e2e', '--bg-elev': '#181825', '--fg': '#cdd6f4', '--fg-muted': '#a6adc8', '--fg-dim': 'rgba(205,214,244,.22)', '--border': '#313244', '--accent': '#cba6f7', '--accent-fg': '#1e1e2e', '--link': '#89b4fa', '--code-bg': '#313244', '--code-fg': '#f5c2e7', '--quote': '#45475a', '--sel': 'rgba(203,166,247,.25)', '--mark': '#5b4a2a', '--syn-keyword': '#cba6f7', '--syn-string': '#a6e3a1', '--syn-number': '#fab387', '--syn-comment': '#9399b2', '--syn-func': '#89b4fa', '--syn-type': '#f9e2af' }),
+  },
+  {
+    id: 'catppuccin-latte', group: 'writing', name: 'Catppuccin Latte', dark: false, kind: 'normal', pair: 'catppuccin',
+    caret: { shape: 'bar', blink: 'smooth', width: '2px', color: '#8839ef', rate: 1100 },
+    fonts: { ui: F('system'), doc: F('inter'), heading: F('inter'), code: F('jetbrains') },
+    vars: light({ '--bg': '#eff1f5', '--bg-elev': '#e6e9ef', '--fg': '#4c4f69', '--fg-muted': '#5c5f77', '--border': '#ccd0da', '--accent': '#8839ef', '--link': '#1a56d6', '--code-bg': '#e6e9ef', '--code-fg': '#b4237f', '--quote': '#bcc0cc', '--sel': 'rgba(136,57,239,.16)', '--syn-keyword': '#8839ef', '--syn-string': '#40a02b', '--syn-number': '#fe640b', '--syn-comment': '#6c6f85', '--syn-func': '#1e66f5', '--syn-type': '#df8e1d' }),
+  },
+  {
+    id: 'solarized-dark', group: 'writing', name: 'Solarized Dark', dark: true, kind: 'normal', pair: 'solarized',
+    fonts: { ui: F('system'), doc: F('plexSerif'), heading: F('plexSerif'), code: F('plexMono') },
+    vars: dark({ '--bg': '#002b36', '--bg-elev': '#073642', '--fg': '#d2dcdc', '--fg-muted': '#93a1a1', '--fg-dim': 'rgba(210,220,220,.22)', '--border': '#0d4250', '--accent': '#268bd2', '--link': '#5fafe8', '--code-bg': '#073642', '--code-fg': '#f472b0', '--quote': '#2a5562', '--sel': 'rgba(38,139,210,.3)', '--mark': '#5c4a00', '--syn-keyword': '#859900', '--syn-string': '#2aa198', '--syn-number': '#d33682', '--syn-comment': '#839496', '--syn-func': '#268bd2', '--syn-type': '#b58900' }),
   },
   {
     id: 'dracula', group: 'writing', name: 'Dracula', dark: true, kind: 'normal',

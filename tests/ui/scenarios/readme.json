@@ -1,0 +1,373 @@
+{
+ "viewport": {
+  "width": 1440,
+  "height": 900,
+  "deviceScaleFactor": 2
+ },
+ "settings": {
+  "theme": "modern",
+  "appearance": "light",
+  "typingSound": "off",
+  "showToolbar": true
+ },
+ "startWait": 1500,
+ "actions": [
+  {
+   "waitFor": "document.querySelector('.welcome')",
+   "wait": 300,
+   "shot": "welcome"
+  },
+  {
+   "eval": "{ window.__S = import('/src/lib/state.svelte.ts'); }",
+   "wait": 200
+  },
+  {
+   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__ROOT + '/docs/showcase/Chapter One.md')) }",
+   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'Chapter One.md'",
+   "wait": 900
+  },
+  {
+   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__ROOT + '/docs/showcase/Talk.md')) }",
+   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'Talk.md'",
+   "wait": 900
+  },
+  {
+   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__ROOT + '/docs/showcase/Field Notes.md')) }",
+   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'Field Notes.md'",
+   "wait": 900
+  },
+  {
+   "eval": "{ import('/src/lib/workspace.svelte.ts').then(m => { m.toggleFavorite(window.__ROOT + '/docs/showcase/Chapter One.md'); m.toggleFavorite(window.__ROOT + '/docs/showcase/notes', true); }) }",
+   "wait": 400
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.session.expanded = [window.__ROOT + '/docs/showcase/notes']; m.app.treeVersion++; }) }",
+   "waitFor": "document.querySelector('.preview .mermaid-diagram svg')",
+   "wait": 1200,
+   "shot": "read"
+  },
+  {
+   "chord": [
+    "Mod",
+    "Digit3"
+   ],
+   "waitFor": "document.querySelector('.cm-editor') && document.querySelector('.preview .mermaid-diagram svg')",
+   "wait": 1200,
+   "shot": "split"
+  },
+  {
+   "chord": [
+    "Mod",
+    "Digit4"
+   ],
+   "waitFor": "document.querySelector('.milkdown .ProseMirror')",
+   "wait": 1500,
+   "shot": "visual"
+  },
+  {
+   "chord": [
+    "Mod",
+    "Digit1"
+   ],
+   "wait": 400
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'catppuccin'; m.settings.appearance = 'dark'; }) }",
+   "wait": 900
+  },
+  {
+   "wait": 600,
+   "shot": "dark"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'modern'; m.settings.appearance = 'light'; }) }",
+   "wait": 900
+  },
+  {
+   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__ROOT + '/docs/showcase/Chapter One.md')) }",
+   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'Chapter One.md'",
+   "wait": 900
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'calm';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-calm"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'typewriter';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-typewriter"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'crt-green';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-crt-green"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'notebook';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-notebook"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'gameboy';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-gameboy"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'parchment';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-parchment"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'chalkboard';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-chalkboard"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'sepia-night';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-sepia-night"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'manuscript';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-manuscript"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'msdos';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-msdos"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'terminal';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-terminal"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'eink';  }) }",
+   "wait": 900
+  },
+  {
+   "wait": 300,
+   "shot": "theme-eink"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'terminal';  }) }",
+   "wait": 900
+  },
+  {
+   "chord": [
+    "Mod",
+    "Digit2"
+   ],
+   "waitFor": "document.querySelector('.cm-content')",
+   "wait": 400
+  },
+  {
+   "eval": "{ const c = document.querySelector('.cm-content'); c.focus(); import('/src/lib/state.svelte.ts'); }",
+   "wait": 200
+  },
+  {
+   "chord": [
+    "Mod",
+    "End"
+   ],
+   "wait": 300,
+   "shot": "terminal-caret"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'calm';  }) }",
+   "wait": 900
+  },
+  {
+   "chord": [
+    "Mod",
+    "Shift",
+    "Enter"
+   ],
+   "wait": 600
+  },
+  {
+   "eval": "{ document.querySelector('.cm-content').focus(); }",
+   "wait": 200
+  },
+  {
+   "chord": [
+    "Mod",
+    "End"
+   ],
+   "wait": 200
+  },
+  {
+   "keys": "ArrowUp",
+   "wait": 50
+  },
+  {
+   "keys": "ArrowUp",
+   "wait": 50
+  },
+  {
+   "keys": "ArrowUp",
+   "wait": 50
+  },
+  {
+   "keys": "ArrowUp",
+   "wait": 3200
+  },
+  {
+   "eval": "{ window.dispatchEvent(new MouseEvent('mousemove', { clientX: 600, clientY: 20 })) }",
+   "wait": 500,
+   "shot": "focus"
+  },
+  {
+   "keys": "Escape",
+   "wait": 400
+  },
+  {
+   "chord": [
+    "Mod",
+    "Digit1"
+   ],
+   "wait": 400
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'modern';  }) }",
+   "wait": 900
+  },
+  {
+   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__ROOT + '/docs/showcase/Field Notes.md')) }",
+   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'Field Notes.md'",
+   "wait": 900
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'tractor';  }) }",
+   "wait": 900
+  },
+  {
+   "chord": [
+    "Mod",
+    "Alt",
+    "KeyP"
+   ],
+   "waitFor": "document.querySelectorAll('.page').length >= 2",
+   "wait": 1200,
+   "shot": "pages"
+  },
+  {
+   "chord": [
+    "Mod",
+    "Alt",
+    "KeyP"
+   ],
+   "wait": 400
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'modern';  }) }",
+   "wait": 900
+  },
+  {
+   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__ROOT + '/docs/showcase/Chapter One.md')) }",
+   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'Chapter One.md'",
+   "wait": 900
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.exportTheme = 'book'; }); import('/src/lib/exportRequest.svelte.ts').then(m => m.exportRequest.open(window.__ROOT + '/docs/showcase/Chapter One.md', 'pdf')) }",
+   "waitFor": "document.querySelector('.export .preview iframe')?.contentDocument?.querySelector('main.theme-book .page')",
+   "wait": 1200,
+   "shot": "export"
+  },
+  {
+   "eval": "{ document.querySelector('.export .btn:not(.primary)')?.click(); window.__S.then(m => { m.app.exportOpen = false; }) }",
+   "wait": 400
+  },
+  {
+   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__ROOT + '/docs/showcase/Talk.md')) }",
+   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'Talk.md'",
+   "wait": 900
+  },
+  {
+   "chord": [
+    "Mod",
+    "Alt",
+    "Enter"
+   ],
+   "waitFor": "document.querySelector('.presentation .slide')",
+   "wait": 500
+  },
+  {
+   "keys": "ArrowRight",
+   "wait": 500,
+   "shot": "slides"
+  },
+  {
+   "keys": "Escape",
+   "wait": 400
+  },
+  {
+   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__ROOT + '/docs/showcase/Field Notes.md')) }",
+   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'Field Notes.md'",
+   "wait": 900
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.settings.theme = 'notebook'; m.app.settingsOpen = true; }) }",
+   "waitFor": "document.querySelector('.settings .sheet-sample')",
+   "wait": 900,
+   "shot": "settings"
+  },
+  {
+   "eval": "{ window.__S.then(m => { m.app.settingsOpen = false; m.settings.theme = 'modern'; }) }",
+   "wait": 400
+  },
+  {
+   "chord": [
+    "Mod",
+    "Shift",
+    "KeyP"
+   ],
+   "waitFor": "document.querySelector('.picker input')",
+   "wait": 300
+  },
+  {
+   "type": "theme",
+   "wait": 500,
+   "shot": "palette"
+  },
+  {
+   "keys": "Escape",
+   "wait": 300
+  }
+ ]
+}

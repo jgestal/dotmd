@@ -52,7 +52,7 @@ jobs:
           releaseBody: |
             See [CHANGELOG.md](https://github.com/jgestal/dotmd/blob/main/CHANGELOG.md) for what's new.
 
-            **First launch on macOS:** the app is not notarized yet. Right-click DotMD.app → Open, then confirm.
+            **First launch on macOS:** the app is not notarized yet. If macOS says it cannot verify the developer, open System Settings → Privacy & Security and click "Open Anyway" (or run `xattr -dr com.apple.quarantine /Applications/DotMD.app`).
             **Windows:** if SmartScreen appears, choose "More info" → "Run anyway".
           releaseDraft: true
           prerelease: false

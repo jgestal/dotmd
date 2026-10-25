@@ -408,6 +408,7 @@ const de: Record<Key, string> = {
   'sidebar.sortName': 'Sortierung: nach Name (klicken für neueste zuerst)',
   'sidebar.sortModified': 'Sortierung: neueste zuerst (klicken für nach Name)',
   'stats.writingTime': '{m} Min. geschrieben',
+  'export.onePage': '1 Seite',
 };
 
 export default de;

@@ -407,6 +407,7 @@ const en = {
   'sidebar.sortName': 'Sort: by name (click for newest first)',
   'sidebar.sortModified': 'Sort: newest first (click for by name)',
   'stats.writingTime': '{m} min writing',
+  'export.onePage': '1 page',
 };
 
 export default en;

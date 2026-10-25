@@ -1,81 +1,174 @@
-# DotMD — Markdown Viewer & Editor
+<div align="center">
 
-**A fast, native-feeling Markdown and text viewer and editor for macOS, Windows and Linux.**
-Read, write and export Markdown, from a quick look at a README to a long distraction-free writing session.
+<img src="docs/screenshots/icon.png" width="128" height="128" alt="DotMD icon">
 
-Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev). The app bundle is about 10 MB.
+# DotMD
 
-![Read mode](docs/screenshots/read.png)
+**A fast, native-feeling Markdown & text editor for macOS, Windows and Linux.**
+
+Read, write, present and export Markdown — from a quick look at a README to a long, distraction-free writing session.
+
+[![CI](https://github.com/jgestal/dotmd/actions/workflows/ci.yml/badge.svg)](https://github.com/jgestal/dotmd/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/jgestal/dotmd?label=download)](https://github.com/jgestal/dotmd/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+![Platforms](https://img.shields.io/badge/platforms-macOS%20·%20Windows%20·%20Linux-lightgrey)
+
+[**Download**](https://github.com/jgestal/dotmd/releases/latest) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Command line](#command-line) · [Build](#building-from-source)
+
+<img src="docs/screenshots/read.png" alt="DotMD in Read mode, with the folder sidebar, tabs and favourites">
+
+</div>
+
+## Why DotMD
+
+- **Plain files, nothing else.** DotMD opens the folders you already have. No library, no import, no lock-in — your notes stay `.md` files you can sync, diff and back up.
+- **Native and fast.** Built on [Tauri 2](https://tauri.app) and Rust: a ~15 MB app that starts instantly, follows your system's light/dark mode, menus and shortcuts, and renders large documents smoothly.
+- **Made for writing.** Sheet themes with legible type, an animated cursor that suits each theme, focus modes, typewriter sounds and word goals.
+- **Ready to share.** Export to PDF or HTML with a live print preview, in the format you choose — independent of how you write — or present the document as slides.
 
 ## Features
 
-- **Four modes**: *Read*, *Source* (raw Markdown or plain text), *Split* (source and preview, with synced scrolling) and *Visual* (WYSIWYG, edit on the formatted document). Switch with ⌘1–4.
-- **Page view** (⌘⌥P): the preview laid out on A4/Letter sheets with the export margins and page numbers, so you see the PDF before exporting. Manual page breaks.
-- **Any text file**: Markdown, plain text, logs, CSV/TSV (shown as a table), JSON, YAML, source code (highlighted by language), README/LICENSE… UTF-8, UTF-16 and Latin-1, Windows line endings preserved.
-- **Folder sidebar** you can hide (⌘\\), resize or move to the right, with a filter, an outline tab, folder-wide search (⌘⇧F) and a native context menu (new, rename, move by dragging, Move to Trash).
-- **Tabs**, back/forward history (⌘[ / ⌘]), **quick open** (⌘P) and a **command palette** (⌘⇧P), plus a full native menu bar.
-- **Drag & drop** files and folders. Open from the command line or the OS "Open with…". Paste or drop images into the editor and they are saved to `assets/`.
-- **Formatting toolbar**:
-  - Headings, emphasis, lists, tasks, links and images.
-  - A grid picker for tables and one-click table alignment.
-  - Code blocks by language, 10 Mermaid templates, math, GitHub callouts, footnotes and collapsible sections.
-- **Rendering**: GitHub Flavored Markdown, Mermaid diagrams, KaTeX math, syntax highlighting, front matter, clickable task lists and links between notes.
-- **Live reload** when another program changes the open file.
-- **Statistics under the document**: words, characters, letters, sentences, paragraphs and reading time, each toggled separately, plus cursor position, document type and line endings.
-  - The detail panel adds a readability score adapted to the document's language (Flesch, Fernández-Huerta, Kandel-Moles, Amstad, Flesch-Vacca, Martins) and a word goal with a progress ring.
-- **Zen mode**:
-  - Full screen, with focus highlighting on the current line, sentence or paragraph.
-  - Typewriter scrolling, which keeps the cursor centered.
-  - Optional typing sounds, including **real typewriter recordings** (CC0) panned by key position, with a margin bell and carriage return.
-  - One-click **Typewriter mode**.
-- **Focus writing** (⌘⌥F): full screen, only the line you are typing lit, caret kept centered.
-- **27 sheet themes** — for writing: Notebook (ruled lines), Manuscript and Sepia Night, E-ink, Accessible (Atkinson Hyperlegible), Calm…; for fun: Chalkboard (chalk sound), Game Boy, Teletype, Parchment (quill sound) — including **Calm** and **Calm Night** (iA Writer fonts), **Typewriter** (paper texture, uneven ink), **Screenplay** (Hollywood format in Courier 12 pt), **Continuous paper** (green-bar tractor-feed paper with sprocket holes and a dot-matrix font), **CRT** green and amber (scanlines, glow, flicker, adjustable strength), **MS-DOS** (IBM VGA font), **Terminal** and **Mac OS X Aqua**. Themes dress only the **sheet** where you read and write (fonts, colours, effects and an animated cursor — a glowing block prompt in Terminal and CRT, a fading bar in Calm); the interface stays neutral, light or dark. Body text always uses a legible face, decorative ones (dot matrix, VT323, VGA) are kept for headings, and every theme passes a WCAG contrast test. Settings only offer the effects and sounds the active theme supports.
-- **Distraction-free mode** (⌘⇧↩): only the sheet remains; moving the mouse brings back a small bar with the word count, typing hides it.
-- **Screenplay mapping**: `#` title, `##` scene heading, `###` character, `>` dialogue, `*(…)*` parenthetical, `####` transition.
-- Every bundled font covers Spanish completely (checked in CI by `scripts/check-fonts.py`).
-  - Customize the accent color, fonts, size, line height, text width and paragraph spacing, or add your own CSS.
-- **Export** to self-contained HTML (fonts embedded) and to PDF, one file or **in batch**, with an option to merge everything into a single document and a table of contents. PDFs are printed natively on macOS and Linux.
-- **Command line**: `dotmd --export pdf notes.md notes.pdf` exports without opening a window.
-- **Output formats with live print preview**: Document, Book, GitHub, Typewriter, Continuous paper, Screenplay or the sheet theme, chosen when exporting and independent of how you write; the export dialog shows the real paginated pages as you change format, paper or margins (`dotmd --export pdf novel.md --style book`).
-- **Presentations**: any Markdown document is a deck — `---` separates slides, a paragraph starting with `Note:` holds the speaker notes. Present full screen (⌘⌥↩; arrows, N for notes, Esc), or export the slides as a 16:9 PDF or an HTML deck (`dotmd --export pdf talk.md --slides`).
-- **Feels native**: native menus laid out per platform (macOS app menu with Check for Updates, Settings and Services; File ▸ Rename, Revert to Saved, Show in Finder/Explorer; Edit ▸ Find Next/Previous; View ▸ Full Screen and bar toggles; Window lists open documents; Help ▸ Markdown Guide and Keyboard Shortcuts), the window remembers its size and position, the macOS close button shows unsaved changes, drop several folders at once, and drag files from the sidebar or a tab out of the window into Finder, Explorer or an e-mail.
-- **Languages**: English (default), Spanish, French, German, Italian, Portuguese, Catalan and Galician.
-- **Preferences** can be exported, imported or kept in a synced folder (Google Drive, Dropbox, iCloud…).
+### Read, write and edit three ways
 
-| Split mode | Page view | Focus writing (CRT theme) |
+| Read | Split | Visual |
 |---|---|---|
-| ![](docs/screenshots/split.png) | ![](docs/screenshots/pages.png) | ![](docs/screenshots/focus-crt.png) |
-| **Continuous paper theme** | **Typewriter theme (visual editor)** | **CSV as a table** |
-| ![](docs/screenshots/tractor.png) | ![](docs/screenshots/typewriter.png) | ![](docs/screenshots/csv.png) |
-| **Welcome** | **Settings** | |
-| ![](docs/screenshots/welcome.png) | ![](docs/screenshots/settings.png) | |
+| ![Read mode](docs/screenshots/read.png) | ![Split mode](docs/screenshots/split.png) | ![Visual mode](docs/screenshots/visual.png) |
 
-## Development
+- **Read** the rendered document, **Source** for raw Markdown, **Split** with synced scrolling, or **Visual** to edit the formatted text directly (WYSIWYG). Switch with ⌘1–⌘4.
+- GitHub Flavored Markdown with **Mermaid** diagrams, **KaTeX** maths, syntax highlighting, callouts, `==highlight==`, footnotes, front matter, clickable task lists and links between notes (hover one to preview it, ⌘-click it in the editor to follow it).
+- **Any text file**: plain text, logs, CSV/TSV as a table, JSON, YAML and source code; UTF-8, UTF-16 and Latin-1; Windows line endings preserved.
+- A formatting toolbar, table grid picker and aligner, smart paste (web pages become Markdown, a URL over a selection becomes a link) and images pasted or dropped straight into `assets/`.
 
-Requirements: [Rust](https://rustup.rs), Node.js 20+ and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your OS.
+### Sheet themes for every kind of writing
+
+![Twelve of DotMD's sheet themes](docs/screenshots/themes.png)
+
+**32 sheet themes**, from quiet to playful: Calm and Calm Night (iA Writer type), Notebook, Manuscript, Sepia Night, E-ink, Accessible (Atkinson Hyperlegible), Gruvbox, Catppuccin, Nord, Solarized… and Typewriter, Screenplay, Continuous paper, CRT phosphor, MS-DOS, Terminal, Game Boy, Chalkboard, Teletype, Parchment and Mac OS X Aqua.
+
+- Themes dress only the **sheet** where you read and write; the interface stays neutral, light or dark.
+- Body text always uses a legible face — decorative fonts (dot matrix, VT323, VGA, chalk) are for headings — and **every theme passes a WCAG contrast test** in CI.
+- Each theme has its own **cursor**: a glowing block prompt in Terminal and CRT, a fading blue bar in Calm, a striking block in Typewriter. Some bring **sounds** too: real typewriter recordings with a margin bell, chalk, a quill.
+
+| Terminal: a glowing prompt | Distraction-free writing |
+|---|---|
+| ![Terminal theme with its glowing block cursor](docs/screenshots/terminal-caret.png) | ![Distraction-free mode](docs/screenshots/focus.png) |
+
+### Write without distractions
+
+- **Distraction-free mode** (⌘⇧↩): only the sheet remains. Move the mouse for a small bar with focus, typewriter scrolling and your word goal; start typing and it disappears.
+- **Focus** on the current line, sentence or paragraph, and **typewriter scrolling** that keeps the cursor centred.
+- **Statistics**: words, characters, reading time, readability adapted to the document's language, a word goal and the time you actually spent writing this session.
+
+### Export what you see
+
+![Export dialog with a live print preview](docs/screenshots/export.png)
+
+- **PDF and HTML**, one file or a whole folder at once, optionally merged into a single document with a table of contents.
+- **Output formats** — Document, Book, GitHub, Typewriter, Continuous paper, Screenplay or your sheet theme — chosen when exporting, with a **live preview of the real pages**.
+- **Page view** (⌘⌥P) lays the document out on sheets exactly as it will print, with long tables split across pages and their headers repeated.
+- Native PDF printing on macOS and Linux (no browser needed), fonts embedded in exports.
+
+| Page view on continuous paper | Presentations |
+|---|---|
+| ![Page view with the continuous paper theme](docs/screenshots/pages.png) | ![A slide in presentation mode](docs/screenshots/slides.png) |
+
+### Present
+
+Any document is a deck: `---` starts a new slide and a paragraph beginning with `Note:` holds the speaker notes. Present full screen (⌘⌥↩), or export the slides to a 16:9 PDF or an HTML deck.
+
+### Work with folders, not files
+
+- A **sidebar** with several folders at once, **favourites** (files and folders), filter, sort by name or date, outline and **folder-wide search** (⌘⇧F).
+- **Tabs** that remember their scroll position, back/forward history, **quick open** (⌘P), a **command palette** (⌘⇧P) and a searchable **keyboard shortcuts** sheet (⌘⌥/).
+- Move, rename, duplicate and trash files from the tree; drag files out of the window into Finder, Explorer or an e-mail; live reload when another app changes a file.
+
+### Feels at home on your system
+
+- Native menus laid out per platform (macOS app menu, Services, Window list, Show in Finder / Explorer, Revert to Saved…), native dialogs and context menus.
+- The window remembers its size and position; on macOS the close button shows unsaved changes.
+- **8 languages**: English, Spanish, French, German, Italian, Portuguese, Catalan and Galician.
+- **Preferences** can be exported, imported or kept in a synced folder (Google Drive, Dropbox, iCloud) to share them across computers.
+- Automatic, signed updates.
+
+| Settings: live sheet preview | Command palette |
+|---|---|
+| ![Settings with the sheet theme preview](docs/screenshots/settings.png) | ![Command palette](docs/screenshots/palette.png) |
+
+## Installation
+
+Download the latest version from **[Releases](https://github.com/jgestal/dotmd/releases/latest)**:
+
+| System | File |
+|---|---|
+| macOS (Apple Silicon and Intel) | `DotMD_x.y.z_universal.dmg` |
+| Windows 10/11 | `DotMD_x.y.z_x64-setup.exe` or `.msi` |
+| Linux | `.AppImage`, `.deb` or `.rpm` |
+
+> [!NOTE]
+> DotMD is not notarised by Apple yet. On first launch macOS may say it cannot verify the developer: open **System Settings → Privacy & Security** and click **Open Anyway**, or run `xattr -dr com.apple.quarantine /Applications/DotMD.app`. On Windows, if SmartScreen appears, choose **More info → Run anyway**.
+
+## Keyboard shortcuts
+
+| Action | macOS | Windows / Linux |
+|---|---|---|
+| Read · Source · Split · Visual | ⌘1 · ⌘2 · ⌘3 · ⌘4 | Ctrl+1…4 |
+| Go to file · Command palette | ⌘P · ⌘⇧P | Ctrl+P · Ctrl+Shift+P |
+| Search in folder | ⌘⇧F | Ctrl+Shift+F |
+| Find · Find next · Replace | ⌘F · ⌘G · ⌘⌥R | Ctrl+F · Ctrl+G · Ctrl+Alt+R |
+| Distraction-free mode | ⌘⇧↩ | Ctrl+Shift+Enter |
+| Page view · Present | ⌘⌥P · ⌘⌥↩ | Ctrl+Alt+P · Ctrl+Alt+Enter |
+| Reopen closed tab | ⌘⇧T | Ctrl+Shift+T |
+| Insert / update table of contents | ⌘⌥T | Ctrl+Alt+T |
+| All shortcuts | ⌘⌥/ | Ctrl+Alt+/ |
+
+## Command line
+
+Help → *Install "dotmd" command* puts `dotmd` on your PATH.
+
+```bash
+dotmd notes.md                               # open in DotMD (reuses the open window)
+dotmd --export pdf notes.md                  # notes.pdf next to notes.md, no window
+dotmd --export html docs/ -o site/           # a whole folder, keeping sub-folders
+dotmd --export pdf a.md b.md --merge -o book.pdf
+dotmd --export pdf novel.md --style book     # document, book, github, typewriter, tractor, screenplay, sheet
+dotmd --export pdf talk.md --slides          # one 16:9 page per slide
+```
+
+## Building from source
+
+Requirements: [Rust](https://rustup.rs), Node.js 20+ and the [Tauri prerequisites](https://tauri.app/start/prerequisites/) for your system.
 
 ```bash
 npm install
-npm run tauri dev     # run in development
-npm run tauri build   # build installers
-npm run check         # type-check the frontend
-cd src-tauri && cargo test
+npm run tauri dev        # run in development
+npm run tauri build      # build installers
 ```
 
-PDF export uses the system WebKit on macOS and Linux. Elsewhere, or if that fails, it uses Chrome, Edge, Brave or Chromium if one is installed, and otherwise opens the print dialog.
+### Tests
 
-UI tests (`npm run test:ui`) drive the frontend in headless Chrome with a fake Tauri bridge backed by the real Rust renderer; set `CHROME_PATH` if Chrome is not in a standard location.
+| Suite | Command | What it covers |
+|---|---|---|
+| Type check | `npm run check` | Svelte and TypeScript |
+| Unit and use cases | `npm test` · `npm run test:coverage` | Domain rules, use cases with in-memory adapters, architecture rules, themes (WCAG contrast), locales |
+| Rust | `cd src-tauri && cargo test` | Decoding, CLI parsing, search, file system |
+| UI | `npm run test:ui` | Every screen and flow in headless Chrome with a fake Tauri bridge (set `CHROME_PATH` if needed) |
+| End to end | `npm run test:cli` | The real executable: window, single instance, PDF/HTML exports, slides, formats |
+| Fonts | `python3 scripts/check-fonts.py` | Every bundled font covers Spanish completely |
+
+CI runs all of them, the end-to-end suite on macOS, Windows and Linux, and builds the installers. The code follows a clean architecture (domain, ports, use cases, adapters) described in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Roadmap
 
-See [PLAN.md](PLAN.md) and the [issues](https://github.com/jgestal/dotmd/issues), grouped by milestone.
+Ideas for the next versions — wiki links and backlinks, tags, a note graph, a Pomodoro timer, style checks, DOCX/EPUB export and more — are tracked as [issues](https://github.com/jgestal/dotmd/issues). Suggestions are welcome.
 
 ## Credits
 
 Created by **Juan Gestal** — [juan@gestal.es](mailto:juan@gestal.es) · [gestal.es](https://gestal.es)
 
-Fonts: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro & Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend, Source Serif 4, EB Garamond, IM Fell English, Caveat, Patrick Hand, Fredericka the Great, Press Start 2P and Pixelify Sans (SIL Open Font License); IBM VGA 8×16 from [The Ultimate Oldschool PC Font Pack](https://int10h.org/oldschool-pc-fonts/) by VileR (CC BY-SA 4.0). Licences are next to the files in `static/fonts/`.
+Built with Tauri, Svelte, CodeMirror, Milkdown, comrak, Mermaid and KaTeX.
+
+Fonts: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro & Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend, Source Serif 4, EB Garamond, IM Fell English, Caveat, Patrick Hand, Fredericka the Great, Press Start 2P and Pixelify Sans (SIL Open Font License); IBM VGA 8×16 from [The Ultimate Oldschool PC Font Pack](https://int10h.org/oldschool-pc-fonts/) by VileR (CC BY-SA 4.0). Licences are next to the files in `static/fonts/`. Typewriter sounds are CC0 recordings from Freesound — see [static/sounds/CREDITS.md](static/sounds/CREDITS.md).
 
 ## License
 
-[MIT](LICENSE) © Juan Gestal. Third-party sound credits are in [static/sounds/CREDITS.md](static/sounds/CREDITS.md).
+[MIT](LICENSE) © 2026 Juan Gestal

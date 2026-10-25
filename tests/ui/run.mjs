@@ -196,13 +196,14 @@ async function runScenario(file, name) {
   const sc = JSON.parse(fs.readFileSync(path.join(HERE, 'scenarios', file), 'utf8').replaceAll('$FIX', FIX.replaceAll('\\', '/')));
   pendingOpen = sc.open ? [sc.open] : [];
   const page = await browser.newPage();
+  if (sc.viewport) await page.setViewport(sc.viewport);
   currentPage = page;
   page.setDefaultTimeout(30000);
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => process.env.UI_DEBUG && m.type() === 'log' && console.log('    [page]', m.text()));
   page.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && errors.push(m.text()));
-  await page.evaluateOnNewDocument((fix) => { window.__FIX = fix; }, FIX.replaceAll('\\', '/'));
+  await page.evaluateOnNewDocument((fix, root) => { window.__FIX = fix; window.__ROOT = root; }, FIX.replaceAll('\\', '/'), ROOT.replaceAll('\\', '/'));
   await page.evaluateOnNewDocument((settings) => {
     // Fresh storage on the scenario's first load only, so a reload can test persistence.
     if (!sessionStorage.getItem('__dotmd_init')) {

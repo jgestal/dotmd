@@ -408,6 +408,7 @@ const gl: Record<Key, string> = {
   'sidebar.sortName': 'Orde: por nome (preme para os máis recentes primeiro)',
   'sidebar.sortModified': 'Orde: máis recentes primeiro (preme para por nome)',
   'stats.writingTime': '{m} min escribindo',
+  'export.onePage': '1 páxina',
 };
 
 export default gl;
