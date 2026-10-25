@@ -111,13 +111,19 @@
 
     (async () => {
       if (await runCliExport()) return;
-      const pending = await invoke<string[]>('take_pending_open');
-      if (pending.length) await handleDroppedPaths(pending);
-      else {
-        if (session.lastFolder && (await invoke('path_kind', { path: session.lastFolder })) === 'dir') app.root = session.lastFolder;
-        await restoreTabs();
+      try {
+        const pending = await invoke<string[]>('take_pending_open');
+        if (pending.length) await handleDroppedPaths(pending);
+        else {
+          if (session.lastFolder && (await invoke('path_kind', { path: session.lastFolder })) === 'dir') app.root = session.lastFolder;
+          await restoreTabs();
+        }
+      } catch (e) {
+        console.error('restoring the session failed', e);
+      } finally {
+        // Not in requestAnimationFrame: WebKit does not run frames for a window that is still hidden.
+        await win.show();
       }
-      requestAnimationFrame(() => win.show());
       scheduleUpdateCheck();
     })();
 

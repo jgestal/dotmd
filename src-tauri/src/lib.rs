@@ -110,6 +110,24 @@ pub fn run() {
             export::pdf_engine,
             export::export_pdf_native,
         ])
+        .setup(move |app| {
+            // Safety net: the frontend shows the window once it has painted; if that never happens
+            // (a startup error), show it anyway rather than leave an invisible app running.
+            if !exporting {
+                let handle = app.handle().clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(3));
+                    if let Some(w) = handle.get_webview_window("main") {
+                        if !w.is_visible().unwrap_or(true) {
+                            log::warn!("window was still hidden after start-up; showing it");
+                            let _ = w.show();
+                            let _ = w.set_focus();
+                        }
+                    }
+                });
+            }
+            Ok(())
+        })
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 

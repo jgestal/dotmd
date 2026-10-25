@@ -95,6 +95,21 @@ if (process.platform !== 'win32') {
   });
 }
 
+if (process.platform === 'darwin') {
+  check('a normal launch shows its window', () => {
+    const first = spawnSync('sh', ['-c', `"${EXE}" >/dev/null 2>&1 & echo $!`], { cwd: work, encoding: 'utf8' });
+    const pid = first.stdout.trim();
+    try {
+      const windows = () => Number(spawnSync('osascript', ['-e', `tell application "System Events" to count windows of (first process whose unix id is ${pid})`], { encoding: 'utf8' }).stdout.trim() || 0);
+      let n = 0;
+      for (let i = 0; i < 20 && !(n = windows()); i++) spawnSync('sleep', ['0.5']);
+      assert(n >= 1, 'no window appeared within 10 s (the app started hidden)');
+    } finally {
+      spawnSync('kill', [pid]);
+    }
+  });
+}
+
 fs.rmSync(work, { recursive: true, force: true });
 console.log(failed ? `${failed} failed` : 'all passed');
 process.exit(failed ? 1 : 0);
