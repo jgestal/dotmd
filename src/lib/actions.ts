@@ -17,6 +17,7 @@ export { APP_TITLE } from './application/documents';
 
 export const saveDoc = (as = false) => documents.save(as);
 export const restoreTabs = () => documents.restore();
+export const revertDoc = () => documents.revert();
 
 /** Adds a folder to the sidebar workspace (several can be open at once); asks when none is given. */
 export async function openFolder(path?: string) {

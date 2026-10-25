@@ -55,6 +55,7 @@ nothing, the application only domain and ports, ports are pure types, and no mod
 | `export.rs` | PDF via the system WebKit (macOS, Linux) or headless Chromium. |
 | `markdown.rs` | comrak options and rendering. |
 | `watch.rs` | Live reload (file watcher). |
+| `os.rs` | OS integration: drag-out preview image, the macOS window's document (represented file, unsaved dot). Window size/position persist via `tauri-plugin-window-state`; files are dragged out with `tauri-plugin-drag`. |
 
 Commands stay thin; logic lives in plain functions that tests call directly with temporary folders.
 

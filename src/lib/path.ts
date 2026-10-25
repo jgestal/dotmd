@@ -85,4 +85,5 @@ export const isPlainText = (p: string | null) => !!p && docKind(p) !== 'markdown
 export const isTextPath = (p: string) =>
   docKind(p) !== 'text' || PLAIN_EXT.includes(keyOf(p)) || ['readme', 'license', 'licence', 'changelog', 'authors', 'contributing', 'notes', 'todo'].includes(keyOf(p));
 export const isMac = typeof navigator !== 'undefined' && /Mac/.test(navigator.userAgent);
+export const isWindows = typeof navigator !== 'undefined' && /Win/.test(navigator.userAgent);
 export const modKey = isMac ? '⌘' : 'Ctrl+';

@@ -4,7 +4,10 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { app, settings, getEditorApi, toast, type Mode } from './state.svelte';
 import { services } from './container';
 import { t, type Key } from './i18n';
-import { isMac, isPlainText } from './path';
+import { isMac, isWindows, isPlainText, basename } from './path';
+import { revealItemInDir } from '@tauri-apps/plugin-opener';
+import { askFields } from './prompt.svelte';
+import { applyToc } from './toc';
 import { LANGUAGES } from './i18n';
 import { THEMES } from './themes';
 import { toggleAppearance } from './appearance.svelte';
@@ -13,7 +16,7 @@ import type { FormatAction } from './snippets';
 import {
   newDoc, openFileDialog, openFolder, saveDoc, toggleZen, toggleTypewriterMode, insertLink, insertImage,
   toggleFocusHighlight, updateToc, closeTab, closeOtherTabs, closeTabsToLeft, closeTabsToRight, cycleTab, goBack, goForward, canGoBack, canGoForward, toggleFocusWriting, copyRichText,
-  typewriterModeOn,
+  typewriterModeOn, renamePath, revertDoc,
 } from './actions';
 import { focusWriting } from './state.svelte';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -42,6 +45,20 @@ export interface Command {
 }
 
 const hasDoc = () => app.docOpen;
+
+async function renameCurrent() {
+  if (!app.path) return;
+  const name = basename(app.path);
+  const v = await askFields(t('cmd.renameFile'), [{ key: 'name', label: t('common.name'), value: name }]);
+  if (v?.name && v.name !== name) await renamePath(app.path, v.name);
+}
+
+/** Help ▸ Markdown Guide: a cheat sheet in the UI language, opened side by side with its result. */
+async function openGuide() {
+  const lang = ['es'].includes(settings.lang) ? settings.lang : 'en';
+  const text = await fetch(`/guide/${lang}.md`).then((r) => r.text());
+  newDoc(applyToc(text), 'split');
+}
 const editing = () => app.docOpen && app.mode !== 'preview';
 const fmt = (a: FormatAction) => () => getEditorApi()?.exec(a);
 let lastEditMode: Mode = 'source';
@@ -65,7 +82,7 @@ export function registerCommands(cmds: Command[]) {
 const L = (k: Key) => () => t(k);
 
 const EDIT_GROUP: Record<string, Key> = {
-  find: 'menu.find', replace: 'menu.find', gotoLine: 'menu.find',
+  find: 'menu.find', findNext: 'menu.find', findPrevious: 'menu.find', replace: 'menu.find', gotoLine: 'menu.find',
   selectNext: 'menu.selection', selectAllMatches: 'menu.selection', cursorAbove: 'menu.selection', cursorBelow: 'menu.selection', selectLine: 'menu.selection',
   duplicateLine: 'menu.lines', deleteLine: 'menu.lines', moveLineUp: 'menu.lines', moveLineDown: 'menu.lines',
   sortLines: 'menu.lines', sortLinesDesc: 'menu.lines', uniqueLines: 'menu.lines', trimTrailing: 'menu.lines', joinLines: 'menu.lines',
@@ -76,7 +93,7 @@ const INSERT = new Set(['fmt.link', 'fmt.image', 'fmt.table', 'fmt.codeblock', '
 function base(): Command[] {
   return [
     // File
-    { id: 'file.new', label: L('cmd.new'), shortcut: 'CmdOrCtrl+N', menu: 'file', run: newDoc },
+    { id: 'file.new', label: L('cmd.new'), shortcut: 'CmdOrCtrl+N', menu: 'file', run: () => newDoc() },
     { id: 'file.open', label: L('cmd.open'), shortcut: 'CmdOrCtrl+O', menu: 'file', run: openFileDialog },
     { id: 'file.quickOpen', label: L('cmd.quickOpen'), shortcut: 'CmdOrCtrl+P', menu: 'file', run: () => (app.quickOpen = true) },
     { id: 'file.openFolder', label: L('cmd.openFolder'), shortcut: 'CmdOrCtrl+Shift+O', menu: 'file', run: () => openFolder() },
@@ -88,6 +105,9 @@ function base(): Command[] {
     { id: 'window.close', label: L('cmd.closeWindow'), shortcut: 'CmdOrCtrl+Shift+W', menu: 'file', run: () => getCurrentWindow().close() },
     { id: 'file.save', label: L('cmd.save'), shortcut: 'CmdOrCtrl+S', menu: 'file', separator: true, enabled: hasDoc, run: () => saveDoc() },
     { id: 'file.saveAs', label: L('cmd.saveAs'), shortcut: 'CmdOrCtrl+Shift+S', menu: 'file', enabled: hasDoc, run: () => saveDoc(true) },
+    { id: 'file.rename', label: L('cmd.renameFile'), menu: 'file', separator: true, enabled: () => !!app.path, run: renameCurrent },
+    { id: 'file.revert', label: L('cmd.revert'), menu: 'file', enabled: () => !!app.path && app.content !== app.saved, run: () => revertDoc() },
+    { id: 'file.reveal', label: () => t(isMac ? 'cmd.revealMac' : isWindows ? 'cmd.revealWin' : 'cmd.revealLinux'), menu: 'file', enabled: () => !!app.path, run: () => app.path && revealItemInDir(app.path) },
     { id: 'file.export', label: L('cmd.export'), shortcut: 'CmdOrCtrl+Shift+E', menu: 'file', separator: true, run: () => (app.exportOpen = true) },
     { id: 'file.exportPdf', label: L('cmd.exportPdf'), menu: 'file', enabled: hasDoc, run: () => exportRequest.open(app.path, 'pdf') },
     { id: 'file.exportHtml', label: L('cmd.exportHtml'), menu: 'file', enabled: hasDoc, run: () => exportRequest.open(app.path, 'html') },
@@ -96,7 +116,8 @@ function base(): Command[] {
 
     // Edit
     ...([
-      ['find', 'CmdOrCtrl+F', true], ['replace', 'CmdOrCtrl+Alt+R', false], ['gotoLine', 'CmdOrCtrl+Alt+G', true],
+      ['find', 'CmdOrCtrl+F', true], ['findNext', 'CmdOrCtrl+G', true], ['findPrevious', 'CmdOrCtrl+Shift+G', true],
+      ['replace', 'CmdOrCtrl+Alt+R', false], ['gotoLine', 'CmdOrCtrl+Alt+G', true],
       ['selectNext', 'CmdOrCtrl+D', true], ['selectAllMatches', 'CmdOrCtrl+Shift+L', true],
       ['cursorAbove', 'CmdOrCtrl+Alt+Up', true], ['cursorBelow', 'CmdOrCtrl+Alt+Down', true], ['selectLine', 'CmdOrCtrl+L', true],
       ['duplicateLine', 'CmdOrCtrl+Shift+D', true], ['deleteLine', 'CmdOrCtrl+Shift+K', true],
@@ -160,6 +181,8 @@ function base(): Command[] {
     { id: 'view.zoomIn', label: L('cmd.zoomIn'), shortcut: 'CmdOrCtrl+=', menu: 'view', separator: true, run: () => (settings.fontSize = Math.min(32, settings.fontSize + 1)) },
     { id: 'view.zoomOut', label: L('cmd.zoomOut'), shortcut: 'CmdOrCtrl+-', menu: 'view', run: () => (settings.fontSize = Math.max(10, settings.fontSize - 1)) },
     { id: 'view.zoomReset', label: L('cmd.zoomReset'), shortcut: 'CmdOrCtrl+0', menu: 'view', run: () => (settings.fontSize = 16) },
+    { id: 'view.toolbar', label: L('cmd.showToolbar'), menu: 'view', separator: true, checked: () => settings.showToolbar, run: () => (settings.showToolbar = !settings.showToolbar) },
+    { id: 'view.statusbar', label: L('cmd.showStatusbar'), menu: 'view', checked: () => settings.showStats, run: () => (settings.showStats = !settings.showStats) },
     { id: 'view.palette', label: L('cmd.palette'), shortcut: 'CmdOrCtrl+Shift+P', menu: 'view', separator: true, run: () => (app.paletteOpen = true) },
     // Go
     { id: 'go.back', label: L('go.back'), shortcut: 'CmdOrCtrl+[', menu: 'go', enabled: canGoBack, run: goBack },
@@ -183,13 +206,16 @@ function base(): Command[] {
     })),
 
     // Help
+    { id: 'help.guide', label: L('cmd.markdownGuide'), menu: 'help', run: openGuide },
+    { id: 'help.shortcuts', label: L('cmd.shortcuts'), shortcut: 'CmdOrCtrl+Alt+/', menu: 'help', run: () => (app.shortcutsOpen = !app.shortcutsOpen) },
+    { id: 'help.website', label: L('cmd.website'), menu: 'help', separator: true, run: () => openUrl('https://github.com/jgestal/dotmd#readme') },
+    { id: 'help.releaseNotes', label: L('cmd.releaseNotes'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd/blob/main/CHANGELOG.md') },
+    { id: 'help.issue', label: L('cmd.reportIssue'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd/issues/new') },
     {
-      id: 'help.installCli', label: L('cmd.installCli'), menu: 'help',
+      id: 'help.installCli', label: L('cmd.installCli'), menu: 'help', separator: true,
       run: () => services.process.installCli().then((path) => toast(t('toast.cliInstalled', { path }), 6000), (e) => toast(t('toast.error', { msg: String(e) }))),
     },
-    { id: 'help.updates', label: L('cmd.checkUpdates'), menu: 'help', run: () => import('./updates').then((m) => m.checkForUpdates(true)) },
-    { id: 'help.website', label: L('cmd.website'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd') },
-    { id: 'help.issue', label: L('cmd.reportIssue'), menu: 'help', run: () => openUrl('https://github.com/jgestal/dotmd/issues/new') },
+    { id: 'help.updates', label: L('cmd.checkUpdates'), menu: 'help', separator: true, run: () => import('./updates').then((m) => m.checkForUpdates(true)) },
   ];
 }
 
@@ -249,7 +275,7 @@ export function formatShortcut(acc?: string): string {
   if (!acc) return '';
   const parts = acc.split('+').map((p) => p === '' ? '+' : p);
   if (!isMac) return parts.map((p) => (p === 'CmdOrCtrl' ? 'Ctrl' : p)).join('+');
-  const sym: Record<string, string> = { CmdOrCtrl: '⌘', Shift: '⇧', Alt: '⌥', Ctrl: '⌃', Enter: '↩', Backspace: '⌫', Tab: '⇥' };
+  const sym: Record<string, string> = { CmdOrCtrl: '⌘', Shift: '⇧', Alt: '⌥', Ctrl: '⌃', Enter: '↩', Backspace: '⌫', Tab: '⇥', Up: '↑', Down: '↓', Left: '←', Right: '→' };
   return parts.map((p) => sym[p] ?? p.toUpperCase()).join('');
 }
 
@@ -265,6 +291,7 @@ function matches(acc: string, e: KeyboardEvent): boolean {
   const code = e.code;
   if (/^[0-9]$/.test(key)) return code === `Digit${key}` || code === `Numpad${key}`;
   if (/^[A-Z]$/i.test(key)) return code === `Key${key.toUpperCase()}`;
+  if (key === '/') return code === 'Slash' || code === 'NumpadDivide';
   const special: Record<string, string[]> = {
     Enter: ['Enter', 'NumpadEnter'], '\\': ['Backslash', 'IntlBackslash'], '[': ['BracketLeft'], ']': ['BracketRight'],
     '=': ['Equal', 'NumpadAdd'], '-': ['Minus', 'NumpadSubtract'], ',': ['Comma'], Tab: ['Tab'], Left: ['ArrowLeft'], Right: ['ArrowRight'], Up: ['ArrowUp'], Down: ['ArrowDown'],

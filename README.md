@@ -38,6 +38,7 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
 - **Command line**: `dotmd --export pdf notes.md notes.pdf` exports without opening a window.
 - **Output formats with live print preview**: Document, Book, GitHub, Typewriter, Continuous paper, Screenplay or the sheet theme, chosen when exporting and independent of how you write; the export dialog shows the real paginated pages as you change format, paper or margins (`dotmd --export pdf novel.md --style book`).
 - **Presentations**: any Markdown document is a deck — `---` separates slides, a paragraph starting with `Note:` holds the speaker notes. Present full screen (⌘⌥↩; arrows, N for notes, Esc), or export the slides as a 16:9 PDF or an HTML deck (`dotmd --export pdf talk.md --slides`).
+- **Feels native**: native menus laid out per platform (macOS app menu with Check for Updates, Settings and Services; File ▸ Rename, Revert to Saved, Show in Finder/Explorer; Edit ▸ Find Next/Previous; View ▸ Full Screen and bar toggles; Window lists open documents; Help ▸ Markdown Guide and Keyboard Shortcuts), the window remembers its size and position, the macOS close button shows unsaved changes, drop several folders at once, and drag files from the sidebar or a tab out of the window into Finder, Explorer or an e-mail.
 - **Languages**: English (default), Spanish, French, German, Italian, Portuguese, Catalan and Galician.
 - **Preferences** can be exported, imported or kept in a synced folder (Google Drive, Dropbox, iCloud…).
 

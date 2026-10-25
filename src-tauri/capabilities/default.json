@@ -18,6 +18,9 @@
     "dialog:default",
     "log:default",
     "updater:default",
-    "process:allow-restart"
+    "process:allow-restart",
+    "drag:default",
+    "core:window:allow-unminimize",
+    "core:window:allow-set-focus"
   ]
 }

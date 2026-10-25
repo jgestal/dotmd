@@ -82,6 +82,10 @@ export class RecordingWindow implements AppWindow {
   fullscreen = false;
   async setTitle(t: string) { this.titles.push(t); }
   async setFullscreen(on: boolean) { this.fullscreen = on; }
+  document: { path: string | null; edited: boolean } = { path: null, edited: false };
+  draggedOut: string[][] = [];
+  async setDocument(path: string | null, edited: boolean) { this.document = { path, edited }; }
+  async dragOut(paths: string[]) { this.draggedOut.push(paths); }
   get title() { return this.titles.at(-1); }
 }
 

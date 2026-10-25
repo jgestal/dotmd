@@ -8,7 +8,12 @@ interface DragOptions {
   target: string;
   onOver?: (el: HTMLElement | null) => void;
   onDrop: (el: HTMLElement) => void;
+  /** The pointer left the window while dragging: hand the drag over to the OS (drag out). */
+  onOut?: () => void;
 }
+
+/** True when a point is at (or past) the window's edge. */
+export const atWindowEdge = (x: number, y: number, w = window.innerWidth, h = window.innerHeight) => x <= 2 || y <= 2 || x >= w - 2 || y >= h - 2;
 
 export function pointerDrag(down: PointerEvent, o: DragOptions) {
   if (down.button !== 0) return;
@@ -34,6 +39,20 @@ export function pointerDrag(down: PointerEvent, o: DragOptions) {
       document.body.classList.add('dragging');
     }
     ghost.style.transform = `translate(${e.clientX + 12}px, ${e.clientY + 8}px)`;
+    if (o.onOut && atWindowEdge(e.clientX, e.clientY)) {
+      // Leaving the window: stop the in-app drag and let the system carry the file elsewhere.
+      const out = o.onOut;
+      over = null;
+      setOver(null);
+      ghost.remove();
+      ghost = null;
+      document.body.classList.remove('dragging');
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('keydown', cancel, true);
+      out();
+      return;
+    }
     const hit = document.elementFromPoint(e.clientX, e.clientY);
     setOver((hit?.closest(o.target) as HTMLElement | null) ?? null);
   };

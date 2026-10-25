@@ -2,6 +2,7 @@
 import { invoke, Channel } from '@tauri-apps/api/core';
 import { ask, message, open, save } from '@tauri-apps/plugin-dialog';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { startDrag } from '@crabnebula/tauri-plugin-drag';
 import type { AppProcess, AppWindow, Dialogs, DirEntry, Exporter, FileSystem, FileWatcher, FuzzyHit, MarkdownEngine, PathKind, SearchEngine, SearchEvent } from '../../ports';
 import { toAppError } from '../../domain/errors';
 
@@ -44,6 +45,11 @@ export const tauriDialogs: Dialogs = {
 export const tauriWindow: AppWindow = {
   setTitle: (title) => getCurrentWindow().setTitle(title).catch(() => {}),
   setFullscreen: (on) => getCurrentWindow().setFullscreen(on).catch(() => {}),
+  setDocument: (path, edited) => invoke<void>('set_document', { path, edited }).catch(() => {}),
+  async dragOut(paths) {
+    const icon = await call<string>('drag_icon', {});
+    await startDrag({ item: paths, icon });
+  },
 };
 
 export const tauriWatcher: FileWatcher = {

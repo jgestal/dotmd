@@ -210,12 +210,42 @@ describe('workspace', () => {
     expect(w.workspace.isFavoriteDir('/p/docs')).toBe(false);
   });
 
+  it('opens every folder dropped on the window', async () => {
+    const w = setup({ '/a/x.md': 'x', '/b/y.md': 'y' });
+    await w.documents.handleDroppedPaths(['/a', '/b', '/a/x.md']);
+    expect([...w.session.folders].sort()).toEqual(['/a', '/b']);
+    expect(w.state.path).toBe('/a/x.md');
+  });
+
   it('picks the deepest folder that contains a file', () => {
     const w = setup();
     w.workspace.addFolder('/a');
     w.workspace.addFolder('/a/b');
     expect(w.workspace.folderOf('/a/b/c.md')).toBe('/a/b');
     expect(w.workspace.folderOf('/z/c.md')).toBeNull();
+  });
+});
+
+describe('revert to saved', () => {
+  it('asks before dropping edits, then reloads the file', async () => {
+    const w = setup({ '/p/a.md': 'disk' });
+    await w.documents.openPath('/p/a.md');
+    w.state.content = 'edited';
+    w.services.dialogs.confirms.push(false);
+    expect(await w.documents.revert()).toBe(false);
+    expect(w.state.content).toBe('edited');
+    w.services.dialogs.confirms.push(true);
+    expect(await w.documents.revert()).toBe(true);
+    expect(w.state.content).toBe('disk');
+    expect(w.state.saved).toBe('disk');
+  });
+
+  it('opens a document with content (the Markdown guide) without marking it unsaved', () => {
+    const w = setup();
+    w.documents.newDoc('# Guide', 'split');
+    expect(w.state.content).toBe('# Guide');
+    expect(w.state.mode).toBe('split');
+    expect(w.documents.isDirty()).toBe(false);
   });
 });
 

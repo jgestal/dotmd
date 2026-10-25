@@ -219,6 +219,7 @@ export const app = $state({
   viewLine: 1,
   settingsOpen: false,
   paletteOpen: false,
+  shortcutsOpen: false,
   exportOpen: false,
   dragOver: false,
   treeVersion: 0,

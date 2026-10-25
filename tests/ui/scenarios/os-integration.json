@@ -1,0 +1,20 @@
+{
+  "open": "$FIX/notes/second.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1')", "wait": 400 },
+    { "assert": "(() => { const c = window.__calls.filter(c => c.cmd === 'set_document').pop(); return c && c.args.path.endsWith('second.md') && c.args.edited === false; })()" },
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')" },
+    { "eval": "{ document.querySelector('.cm-content').focus() }" },
+    { "type": "x", "wait": 300 },
+    { "assert": "window.__calls.filter(c => c.cmd === 'set_document').pop().args.edited === true" },
+    { "eval": "{ window.__calls = []; const row = [...document.querySelectorAll('.tree-row')].find(r => r.dataset.path?.endsWith('plain.txt')); const b = row.getBoundingClientRect(); const opts = (x, y) => ({ clientX: x, clientY: y, bubbles: true, button: 0, pointerId: 1 }); row.dispatchEvent(new PointerEvent('pointerdown', opts(b.x + 10, b.y + 5))); window.dispatchEvent(new PointerEvent('pointermove', opts(b.x + 60, b.y + 40))); window.dispatchEvent(new PointerEvent('pointermove', opts(1, b.y + 40))); }", "wait": 500 },
+    { "assert": "(() => { const d = window.__calls.find(c => c.cmd === 'plugin:drag|start_drag'); return !!d && JSON.stringify(d.args).includes('plain.txt') && window.__calls.some(c => c.cmd === 'drag_icon'); })() || JSON.stringify(window.__calls.map(c => c.cmd))" },
+    { "assert": "!document.querySelector('.drag-ghost')" },
+    { "chord": ["Mod", "Alt", "Slash"], "waitFor": "document.querySelector('.shortcuts')", "shot": "shortcuts" },
+    { "assert": "document.querySelector('.shortcuts').textContent.includes('Find Next') && /⌘G|Ctrl\\+G/.test(document.querySelector('.shortcuts').textContent)" },
+    { "keys": "Escape", "wait": 200 },
+    { "assert": "!document.querySelector('.shortcuts')" },
+    { "eval": "{ import('/src/lib/commands.ts').then(m => m.runCommand(m.allCommands().find(c => c.id === 'help.guide'))) }", "waitFor": "document.querySelector('.preview h1')?.textContent.includes('Markdown guide')", "wait": 600, "shot": "guide" },
+    { "assert": "document.querySelector('.content').classList.contains('mode-split') && document.querySelectorAll('.preview .markdown-alert').length >= 3" }
+  ]
+}

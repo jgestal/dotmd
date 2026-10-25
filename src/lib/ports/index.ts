@@ -51,6 +51,10 @@ export interface Dialogs {
 export interface AppWindow {
   setTitle(title: string): Promise<void>;
   setFullscreen(on: boolean): Promise<void>;
+  /** The file the window shows and whether it has unsaved changes (macOS close-button dot). */
+  setDocument(path: string | null, edited: boolean): Promise<void>;
+  /** Starts a native drag of files out of the app (to Finder, mail, other apps). */
+  dragOut(paths: string[]): Promise<void>;
 }
 
 /** Re-arms change notifications for the given files (live reload). */

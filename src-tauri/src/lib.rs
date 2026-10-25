@@ -1,6 +1,7 @@
 mod cli;
 mod export;
 mod fs;
+mod os;
 mod search;
 pub mod markdown;
 mod watch;
@@ -70,12 +71,19 @@ pub fn run() {
                 let _ = w.set_focus();
             }
         }));
+        // Window size, position and maximised state survive restarts (the frontend shows it).
+        builder = builder.plugin(
+            tauri_plugin_window_state::Builder::new()
+                .with_state_flags(tauri_plugin_window_state::StateFlags::all() & !tauri_plugin_window_state::StateFlags::VISIBLE)
+                .build(),
+        );
     }
     let app = builder
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_drag::init())
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(if cfg!(debug_assertions) { log::LevelFilter::Info } else { log::LevelFilter::Warn })
@@ -109,6 +117,8 @@ pub fn run() {
             export::export_pdf,
             export::pdf_engine,
             export::export_pdf_native,
+            os::drag_icon,
+            os::set_document,
         ])
         .setup(move |app| {
             // Safety net: the frontend shows the window once it has painted; if that never happens

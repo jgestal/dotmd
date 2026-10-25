@@ -3,10 +3,10 @@
 import { EditorSelection, type SelectionRange } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import { copyLineDown, copyLineUp, deleteLine, moveLineDown, moveLineUp, selectLine } from '@codemirror/commands';
-import { openSearchPanel, gotoLine, selectNextOccurrence, selectSelectionMatches } from '@codemirror/search';
+import { openSearchPanel, findNext, findPrevious, gotoLine, selectNextOccurrence, selectSelectionMatches } from '@codemirror/search';
 
 export type SourceCommand =
-  | 'find' | 'replace' | 'gotoLine' | 'selectNext' | 'selectAllMatches'
+  | 'find' | 'findNext' | 'findPrevious' | 'replace' | 'gotoLine' | 'selectNext' | 'selectAllMatches'
   | 'cursorAbove' | 'cursorBelow' | 'selectLine' | 'duplicateLine' | 'deleteLine' | 'moveLineUp' | 'moveLineDown'
   | 'upper' | 'lower' | 'title' | 'sortLines' | 'sortLinesDesc' | 'uniqueLines' | 'trimTrailing' | 'joinLines';
 
@@ -61,6 +61,8 @@ const collator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'bas
 export function runSourceCommand(view: EditorView, cmd: SourceCommand): boolean {
   switch (cmd) {
     case 'find': return openSearchPanel(view);
+    case 'findNext': return findNext(view);
+    case 'findPrevious': return findPrevious(view);
     case 'replace': {
       openSearchPanel(view);
       requestAnimationFrame(() => (view.dom.querySelector('.cm-search input[name=replace]') as HTMLInputElement | null)?.focus());

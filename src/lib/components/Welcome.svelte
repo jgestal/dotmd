@@ -15,7 +15,7 @@
     <div class="actions">
       <button class="big" onclick={openFileDialog}><Icon name="filetext" size={20} /><span>{t('welcome.openFile')}</span><kbd>{modKey}O</kbd></button>
       <button class="big" onclick={() => openFolder()}><Icon name="folder" size={20} /><span>{t('welcome.openFolder')}</span><kbd>{modKey}⇧O</kbd></button>
-      <button class="big" onclick={newDoc}><Icon name="plus" size={20} /><span>{t('welcome.new')}</span><kbd>{modKey}N</kbd></button>
+      <button class="big" onclick={() => newDoc()}><Icon name="plus" size={20} /><span>{t('welcome.new')}</span><kbd>{modKey}N</kbd></button>
     </div>
     <div class="tips">
       <span><kbd>{modKey}P</kbd> {t('cmd.quickOpen')}</span>

@@ -38,7 +38,8 @@ async function build(nodes: MenuNode[]): Promise<(MenuItem | CheckMenuItem | Sub
   return out;
 }
 
-const itemsFor = (menu: MenuId) => build(menuTree(allCommands(), menu));
+const itemsFor = (menu: MenuId, skip: string[] = []) => build(menuTree(allCommands().filter((c) => !skip.includes(c.id)), menu));
+const run = (id: string) => () => { const c = allCommands().find((x) => x.id === id); if (c) runCommand(c); };
 
 async function recentMenu() {
   const items = [];
@@ -79,8 +80,7 @@ async function aboutItem() {
 async function windowMenu() {
   const items = [
     await PredefinedMenuItem.new({ item: 'Minimize' }),
-    await PredefinedMenuItem.new({ item: 'Maximize' }),
-    await PredefinedMenuItem.new({ item: 'Fullscreen' }),
+    await PredefinedMenuItem.new({ item: 'Maximize', text: isMac ? t('menu.zoom') : undefined }),
   ];
   if (app.tabs.length) items.push(await sep());
   for (const [i, tab] of app.tabs.slice(0, 20).entries()) {
@@ -106,6 +106,8 @@ export async function installMenu() {
         text: 'DotMD',
         items: [
           await aboutItem(),
+          // macOS convention: updates are checked from the application menu.
+          await MenuItem.new({ id: 'app.updates', text: t('cmd.checkUpdates'), action: run('help.updates') }),
           await sep(),
           await settingsItem(),
           await sep(),
@@ -125,7 +127,7 @@ export async function installMenu() {
   const at = fileItems.findIndex((i) => (i as MenuItem).id === 'file.openFolder') + 1;
   fileItems.splice(at, 0, await recentMenu());
   // Windows and Linux: Settings and Exit live in the File menu.
-  const fileTail = isMac ? [] : [await sep(), await settingsItem(), await sep(), await PredefinedMenuItem.new({ item: 'Quit' })];
+  const fileTail = isMac ? [] : [await sep(), await settingsItem(), await sep(), await PredefinedMenuItem.new({ item: 'Quit', text: t('menu.exit') })];
   submenus.push(await Submenu.new({ text: t('menu.file'), items: [...fileItems, ...fileTail] }));
   submenus.push(
     await Submenu.new({
@@ -144,11 +146,12 @@ export async function installMenu() {
     }),
   );
   submenus.push(await Submenu.new({ text: t('menu.format'), items: await itemsFor('format') }));
-  submenus.push(await Submenu.new({ text: t('menu.view'), items: await itemsFor('view') }));
+  // Full screen lives in View (macOS adds the globe/fn-F shortcut, F11 elsewhere).
+  submenus.push(await Submenu.new({ text: t('menu.view'), items: [...(await itemsFor('view')), await sep(), await PredefinedMenuItem.new({ item: 'Fullscreen', text: t('menu.fullscreen') })] }));
   const go = await itemsFor('go');
   if (go.length) submenus.push(await Submenu.new({ text: t('menu.go'), items: go }));
   submenus.push(await windowMenu());
-  const help = await itemsFor('help');
+  const help = await itemsFor('help', isMac ? ['help.updates'] : []);
   if (!isMac) help.push(await sep(), await aboutItem());
   submenus.push(await Submenu.new({ text: t('menu.help'), items: help }));
   const menu = await Menu.new({ items: submenus });

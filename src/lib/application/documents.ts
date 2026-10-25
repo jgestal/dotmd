@@ -237,8 +237,28 @@ export function createDocuments(d: DocumentDeps) {
     closeTabsToLeft: (i?: number) => closeTabs('left', i),
     onExternalChange,
     replaceContent,
-    newDoc() {
-      addTab({ path: null, content: '', saved: '', mode: d.settings.defaultMode === 'preview' ? 'source' : d.settings.defaultMode, crlf: false }, false);
+    /** A new untitled document (optionally with content, e.g. the Markdown guide, opened to read). */
+    newDoc(content = '', mode?: Mode) {
+      addTab({ path: null, content, saved: content, mode: mode ?? (d.settings.defaultMode === 'preview' ? 'source' : d.settings.defaultMode), crlf: false }, false);
+    },
+    /** File ▸ Revert to Saved: drops unsaved edits after asking, and reloads the file from disk. */
+    async revert(): Promise<boolean> {
+      if (!state.path) return false;
+      if (isDirty()) {
+        const ok = await s.dialogs.confirm({
+          title: s.t('dlg.revertTitle'), message: s.t('dlg.revertBody', { name: docName() }), ok: s.t('dlg.revert'), cancel: s.t('common.cancel'),
+        });
+        if (!ok) return false;
+      }
+      try {
+        const disk = fromDisk(await s.fs.readText(state.path));
+        state.crlf = disk.crlf;
+        replaceContent(disk.text, true);
+        return true;
+      } catch (e) {
+        report(e, state.path);
+        return false;
+      }
     },
     async openFileDialog() {
       for (const f of await s.dialogs.pickFiles({ multiple: true, filters: d.fileFilters() })) await openPath(f);
@@ -288,7 +308,8 @@ export function createDocuments(d: DocumentDeps) {
       history.clear();
     },
     async handleDroppedPaths(paths: string[]) {
-      for (const p of paths) if ((await s.fs.kind(p)) === 'dir') { await d.workspace.openFolder(p); break; }
+      // Every dropped folder joins the workspace; text files open in tabs.
+      for (const p of paths) if ((await s.fs.kind(p)) === 'dir') await d.workspace.openFolder(p);
       for (const f of paths.filter(d.isTextPath)) await openPath(f);
     },
     toggleTaskLine(line: number) {

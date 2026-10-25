@@ -17,6 +17,7 @@
   import CommandPalette from '$lib/components/CommandPalette.svelte';
   import QuickOpen from '$lib/components/QuickOpen.svelte';
   import Presentation from '$lib/components/Presentation.svelte';
+  import Shortcuts from '$lib/components/Shortcuts.svelte';
   import { allCommands, handleShortcut, setMode } from '$lib/commands';
   import { installMenu, syncMenuState } from '$lib/menu';
   import { app, settings, session, isDirty, focusActive, type Mode } from '$lib/state.svelte';
@@ -113,6 +114,11 @@
     void snapshot;
     clearTimeout(prefsTimer);
     prefsTimer = setTimeout(() => void preferences.push(), 1200);
+  });
+
+  // The OS window knows the open file and whether it is unsaved (macOS: dot in the close button).
+  $effect(() => {
+    void services.window.setDocument(app.docOpen ? app.path : null, app.docOpen && isDirty());
   });
 
   // Autosave a couple of seconds after typing stops.
@@ -267,6 +273,7 @@
   {#if app.paletteOpen}<CommandPalette />{/if}
   {#if app.quickOpen}<QuickOpen />{/if}
   {#if app.presenting}<Presentation />{/if}
+  {#if app.shortcutsOpen}<Shortcuts />{/if}
   <PromptDialog />
 </div>
 

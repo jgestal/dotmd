@@ -223,6 +223,8 @@ async function runScenario(file, name) {
       unregisterCallback: () => {},
       convertFileSrc: (p) => 'http://127.0.0.1:1431/file?path=' + encodeURIComponent(p),
       invoke: async (cmd, args) => {
+        // Every native call is recorded, so scenarios can check what reached the OS.
+        (window.__calls ??= []).push({ cmd, args: JSON.parse(JSON.stringify(args ?? {}, (k, v) => (typeof v === 'function' ? undefined : v))) });
         // Native dialogs: answer with window.__dialogAnswer (set by a scenario step), default "cancel".
         if (cmd === 'plugin:event|listen') {
           window.__listeners.push({ event: args.event, handler: args.handler, id: window.__listeners.length + 1 });

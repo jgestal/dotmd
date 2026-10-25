@@ -6,6 +6,7 @@
   import { t } from '../i18n';
   import { activateTab, closeOtherTabs, closeTab, closeTabsToLeft, closeTabsToRight, docName, moveTab, newDoc } from '../actions';
   import { pointerDrag } from '../drag';
+  import { services } from '../container';
   import { isFavorite, toggleFavorite } from '../workspace.svelte';
 
   let dropAt = $state(-1);
@@ -49,6 +50,7 @@
         target: '.tabbar .tab',
         onOver: (el) => (dropAt = el ? Number(el.dataset.index) : -1),
         onDrop: (el) => { moveTab(i, Number(el.dataset.index)); dropAt = -1; },
+        onOut: () => { dropAt = -1; const p = i === app.activeTab ? app.path : tab.path; if (p) void services.window.dragOut([p]).catch(() => {}); },
       })}
     >
       <span class="name">{docName(i === app.activeTab ? app.path : tab.path)}</span>
@@ -57,7 +59,7 @@
       </button>
     </div>
   {/each}
-  <button class="tb add" onclick={newDoc} title={t('cmd.new')}><Icon name="plus" size={14} /></button>
+  <button class="tb add" onclick={() => newDoc()} title={t('cmd.new')}><Icon name="plus" size={14} /></button>
 </div>
 
 <style>

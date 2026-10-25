@@ -63,6 +63,8 @@
     target: '.tree-row[data-dir], .ws-title, .cm-content, .milkdown .ProseMirror',
     // Onto a folder: move. Into the editor: insert a link (or the image) to this file.
     onDrop: (el) => (el.dataset.path ? movePath(entry.path, el.dataset.path) : !entry.is_dir && insertFileLink(entry.path)),
+    // Out of the window: a real file drag (copy to Finder/Explorer, attach to an e-mail…).
+    onOut: () => void services.window.dragOut([entry.path]).catch(() => {}),
   })}
   data-dir={entry.is_dir ? '' : undefined}
   data-path={entry.path}
