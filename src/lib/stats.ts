@@ -124,3 +124,10 @@ export function formatMinutes(words: number, wpm: number): string {
   if (m < 1) return '<1';
   return Math.round(m).toString();
 }
+
+/** Word count with the goal, for the distraction-free bar: text and progress (0–1). */
+export function goalProgress(words: number, goal: number, lang: string, wordsLabel: string): { text: string; progress: number | null } {
+  const n = (x: number) => x.toLocaleString(lang);
+  if (goal <= 0) return { text: `${n(words)} ${wordsLabel}`, progress: null };
+  return { text: `${n(words)} / ${n(goal)} ${wordsLabel}`, progress: Math.min(1, words / goal) };
+}

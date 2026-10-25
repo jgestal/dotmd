@@ -3,7 +3,7 @@ import { revealItemInDir } from '@tauri-apps/plugin-opener';
 import { app, toast } from './state.svelte';
 import { t } from './i18n';
 import { askFields } from './prompt.svelte';
-import { dirname, join, relative } from './path';
+import { dirname, join, linkPath } from './path';
 import { openFolder, openPath, renamePath, trashPath } from './actions';
 import { exportRequest } from './exportRequest.svelte';
 import { files } from './container';
@@ -51,8 +51,7 @@ export async function treeContextMenu(entry: Entry) {
       // Relative to the open document (ready to paste as a link), else to its workspace folder.
       id: 'copyRel', text: t('ctx.copyRelative'),
       action: async () => {
-        const from = app.path && app.path !== entry.path ? dirname(app.path) : folderOf(entry.path) ?? dirname(entry.path);
-        await navigator.clipboard.writeText(relative(from, entry.path).replace(/\\/g, '/'));
+        await navigator.clipboard.writeText(linkPath(entry.path, app.path, folderOf(entry.path)));
         toast(t('toast.copied'), 1000);
       },
     },

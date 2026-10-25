@@ -25,7 +25,7 @@
   import { toggleFocusHighlight } from '$lib/actions';
   import { preloadSounds } from '$lib/sound';
   import { forwardConsole } from '$lib/log';
-  import { countWords } from '$lib/stats';
+  import { countWords, goalProgress } from '$lib/stats';
   import { addWritingTime } from '$lib/domain/documents';
   import { runCliExport } from '$lib/cli';
   import { scheduleUpdateCheck } from '$lib/updates';
@@ -70,10 +70,8 @@
   let zenHover = $state(false);
   let zenTyping = $state(false);
   let zenTimer: ReturnType<typeof setTimeout> | undefined;
-  const zenCount = $derived(app.zen ? countWords(app.content) : 0);
-  const zenWords = $derived(app.zen ? (settings.wordGoal > 0
-    ? `${zenCount.toLocaleString(settings.lang)} / ${settings.wordGoal.toLocaleString(settings.lang)} ${t('stats.words')}`
-    : `${zenCount.toLocaleString(settings.lang)} ${t('stats.words')}`) : '');
+  const zenGoal = $derived(app.zen ? goalProgress(countWords(app.content), settings.wordGoal, settings.lang, t('stats.words')) : null);
+  const zenWords = $derived(zenGoal?.text ?? '');
   function zenMouse() {
     if (!app.zen) return;
     zenTyping = false;
@@ -268,7 +266,7 @@
       <button class="tb" class:on={focusActive()} onclick={toggleFocusHighlight} title={t('cmd.toggleFocus')}><Icon name="focus" /></button>
       <button class="tb" class:on={settings.typewriterScroll} onclick={() => (settings.typewriterScroll = !settings.typewriterScroll)} title={t('set.typewriterScroll')}><Icon name="target" /></button>
       <span class="zen-words">{zenWords}</span>
-      {#if settings.wordGoal > 0}<span class="zen-goal" title={t('stats.goal')}><i style:width="{Math.min(100, (zenCount / settings.wordGoal) * 100)}%"></i></span>{/if}
+      {#if zenGoal?.progress != null}<span class="zen-goal" title={t('stats.goal')}><i style:width="{zenGoal.progress * 100}%"></i></span>{/if}
       <button class="tb" onclick={toggleZen} title={t('zen.exit')}><Icon name="x" /></button>
     </div>
     <div class="zen-hint chrome">{t('zen.exit')}</div>

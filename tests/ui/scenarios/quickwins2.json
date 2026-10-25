@@ -1,133 +1,60 @@
 {
- "open": "$FIX/README.md",
- "settings": {
-  "wordGoal": 100,
-  "zenFullscreen": false,
-  "theme": "modern"
- },
- "actions": [
-  {
-   "waitFor": "document.querySelector('.preview a[href=\"notes/second.md\"]')",
-   "wait": 300
-  },
-  {
-   "eval": "{ document.querySelector('.preview a[href=\"notes/second.md\"]').dispatchEvent(new MouseEvent('mouseover', { bubbles: true })) }",
-   "waitFor": "document.querySelector('.peek')?.textContent.includes('Second note')",
-   "shot": "peek"
-  },
-  {
-   "eval": "{ document.querySelector('.preview a[href=\"notes/second.md\"]').dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body })) }",
-   "wait": 200
-  },
-  {
-   "assert": "!document.querySelector('.peek')"
-  },
-  {
-   "chord": [
-    "Mod",
-    "Digit2"
-   ],
-   "waitFor": "document.querySelector('.cm-content')",
-   "wait": 300
-  },
-  {
-   "eval": "{ const line = [...document.querySelectorAll('.cm-line')].find(l => l.textContent.includes('another note')); const w = document.createTreeWalker(line, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode()) && !n.textContent.includes('another')); const r = document.createRange(); const i = n.textContent.indexOf('another'); r.setStart(n, i + 2); r.setEnd(n, i + 3); const b = r.getBoundingClientRect(); document.querySelector('.cm-content').dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: b.left + 1, clientY: b.top + b.height / 2, metaKey: true, ctrlKey: !navigator.platform.includes('Mac'), button: 0 })); }",
-   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'second.md'"
-  },
-  {
-   "chord": [
-    "Mod",
-    "KeyW"
-   ],
-   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'README.md'"
-  },
-  {
-   "chord": [
-    "Mod",
-    "Shift",
-    "KeyT"
-   ],
-   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'second.md'"
-  },
-  {
-   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/long.md')) }",
-   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'long.md'",
-   "wait": 300
-  },
-  {
-   "chord": [
-    "Mod",
-    "Digit1"
-   ],
-   "waitFor": "document.querySelectorAll('.preview h2').length > 2",
-   "wait": 400
-  },
-  {
-   "eval": "{ document.querySelector('.preview-scroll').scrollTop = 1500; document.querySelector('.preview-scroll').dispatchEvent(new Event('scroll')); }",
-   "wait": 300
-  },
-  {
-   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/README.md')) }",
-   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'README.md'",
-   "wait": 600
-  },
-  {
-   "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/long.md')) }",
-   "waitFor": "document.querySelector('.topbar .name')?.textContent === 'long.md'",
-   "wait": 900
-  },
-  {
-   "assert": "Math.abs(document.querySelector('.preview-scroll').scrollTop - 1500) < 40 || document.querySelector('.preview-scroll').scrollTop"
-  },
-  {
-   "chord": [
-    "Mod",
-    "Digit2"
-   ],
-   "waitFor": "document.querySelector('.cm-content')",
-   "wait": 300
-  },
-  {
-   "eval": "{ document.querySelector('.cm-content').focus(); import('/src/lib/commands.ts').then(m => m.runCommand(m.allCommands().find(c => c.id === 'fmt.dateLong'))) }",
-   "wait": 400
-  },
-  {
-   "eval": "{ import('/src/lib/state.svelte.ts').then(m => (window.__content = m.app.content)) }",
-   "waitFor": "window.__content"
-  },
-  {
-   "assert": "window.__content.includes(String(new Date().getFullYear())) && /[A-Z][a-z]+ \\d{1,2}, \\d{4}/.test(window.__content)"
-  },
-  {
-   "eval": "{ document.querySelector('.files-bar [data-sort]').click() }",
-   "wait": 300
-  },
-  {
-   "assert": "document.querySelector('.files-bar [data-sort]').dataset.sort === 'modified'"
-  },
-  {
-   "eval": "{ import('/src/lib/container.ts').then(m => m.files.duplicate(window.__FIX + '/table.md')) }",
-   "waitFor": "[...document.querySelectorAll('.tree-row')].some(r => r.textContent.includes('table copy.md'))"
-  },
-  {
-   "chord": [
-    "Mod",
-    "Shift",
-    "Enter"
-   ],
-   "wait": 300
-  },
-  {
-   "eval": "{ window.dispatchEvent(new MouseEvent('mousemove', { clientX: 300, clientY: 20 })) }",
-   "wait": 300,
-   "shot": "zen-goal"
-  },
-  {
-   "assert": "/ 100 words/.test(document.querySelector('.zen-words').textContent) && !!document.querySelector('.zen-goal i')"
-  },
-  {
-   "keys": "Escape",
-   "wait": 200
-  }
- ]
+  "open": "$FIX/README.md",
+  "settings": { "wordGoal": 100, "zenFullscreen": false, "theme": "modern", "stats": { "session": true } },
+  "actions": [
+    { "waitFor": "document.querySelector('.preview a[href=\"notes/second.md\"]')", "wait": 300 },
+
+    { "eval": "{ document.querySelector('.preview a[href=\"https://tauri.app\"]').dispatchEvent(new MouseEvent('mouseover', { bubbles: true })) }", "wait": 800 },
+    { "assert": "!document.querySelector('.peek')" },
+    { "eval": "{ document.querySelector('.preview a[href=\"https://tauri.app\"]').dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body })) }" },
+    { "eval": "{ document.querySelector('.preview a[href=\"notes/second.md\"]').dispatchEvent(new MouseEvent('mouseover', { bubbles: true })) }", "waitFor": "document.querySelector('.peek')?.textContent.includes('Second note')", "shot": "peek" },
+    { "assert": "document.querySelector('.peek .peek-name').textContent === 'second.md'" },
+    { "eval": "{ document.querySelector('.preview a[href=\"notes/second.md\"]').dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body })) }", "wait": 200 },
+    { "assert": "!document.querySelector('.peek')" },
+
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')", "wait": 300 },
+    { "eval": "{ window.__cmdClick = (text) => { const line = [...document.querySelectorAll('.cm-line')].find(l => l.textContent.includes(text)); const w = document.createTreeWalker(line, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode()) && !n.textContent.includes(text)); const r = document.createRange(); const i = n.textContent.indexOf(text); r.setStart(n, i + 1); r.setEnd(n, i + 2); const b = r.getBoundingClientRect(); document.querySelector('.cm-content').dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: b.left + 1, clientY: b.top + b.height / 2, metaKey: true, ctrlKey: !navigator.platform.includes('Mac'), button: 0 })); }; window.__calls = []; window.__cmdClick('the docs'); }", "wait": 300 },
+    { "assert": "window.__calls.some(c => c.cmd === 'plugin:opener|open_url' && JSON.stringify(c.args).includes('https://tauri.app')) && document.querySelector('.topbar .name').textContent === 'README.md'" },
+    { "eval": "{ window.__cmdClick('another note') }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'second.md'" },
+
+    { "chord": ["Mod", "KeyW"], "waitFor": "document.querySelector('.topbar .name')?.textContent === 'README.md'" },
+    { "chord": ["Mod", "Shift", "KeyT"], "waitFor": "document.querySelector('.topbar .name')?.textContent === 'second.md'" },
+    { "assert": "[...document.querySelectorAll('.tabbar .tab')].length === 2" },
+
+    { "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/long.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'long.md'", "wait": 300 },
+    { "chord": ["Mod", "Digit1"], "waitFor": "document.querySelectorAll('.preview h2').length > 2", "wait": 400 },
+    { "eval": "{ const s = document.querySelector('.preview-scroll'); s.scrollTop = 1500; s.dispatchEvent(new Event('scroll')); }", "wait": 300 },
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-scroller')", "wait": 400 },
+    { "eval": "{ const s = document.querySelector('.cm-scroller'); s.scrollTop = 900; s.dispatchEvent(new Event('scroll')); }", "wait": 300 },
+    { "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/README.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'README.md'", "wait": 600 },
+    { "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/long.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'long.md'", "wait": 700 },
+    { "assert": "Math.abs(document.querySelector('.cm-scroller').scrollTop - 900) < 40 || document.querySelector('.cm-scroller').scrollTop" },
+    { "chord": ["Mod", "Digit1"], "wait": 900 },
+    { "assert": "Math.abs(document.querySelector('.preview-scroll').scrollTop - 1500) < 40 || document.querySelector('.preview-scroll').scrollTop" },
+
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')", "wait": 300 },
+    { "eval": "{ window.__S = import('/src/lib/state.svelte.ts'); window.__S.then(m => { window.__ms0 = m.app.writingMs; }); document.querySelector('.cm-content').focus(); }", "wait": 200 },
+    { "type": "ab", "wait": 300 },
+    { "eval": "{ window.__S.then(m => { window.__ms1 = m.app.writingMs; m.app.writingMs = 5 * 60_000; }) }", "wait": 300 },
+    { "assert": "window.__ms1 > window.__ms0 && document.querySelector('.statusbar').textContent.includes('5 min writing')" },
+
+    { "eval": "{ import('/src/lib/commands.ts').then(m => m.runCommand(m.allCommands().find(c => c.id === 'fmt.dateLong'))) }", "wait": 400 },
+    { "eval": "{ window.__S.then(m => (window.__content = m.app.content)) }", "waitFor": "window.__content" },
+    { "assert": "new RegExp(new Intl.DateTimeFormat('en', { dateStyle: 'long' }).format(new Date())).test(window.__content)" },
+
+    { "eval": "{ import('/src/lib/container.ts').then(m => m.files.duplicate(window.__FIX + '/table.md')) }", "waitFor": "[...document.querySelectorAll('.tree-row')].some(r => r.textContent.trim() === 'table copy.md')" },
+    { "eval": "{ window.__TAURI_INTERNALS__.invoke('read_text', { path: window.__FIX + '/table copy.md' }).then(t => (window.__copy = t)); window.__TAURI_INTERNALS__.invoke('read_text', { path: window.__FIX + '/table.md' }).then(t => (window.__orig = t)); }", "waitFor": "window.__copy && window.__orig" },
+    { "assert": "window.__copy === window.__orig" },
+
+    { "eval": "{ window.__files = () => [...document.querySelectorAll('.ws-section > .tree > .tree-row:not([data-dir])')].map(r => r.textContent.trim()); window.__before = window.__files(); document.querySelector('.files-bar [data-sort]').click(); }", "wait": 500 },
+    { "assert": "document.querySelector('.files-bar [data-sort]').dataset.sort === 'modified' && window.__files()[0] === 'table copy.md' && window.__before[0] === 'deck.md'" },
+    { "eval": "{ document.querySelector('.files-bar [data-sort]').click() }", "wait": 500 },
+    { "assert": "JSON.stringify(window.__files()) === JSON.stringify([...window.__files()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })))" },
+
+    { "chord": ["Mod", "Shift", "Enter"], "wait": 300 },
+    { "eval": "{ window.dispatchEvent(new MouseEvent('mousemove', { clientX: 300, clientY: 20 })) }", "wait": 300, "shot": "zen-goal" },
+    { "eval": "{ window.__S.then(m => import('/src/lib/stats.ts').then(st => (window.__words = st.countWords(m.app.content)))) }", "waitFor": "window.__words > 0" },
+    { "assert": "document.querySelector('.zen-words').textContent.includes(`${window.__words.toLocaleString('en')} / 100 words`) && Math.abs(parseFloat(document.querySelector('.zen-goal i').style.width) - Math.min(100, window.__words)) < 0.5" },
+    { "keys": "Escape", "wait": 200 }
+  ]
 }

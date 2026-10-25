@@ -48,6 +48,15 @@ export function relative(fromDir: string, to: string): string {
   return [...Array(a.length - i).fill('..'), ...b.slice(i)].join('/');
 }
 
+/**
+ * Path to paste as a link to `target`: relative to the open document's folder, or (no document,
+ * or the target is the document itself) to the target's workspace folder.
+ */
+export function linkPath(target: string, openDoc: string | null, workspaceFolder: string | null): string {
+  const from = openDoc && openDoc !== target ? dirname(openDoc) : workspaceFolder ?? dirname(target);
+  return relative(from, target);
+}
+
 export type DocKind = 'markdown' | 'csv' | 'code' | 'text';
 
 const MD_EXT = ['md', 'markdown', 'mdown', 'mkd', 'mdx'];

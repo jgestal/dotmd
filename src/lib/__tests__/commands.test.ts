@@ -63,3 +63,19 @@ describe('native menu layout', () => {
     expect(byId('theme.calm').menuLabel?.()).toBe('Calm');
   });
 });
+
+describe('quick-win commands', () => {
+  const byId = (id: string) => allCommands().find((c) => c.id === id)!;
+  it('reopens closed tabs with ⌘⇧T and moves table alignment out of its way', () => {
+    expect(byId('tab.reopen').shortcut).toBe('CmdOrCtrl+Shift+T');
+    expect(byId('tab.reopen').menu).toBe('file');
+    expect(byId('fmt.formatTable').shortcut).toBe('CmdOrCtrl+Alt+Shift+T');
+  });
+  it('offers the long date in Format ▸ Insert and find next/previous in Edit ▸ Find', () => {
+    expect(byId('fmt.dateLong').submenu).toBe('menu.insert');
+    const insert = menuTree(allCommands(), 'format').find((n) => n.kind === 'submenu' && n.label === 'menu.insert');
+    expect(JSON.stringify(insert)).toContain('fmt.dateLong');
+    expect(byId('edit.findNext').shortcut).toBe('CmdOrCtrl+G');
+    expect(byId('edit.findPrevious').shortcut).toBe('CmdOrCtrl+Shift+G');
+  });
+});

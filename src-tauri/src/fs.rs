@@ -259,6 +259,19 @@ mod tests {
     }
 
     #[test]
+    fn reports_modification_times_for_sorting_by_date() {
+        let d = temp("mtime");
+        std::fs::write(d.join("old.md"), "x").unwrap();
+        let before = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64;
+        std::fs::write(d.join("new.md"), "y").unwrap();
+        let list = list_dir(s(&d), false).unwrap();
+        let get = |n: &str| list.iter().find(|e| e.name == n).unwrap().modified;
+        assert!(get("old.md") > 0);
+        assert!(get("new.md") + 2000 >= before, "the new file was modified just now");
+        let _ = std::fs::remove_dir_all(&d);
+    }
+
+    #[test]
     fn walks_text_documents_recursively() {
         let d = temp("tree");
         std::fs::create_dir_all(d.join("a/b")).unwrap();
