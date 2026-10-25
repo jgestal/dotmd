@@ -371,6 +371,16 @@ const ca: Record<Key, string> = {
   'set.sheetTheme': 'Tema del full',
   'set.sheetHint': 'Només vesteix el full on llegeixes i escrius: tipus de lletra, colors, efectes i cursor. La resta de l’app es manté neutra.',
   'set.decorativeBody': 'Fes servir el tipus de lletra decoratiu també al text (menys llegible)',
+  'export.style': 'Format de sortida',
+  'export.styleSheet': 'Igual que el full',
+  'export.preview': 'Previsualització d’impressió',
+  'export.pages': '{n} pàgines',
+  'export.style.document': 'Document',
+  'export.style.book': 'Llibre',
+  'export.style.github': 'GitHub',
+  'export.style.typewriter': 'Màquina d’escriure',
+  'export.style.tractor': 'Paper continu',
+  'export.style.screenplay': 'Guió',
 };
 
 export default ca;

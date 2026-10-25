@@ -371,6 +371,16 @@ const it: Record<Key, string> = {
   'set.sheetTheme': 'Tema del foglio',
   'set.sheetHint': 'Veste solo il foglio dove leggi e scrivi: font, colori, effetti e cursore. Il resto dell’app resta neutro.',
   'set.decorativeBody': 'Usa il font decorativo anche per il testo (meno leggibile)',
+  'export.style': 'Formato di uscita',
+  'export.styleSheet': 'Come il foglio',
+  'export.preview': 'Anteprima di stampa',
+  'export.pages': '{n} pagine',
+  'export.style.document': 'Documento',
+  'export.style.book': 'Libro',
+  'export.style.github': 'GitHub',
+  'export.style.typewriter': 'Macchina da scrivere',
+  'export.style.tractor': 'Modulo continuo',
+  'export.style.screenplay': 'Sceneggiatura',
 };
 
 export default it;

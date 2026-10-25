@@ -5,8 +5,9 @@ import { settings } from './state.svelte';
 import { currentTheme } from './appearance.svelte';
 import { exportHtmlFile, exportPdfFile, exportSlidesFile, exportTheme } from './export';
 import { basename, dirname, extname, join, relative, stem } from './path';
+import { exportStyleTheme } from './themes';
 
-export interface CliExport { format: 'pdf' | 'html'; inputs: string[]; output: string | null; merge: boolean; slides?: boolean }
+export interface CliExport { format: 'pdf' | 'html'; inputs: string[]; output: string | null; merge: boolean; slides?: boolean; style?: string | null }
 
 /** Expands folders, and maps each input to its output path. Pure, so it is unit-tested. */
 export function planOutputs(files: { path: string; root: string | null }[], job: CliExport, outIsDir: boolean): { input: string; output: string }[] {
@@ -40,7 +41,8 @@ export async function runCliExport(): Promise<boolean> {
     await document.fonts.ready;
     const files = await expand(job.inputs);
     if (!files.length) throw new Error('no documents found');
-    const o = { theme: exportTheme(currentTheme()), pageSize: settings.pdfPageSize, margin: settings.pdfMargin, toc: job.merge };
+    const theme = job.style ? exportStyleTheme(job.style, currentTheme()) : exportTheme(currentTheme());
+    const o = { theme, pageSize: settings.pdfPageSize, margin: settings.pdfMargin, toc: job.merge };
     const noEngine = (ok: boolean) => { if (!ok) throw new Error('no PDF engine available'); };
     const write = (docs: { md: string; path: string }[], out: string) =>
       job.slides ? exportSlidesFile(docs[0].md, docs[0].path, out, o.theme).then(noEngine)

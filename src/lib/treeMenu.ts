@@ -35,8 +35,8 @@ export async function treeContextMenu(entry: Entry) {
     { id: 'sep1', item: 'Separator' as const },
     ...(!entry.is_dir
       ? [
-          { id: 'pdf', text: t('ctx.exportPdf'), action: () => exportRequest.quick(entry.path, 'pdf') },
-          { id: 'html', text: t('ctx.exportHtml'), action: () => exportRequest.quick(entry.path, 'html') },
+          { id: 'pdf', text: t('ctx.exportPdf'), action: () => exportRequest.open(entry.path, 'pdf') },
+          { id: 'html', text: t('ctx.exportHtml'), action: () => exportRequest.open(entry.path, 'html') },
           { id: 'sep2', item: 'Separator' as const },
         ]
       : []),

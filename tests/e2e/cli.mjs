@@ -85,6 +85,11 @@ check('exports slides as 16:9 PDF pages', () => {
   const box = fs.readFileSync(out).toString('latin1').match(/\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)/);
   assert(box && Math.abs(box[1] / box[2] - 16 / 9) < 0.02, `expected a 16:9 page, got ${box?.slice(1)}`);
 });
+check('exports with a chosen output format', () => {
+  const r = run('--export', 'html', 'docs/long.md', '--style', 'book', '-o', 'book-style.html');
+  assert(r.status === 0, r.stderr);
+  assert(fs.readFileSync(path.join(work, 'book-style.html'), 'utf8').includes('class="markdown-body theme-book'), 'expected the Book format');
+});
 check('missing input fails cleanly', () => {
   const r = run('--export', 'html', 'nope.md');
   assert(r.status === 1, `status ${r.status}`);

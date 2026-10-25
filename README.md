@@ -36,6 +36,7 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
   - Customize the accent color, fonts, size, line height, text width and paragraph spacing, or add your own CSS.
 - **Export** to self-contained HTML (fonts embedded) and to PDF, one file or **in batch**, with an option to merge everything into a single document and a table of contents. PDFs are printed natively on macOS and Linux.
 - **Command line**: `dotmd --export pdf notes.md notes.pdf` exports without opening a window.
+- **Output formats with live print preview**: Document, Book, GitHub, Typewriter, Continuous paper, Screenplay or the sheet theme, chosen when exporting and independent of how you write; the export dialog shows the real paginated pages as you change format, paper or margins (`dotmd --export pdf novel.md --style book`).
 - **Presentations**: any Markdown document is a deck — `---` separates slides, a paragraph starting with `Note:` holds the speaker notes. Present full screen (⌘⌥↩; arrows, N for notes, Esc), or export the slides as a 16:9 PDF or an HTML deck (`dotmd --export pdf talk.md --slides`).
 - **Languages**: English (default), Spanish, French, German, Italian, Portuguese, Catalan and Galician.
 - **Preferences** can be exported, imported or kept in a synced folder (Google Drive, Dropbox, iCloud…).

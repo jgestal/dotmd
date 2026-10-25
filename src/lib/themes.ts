@@ -1,6 +1,6 @@
 // Themes are data, not CSS, so the same values can style the app, Mermaid and exported files.
 
-export type ThemeKind = 'normal' | 'typewriter' | 'crt' | 'tractor' | 'calm' | 'dos' | 'terminal' | 'aqua' | 'screenplay';
+export type ThemeKind = 'normal' | 'typewriter' | 'crt' | 'tractor' | 'calm' | 'dos' | 'terminal' | 'aqua' | 'screenplay' | 'book';
 
 /** Optional visual effects; Settings only offers the ones the active theme supports. */
 export type ThemeEffect = 'scanlines' | 'glow' | 'flicker' | 'curvature' | 'paper' | 'ink';
@@ -228,6 +228,32 @@ export const EFFECT_SETTING = {
 /** Effects a theme supports that the user has left on. */
 export function activeEffects(theme: Theme, flags: Partial<Record<(typeof EFFECT_SETTING)[ThemeEffect], boolean>>): ThemeEffect[] {
   return (theme.effects ?? []).filter((e) => flags[EFFECT_SETTING[e]]);
+}
+
+/** A print-only look: a book page (serif, justified and hyphenated, indented paragraphs). */
+const BOOK: Theme = {
+  id: 'book', group: 'paper', name: 'Book', dark: false, kind: 'book',
+  fonts: { ui: F('system'), doc: F('sourceSerif'), heading: F('sourceSerif'), code: F('plexMono') },
+  vars: light({ '--fg': '#1a1a1a', '--fg-muted': '#555555', '--link': '#1a1a1a', '--accent': '#8b1e1e', '--code-bg': '#f4f2ee', '--code-fg': '#1a1a1a', '--quote': '#cfc8bb', '--border': '#d9d4ca' }),
+};
+
+/**
+ * Output formats for PDF and HTML, chosen when exporting and independent of the sheet theme
+ * (you can write on a CRT and print a clean document). "sheet" exports with the sheet theme.
+ */
+export const EXPORT_STYLES: { id: string; theme: Theme }[] = [
+  { id: 'document', theme: THEMES.find((t) => t.id === 'modern')! },
+  { id: 'book', theme: BOOK },
+  { id: 'github', theme: THEMES.find((t) => t.id === 'github')! },
+  { id: 'typewriter', theme: THEMES.find((t) => t.id === 'typewriter')! },
+  { id: 'tractor', theme: THEMES.find((t) => t.id === 'tractor')! },
+  { id: 'screenplay', theme: THEMES.find((t) => t.id === 'screenplay')! },
+];
+
+/** The theme an export uses: an output format, the sheet theme ("sheet"), or any theme id. */
+export function exportStyleTheme(id: string, sheet: Theme): Theme {
+  if (id === 'sheet' || id === 'current') return sheet;
+  return EXPORT_STYLES.find((s) => s.id === id)?.theme ?? THEMES.find((t) => t.id === id) ?? EXPORT_STYLES[0].theme;
 }
 
 export function resolveTheme(id: string, systemDark: boolean): Theme {

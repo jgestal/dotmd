@@ -4,7 +4,7 @@ import { app, settings, toast } from './state.svelte';
 import { t } from './i18n';
 import { dirname, join, relative, stem } from './path';
 import { currentTheme } from './appearance.svelte';
-import { exportHtmlFile, exportPdfFile, exportSlidesFile, exportTheme, type ExportOptions } from './export';
+import { exportHtmlFile, exportPdfFile, exportSlidesFile, exportTheme, previewDocument, type ExportOptions } from './export';
 
 export type Format = 'pdf' | 'html';
 
@@ -33,7 +33,22 @@ function fallbackPrint() {
 }
 
 export const exportRequest = $state({
+  /** File and format the dialog opens with (context menus, File ▸ Export to PDF…). */
+  preset: null as { path: string | null; format: Format } | null,
   running: false,
+
+  /** Opens the export dialog on one file, with its live preview. */
+  open(path: string | null, format: Format) {
+    this.preset = { path, format };
+    app.exportOpen = true;
+  },
+
+  /** Paginated preview of a document with the current export options. */
+  async preview(path: string | null, toc: boolean, widthPx: number) {
+    const doc = path ? await readDoc(path) : { md: app.content, path: null };
+    return previewDocument(doc, options(toc), widthPx);
+  },
+
   done: 0,
   total: 0,
   errors: [] as string[],

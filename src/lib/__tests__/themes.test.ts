@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { EFFECT_SETTING, FONTS, THEMES, THEME_GROUPS, activeEffects, resolveTheme } from '../themes';
+import { EFFECT_SETTING, EXPORT_STYLES, FONTS, THEMES, THEME_GROUPS, activeEffects, exportStyleTheme, resolveTheme } from '../themes';
 
 const byId = (id: string) => THEMES.find((t) => t.id === id)!;
 
@@ -81,6 +81,17 @@ describe('themes', () => {
       expect(byId(id).fonts.doc, id).toContain('IBM Plex Mono'); // legible body text
       expect(byId(id).display, id).toBeTruthy(); // decorative face kept for headings
     }
+  });
+
+  it('offer output formats independent of the sheet theme', () => {
+    const crt = byId('crt-green');
+    expect(EXPORT_STYLES.map((s) => s.id)).toEqual(['document', 'book', 'github', 'typewriter', 'tractor', 'screenplay']);
+    expect(exportStyleTheme('document', crt).id).toBe('modern');
+    expect(exportStyleTheme('book', crt).kind).toBe('book');
+    expect(exportStyleTheme('sheet', crt)).toBe(crt);
+    expect(exportStyleTheme('current', crt)).toBe(crt); // older settings
+    expect(exportStyleTheme('nord', crt).id).toBe('nord'); // older settings named a theme
+    expect(exportStyleTheme('bogus', crt).id).toBe('modern');
   });
 
   it('resolve "auto" by the system appearance', () => {

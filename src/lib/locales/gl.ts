@@ -371,6 +371,16 @@ const gl: Record<Key, string> = {
   'set.sheetTheme': 'Tema da folla',
   'set.sheetHint': 'Só viste a folla onde les e escribes: tipos de letra, cores, efectos e cursor. O resto da app mantense neutro.',
   'set.decorativeBody': 'Usar o tipo de letra decorativo tamén no texto (menos lexible)',
+  'export.style': 'Formato de saída',
+  'export.styleSheet': 'Igual ca a folla',
+  'export.preview': 'Vista previa de impresión',
+  'export.pages': '{n} páxinas',
+  'export.style.document': 'Documento',
+  'export.style.book': 'Libro',
+  'export.style.github': 'GitHub',
+  'export.style.typewriter': 'Máquina de escribir',
+  'export.style.tractor': 'Papel continuo',
+  'export.style.screenplay': 'Guión',
 };
 
 export default gl;

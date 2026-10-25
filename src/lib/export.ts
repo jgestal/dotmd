@@ -1,7 +1,7 @@
 import { services } from './container';
 import documentCss from './styles/document.css?raw';
 import { postProcess, renderDocument, escapeHtml } from './render';
-import { THEMES, type Theme } from './themes';
+import { exportStyleTheme, type Theme } from './themes';
 import { dirname, stem } from './path';
 import { settings } from './state.svelte';
 import { cssVars, fontsFor } from './appearance.svelte';
@@ -16,8 +16,7 @@ export interface ExportOptions {
 }
 
 export function exportTheme(current: Theme): Theme {
-  if (settings.exportTheme === 'current') return current;
-  return THEMES.find((t) => t.id === settings.exportTheme) ?? current;
+  return exportStyleTheme(settings.exportTheme, current);
 }
 
 function themeCss(theme: Theme): string {
@@ -188,7 +187,7 @@ function paginateFragment(frag: HTMLElement, o: ExportOptions): string {
   }
 }
 
-export async function buildDocument(docs: { md: string; path: string | null }[], o: ExportOptions, title: string, paged = false): Promise<string> {
+export async function buildDocument(docs: { md: string; path: string | null }[], o: ExportOptions, title: string, paged = false, embedFonts = settings.exportEmbedFonts): Promise<string> {
   const parts: string[] = [];
   for (let i = 0; i < docs.length; i++) {
     const frag = await renderFragment(docs[i].md, docs[i].path, o.theme);
@@ -207,7 +206,7 @@ export async function buildDocument(docs: { md: string; path: string | null }[],
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="generator" content="DotMD">
 <title>${escapeHtml(title)}</title>
-<style>${settings.exportEmbedFonts ? await embeddedFonts(o.theme) : ''}
+<style>${embedFonts ? await embeddedFonts(o.theme) : ''}
 ${themeCss(o.theme)}
 ${documentCss}
 ${printCss(o)}
@@ -224,6 +223,20 @@ ${parts.join('\n')}
 export async function exportHtmlFile(docs: { md: string; path: string | null }[], out: string, o: ExportOptions) {
   const html = await buildDocument(docs, o, docs.length === 1 && docs[0].path ? stem(docs[0].path) : stem(out));
   await services.exporter.writeHtml(out, html);
+}
+
+/**
+ * What the PDF will look like, for the export dialog: the same paginated document, with the sheets
+ * spaced on a grey desk and scaled to `widthPx`. Returns the HTML and the number of pages.
+ */
+export async function previewDocument(doc: { md: string; path: string | null }, o: ExportOptions, widthPx: number): Promise<{ html: string; pages: number }> {
+  const html = await buildDocument([doc], o, 'preview', true, true);
+  const [w] = PAPER_MM[o.pageSize] ?? PAPER_MM.A4;
+  const zoom = Math.max(0.15, (widthPx - 28) / ((w / 25.4) * 96));
+  const css = `<style>html{zoom:${zoom.toFixed(3)}}html,body{background:#8d8f93 !important}main.markdown-body.paged{padding:14px 0 !important}
+.paged .page{margin:0 auto 14px !important;box-shadow:0 2px 12px rgba(0,0,0,.35) !important}
+.theme-tractor.paged .page{margin-bottom:0 !important}</style>`;
+  return { html: html.replace('</head>', `${css}</head>`), pages: (html.match(/class="page"/g) ?? []).length };
 }
 
 /** The document as a deck: one 16:9 page per slide, text already fitted to each slide. */

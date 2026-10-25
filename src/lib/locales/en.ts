@@ -370,6 +370,16 @@ const en = {
   'set.sheetTheme': 'Sheet theme',
   'set.sheetHint': 'Dresses only the sheet where you read and write: fonts, colours, effects and the cursor. The rest of the app stays neutral.',
   'set.decorativeBody': 'Use the decorative font for body text too (less legible)',
+  'export.style': 'Output format',
+  'export.styleSheet': 'Same as the sheet',
+  'export.preview': 'Print preview',
+  'export.pages': '{n} pages',
+  'export.style.document': 'Document',
+  'export.style.book': 'Book',
+  'export.style.github': 'GitHub',
+  'export.style.typewriter': 'Typewriter',
+  'export.style.tractor': 'Continuous paper',
+  'export.style.screenplay': 'Screenplay',
 };
 
 export default en;

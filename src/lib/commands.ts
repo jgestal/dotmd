@@ -89,8 +89,8 @@ function base(): Command[] {
     { id: 'file.save', label: L('cmd.save'), shortcut: 'CmdOrCtrl+S', menu: 'file', separator: true, enabled: hasDoc, run: () => saveDoc() },
     { id: 'file.saveAs', label: L('cmd.saveAs'), shortcut: 'CmdOrCtrl+Shift+S', menu: 'file', enabled: hasDoc, run: () => saveDoc(true) },
     { id: 'file.export', label: L('cmd.export'), shortcut: 'CmdOrCtrl+Shift+E', menu: 'file', separator: true, run: () => (app.exportOpen = true) },
-    { id: 'file.exportPdf', label: L('cmd.exportPdf'), menu: 'file', enabled: hasDoc, run: () => exportRequest.quick(app.path, 'pdf') },
-    { id: 'file.exportHtml', label: L('cmd.exportHtml'), menu: 'file', enabled: hasDoc, run: () => exportRequest.quick(app.path, 'html') },
+    { id: 'file.exportPdf', label: L('cmd.exportPdf'), menu: 'file', enabled: hasDoc, run: () => exportRequest.open(app.path, 'pdf') },
+    { id: 'file.exportHtml', label: L('cmd.exportHtml'), menu: 'file', enabled: hasDoc, run: () => exportRequest.open(app.path, 'html') },
     { id: 'file.exportSlides', label: L('cmd.exportSlides'), menu: 'file', enabled: () => hasDoc() && !isPlainText(app.path), run: () => exportRequest.slides(app.path) },
     { id: 'file.print', label: L('cmd.print'), menu: 'file', enabled: hasDoc, run: () => window.print() },
 

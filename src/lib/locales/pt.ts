@@ -371,6 +371,16 @@ const pt: Record<Key, string> = {
   'set.sheetTheme': 'Tema da folha',
   'set.sheetHint': 'Veste só a folha onde lê e escreve: tipos de letra, cores, efeitos e cursor. O resto da aplicação mantém-se neutro.',
   'set.decorativeBody': 'Usar o tipo de letra decorativo também no texto (menos legível)',
+  'export.style': 'Formato de saída',
+  'export.styleSheet': 'Igual à folha',
+  'export.preview': 'Pré-visualização de impressão',
+  'export.pages': '{n} páginas',
+  'export.style.document': 'Documento',
+  'export.style.book': 'Livro',
+  'export.style.github': 'GitHub',
+  'export.style.typewriter': 'Máquina de escrever',
+  'export.style.tractor': 'Papel contínuo',
+  'export.style.screenplay': 'Guião',
 };
 
 export default pt;

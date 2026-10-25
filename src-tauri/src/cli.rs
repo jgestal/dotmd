@@ -10,6 +10,8 @@ Usage:
   dotmd --export pdf|html INPUT… [-o OUT]    export without opening a window
         --merge                              put every input into one file (needs -o FILE)
         --slides                             export as slides (--- separates them; 16:9 pages)
+        --style NAME                         output format: document, book, github, typewriter,
+                                             tractor, screenplay or sheet (default: as in Settings)
   dotmd --help | --version
 
 Examples:
@@ -18,6 +20,7 @@ Examples:
   dotmd --export html docs/ -o site/         → every document under docs/ into site/
   dotmd --export pdf a.md b.md --merge -o book.pdf
   dotmd --export pdf talk.md --slides        → talk.pdf, one slide per page
+  dotmd --export pdf novel.md --style book
 ";
 
 #[derive(Clone, Serialize, Debug, PartialEq)]
@@ -29,6 +32,8 @@ pub struct CliExport {
     pub output: Option<String>,
     pub merge: bool,
     pub slides: bool,
+    /// Output format id (None = the one chosen in Settings).
+    pub style: Option<String>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -66,6 +71,7 @@ pub fn parse(args: &[String], cwd: &Path) -> Cli {
     let mut output = None;
     let mut merge = false;
     let mut slides = false;
+    let mut style = None;
     let mut rest = args[i + 2..].iter();
     while let Some(a) = rest.next() {
         match a.as_str() {
@@ -75,6 +81,10 @@ pub fn parse(args: &[String], cwd: &Path) -> Cli {
             },
             "--merge" => merge = true,
             "--slides" => slides = true,
+            "--style" => match rest.next() {
+                Some(s) if !s.starts_with('-') => style = Some(s.to_lowercase()),
+                _ => return Cli::Error("--style needs a name".into()),
+            },
             s if s.starts_with('-') => return Cli::Error(format!("unknown option {s}")),
             s => inputs.push(absolute(s, cwd)),
         }
@@ -92,7 +102,7 @@ pub fn parse(args: &[String], cwd: &Path) -> Cli {
     if merge && slides {
         return Cli::Error("--slides and --merge cannot be combined".into());
     }
-    Cli::Export(CliExport { format, inputs, output, merge, slides })
+    Cli::Export(CliExport { format, inputs, output, merge, slides, style })
 }
 
 /// Puts a `dotmd` command on the PATH that runs this executable (like VS Code's "Install 'code'
@@ -180,6 +190,8 @@ mod tests {
         assert_eq!(batch.output.as_deref(), Some("/work/site"));
         assert!(e("--export pdf a.md b.md --merge -o book.pdf").merge);
         assert!(e("--export pdf talk.md --slides").slides);
+        assert_eq!(e("--export pdf a.md --style Book").style.as_deref(), Some("book"));
+        assert_eq!(e("--export pdf a.md").style, None);
         assert!(!e("--export pdf talk.md").slides);
     }
 
@@ -189,6 +201,7 @@ mod tests {
         assert!(matches!(parse(&args("--export pdf"), Path::new(CWD)), Cli::Error(_)));
         assert!(matches!(parse(&args("--export pdf a.md b.md --merge"), Path::new(CWD)), Cli::Error(_)));
         assert!(matches!(parse(&args("--export pdf a.md --bogus"), Path::new(CWD)), Cli::Error(_)));
+        assert!(matches!(parse(&args("--export pdf a.md --style"), Path::new(CWD)), Cli::Error(_)));
         assert!(matches!(parse(&args("--export pdf a.md b.md --merge --slides -o x.pdf"), Path::new(CWD)), Cli::Error(_)));
         assert_eq!(parse(&args("--help"), Path::new(CWD)), Cli::Help);
         assert_eq!(parse(&args("-V"), Path::new(CWD)), Cli::Version);

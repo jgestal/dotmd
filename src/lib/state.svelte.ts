@@ -75,7 +75,7 @@ export interface Settings {
   decorativeBody: boolean;
   pdfPageSize: 'A4' | 'Letter' | 'A5' | 'Legal';
   pdfMargin: number;
-  /** 'current' or any theme id. */
+  /** Output format id (themes.EXPORT_STYLES), 'sheet' for the sheet theme, or a theme id. */
   exportTheme: string;
   /** Folder (Google Drive, Dropbox, iCloud…) where preferences are kept in sync; local to this machine. */
   syncFolder: string | null;
@@ -142,7 +142,7 @@ export const DEFAULT_SETTINGS: Settings = {
   decorativeBody: false,
   pdfPageSize: 'A4',
   pdfMargin: 18,
-  exportTheme: 'current',
+  exportTheme: 'document',
   exportEmbedFonts: true,
   pageView: false,
   autoUpdate: true,

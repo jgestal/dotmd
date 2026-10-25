@@ -1,0 +1,14 @@
+{
+  "open": "$FIX/long.md",
+  "settings": { "theme": "crt-green", "exportTheme": "document" },
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1')" },
+    { "eval": "{ import('/src/lib/exportRequest.svelte.ts').then(m => m.exportRequest.open(window.__FIX + '/long.md', 'pdf')) }", "waitFor": "document.querySelector('.export .preview iframe')?.contentDocument?.querySelectorAll('.page').length > 1", "wait": 500, "shot": "document" },
+    { "assert": "(() => { const d = document.querySelector('.export .preview iframe').contentDocument; return d.querySelector('main').className.includes('theme-normal') && getComputedStyle(d.body).backgroundColor !== 'rgb(4, 11, 5)'; })()" },
+    { "assert": "/\\d+ pages/.test(document.querySelector('.preview-head').textContent) && document.querySelector('.file.current input')?.checked !== false" },
+    { "eval": "{ document.querySelector('.style[data-style=book]').click() }", "waitFor": "document.querySelector('.export .preview iframe')?.contentDocument?.querySelector('main.theme-book')", "wait": 400, "shot": "book" },
+    { "eval": "{ document.querySelector('.style[data-style=tractor]').click() }", "waitFor": "document.querySelector('.export .preview iframe')?.contentDocument?.querySelector('main.theme-tractor .page')", "wait": 400, "shot": "tractor" },
+    { "eval": "{ document.querySelector('.style[data-style=sheet]').click() }", "waitFor": "document.querySelector('.export .preview iframe')?.contentDocument?.querySelector('main.theme-crt')", "wait": 300 },
+    { "assert": "getComputedStyle(document.querySelector('.sidebar')).backgroundColor !== 'rgb(4, 11, 5)'" }
+  ]
+}

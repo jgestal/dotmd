@@ -371,6 +371,16 @@ const es: Record<Key, string> = {
   'set.sheetTheme': 'Tema de la hoja',
   'set.sheetHint': 'Solo viste la hoja donde lees y escribes: fuentes, colores, efectos y cursor. El resto de la app se mantiene neutro.',
   'set.decorativeBody': 'Usar la fuente decorativa también en el texto (menos legible)',
+  'export.style': 'Formato de salida',
+  'export.styleSheet': 'Igual que la hoja',
+  'export.preview': 'Vista previa de impresión',
+  'export.pages': '{n} páginas',
+  'export.style.document': 'Documento',
+  'export.style.book': 'Libro',
+  'export.style.github': 'GitHub',
+  'export.style.typewriter': 'Máquina de escribir',
+  'export.style.tractor': 'Papel continuo',
+  'export.style.screenplay': 'Guion',
 };
 
 export default es;

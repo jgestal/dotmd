@@ -371,6 +371,16 @@ const fr: Record<Key, string> = {
   'set.sheetTheme': 'Thème de la feuille',
   'set.sheetHint': 'N’habille que la feuille où vous lisez et écrivez : polices, couleurs, effets et curseur. Le reste de l’app reste neutre.',
   'set.decorativeBody': 'Utiliser aussi la police décorative pour le texte (moins lisible)',
+  'export.style': 'Format de sortie',
+  'export.styleSheet': 'Comme la feuille',
+  'export.preview': 'Aperçu avant impression',
+  'export.pages': '{n} pages',
+  'export.style.document': 'Document',
+  'export.style.book': 'Livre',
+  'export.style.github': 'GitHub',
+  'export.style.typewriter': 'Machine à écrire',
+  'export.style.tractor': 'Papier continu',
+  'export.style.screenplay': 'Scénario',
 };
 
 export default fr;

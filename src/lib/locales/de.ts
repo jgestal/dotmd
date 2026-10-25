@@ -371,6 +371,16 @@ const de: Record<Key, string> = {
   'set.sheetTheme': 'Blatt-Design',
   'set.sheetHint': 'Gestaltet nur das Blatt, auf dem du liest und schreibst: Schriften, Farben, Effekte und Cursor. Der Rest der App bleibt neutral.',
   'set.decorativeBody': 'Dekorative Schrift auch für den Fließtext verwenden (weniger gut lesbar)',
+  'export.style': 'Ausgabeformat',
+  'export.styleSheet': 'Wie das Blatt',
+  'export.preview': 'Druckvorschau',
+  'export.pages': '{n} Seiten',
+  'export.style.document': 'Dokument',
+  'export.style.book': 'Buch',
+  'export.style.github': 'GitHub',
+  'export.style.typewriter': 'Schreibmaschine',
+  'export.style.tractor': 'Endlospapier',
+  'export.style.screenplay': 'Drehbuch',
 };
 
 export default de;

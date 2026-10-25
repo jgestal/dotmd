@@ -2,7 +2,7 @@
   import Icon from './Icon.svelte';
   import { app, settings, DEFAULT_SETTINGS, type StatKey, type Settings } from '../state.svelte';
   import { t, LANGUAGES, type Key } from '../i18n';
-  import { THEMES, THEME_GROUPS, FONTS, EFFECT_SETTING, type ThemeEffect } from '../themes';
+  import { THEMES, THEME_GROUPS, EXPORT_STYLES, FONTS, EFFECT_SETTING, type ThemeEffect } from '../themes';
   import { keySound, bellSound, effectiveSound } from '../sound';
   import { currentTheme, sheet, sheetClass } from '../appearance.svelte';
   import { preferences } from '../container';
@@ -237,10 +237,10 @@
 
       {:else if section === 'export'}
         <div class="row">
-          <span>{t('export.theme')}</span>
+          <span>{t('export.style')}</span>
           <select bind:value={settings.exportTheme}>
-            <option value="current">{t('export.themeCurrent')}</option>
-            {#each THEME_GROUPS as g}<optgroup label={t(`theme.group.${g}` as Key)}>{#each THEMES.filter((x) => x.group === g) as th}<option value={th.id}>{th.name}</option>{/each}</optgroup>{/each}
+            {#each EXPORT_STYLES as s}<option value={s.id}>{t(`export.style.${s.id}` as Key)}</option>{/each}
+            <option value="sheet">{t('export.styleSheet')}</option>
           </select>
         </div>
         <div class="row">
