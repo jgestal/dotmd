@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, untrack } from 'svelte';
   import { createSource, execSource } from '../editor/source';
+  import { runSourceCommand } from '../editor/commands';
   import { app, settings, setEditorApi, focusModeNow, typewriterActive, soundActive } from '../state.svelte';
   import { docKind } from '../path';
   import { keySound } from '../sound';
@@ -38,6 +39,7 @@
       exec: (a) => execSource(view, a),
       focus: () => view.focus(),
       revealLine: (line) => ed?.revealLine(line),
+      run: (cmd) => { runSourceCommand(view, cmd); view.focus(); },
     });
     view.dom.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); insertLink(); }

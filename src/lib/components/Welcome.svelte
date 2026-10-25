@@ -1,6 +1,6 @@
 <script lang="ts">
   import Icon from './Icon.svelte';
-  import { session } from '../state.svelte';
+  import { session, clearHistory } from '../state.svelte';
   import { t } from '../i18n';
   import { basename, dirname, modKey } from '../path';
   import { newDoc, openFileDialog, openFolder, openPath } from '../actions';
@@ -22,6 +22,14 @@
       <span><kbd>{modKey}⇧P</kbd> {t('cmd.palette')}</span>
       <span><kbd>{modKey}⌥F</kbd> {t('cmd.focusWriting')}</span>
     </div>
+    {#if session.recentFolders?.length}
+      <h3>{t('welcome.recentFolders')}</h3>
+      <ul class="recent">
+        {#each session.recentFolders.slice(0, 5) as p}
+          <li><button onclick={() => openFolder(p)} title={p}><Icon name="folder" size={14} /><b>{basename(p)}</b><span>{dirname(p)}</span></button></li>
+        {/each}
+      </ul>
+    {/if}
     {#if session.recent.length}
       <h3>{t('welcome.recent')}</h3>
       <ul class="recent">
@@ -29,6 +37,9 @@
           <li><button onclick={() => openPath(p)} title={p}><Icon name="filetext" size={14} /><b>{basename(p)}</b><span>{dirname(p)}</span></button></li>
         {/each}
       </ul>
+    {/if}
+    {#if session.recent.length || session.recentFolders?.length}
+      <button class="clear" onclick={clearHistory}>{t('welcome.clearHistory')}</button>
     {/if}
   </div>
 </div>
@@ -51,6 +62,8 @@
   .big span { flex: 1; }
   .big :global(.icon) { color: var(--accent); }
   h3 { margin: 28px 0 8px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-muted); }
+  .clear { margin-top: 10px; border: 0; background: none; color: var(--fg-muted); font: 12px var(--font-ui); text-decoration: underline; cursor: default; }
+  .clear:hover { color: var(--fg); }
   .recent { list-style: none; margin: 0; padding: 0; text-align: left; }
   .recent button {
     display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: none; color: var(--fg); padding: 6px 8px;

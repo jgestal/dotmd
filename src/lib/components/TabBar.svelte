@@ -4,7 +4,7 @@
   import Icon from './Icon.svelte';
   import { app } from '../state.svelte';
   import { t } from '../i18n';
-  import { activateTab, closeTab, docName, moveTab, newDoc } from '../actions';
+  import { activateTab, closeOtherTabs, closeTab, closeTabsToLeft, closeTabsToRight, docName, moveTab, newDoc } from '../actions';
   import { pointerDrag } from '../drag';
 
   let dropAt = $state(-1);
@@ -17,13 +17,9 @@
     const menu = await Menu.new({
       items: [
         { id: 'close', text: t('tabs.close'), action: () => void closeTab(i) },
-        {
-          id: 'others', text: t('tabs.closeOthers'),
-          action: async () => {
-            const keep = app.tabs[i].id;
-            for (let j = app.tabs.length - 1; j >= 0; j--) if (app.tabs[j]?.id !== keep && !(await closeTab(j))) return;
-          },
-        },
+        { id: 'others', text: t('tabs.closeOthers'), enabled: app.tabs.length > 1, action: () => void closeOtherTabs(i) },
+        { id: 'right', text: t('tabs.closeRight'), enabled: i < app.tabs.length - 1, action: () => void closeTabsToRight(i) },
+        { id: 'left', text: t('tabs.closeLeft'), enabled: i > 0, action: () => void closeTabsToLeft(i) },
         ...(tab.path ? [{ id: 'reveal', text: t('ctx.reveal'), action: () => void revealItemInDir(tab.path!) }] : []),
       ],
     });

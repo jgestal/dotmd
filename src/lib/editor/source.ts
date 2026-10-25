@@ -1,4 +1,5 @@
-import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection, dropCursor, highlightSpecialChars, Decoration, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
+import { EditorView, keymap, lineNumbers, highlightActiveLine, drawSelection, dropCursor, highlightSpecialChars, rectangularSelection, crosshairCursor, Decoration, ViewPlugin, type DecorationSet, type ViewUpdate } from '@codemirror/view';
+import { runSourceCommand } from './commands';
 import { EditorState, Compartment, EditorSelection, RangeSetBuilder, StateEffect, type Extension } from '@codemirror/state';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
@@ -378,6 +379,9 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
         highlightActiveLine(),
         highlightSelectionMatches(),
         closeBrackets(),
+        EditorState.allowMultipleSelections.of(true),
+        rectangularSelection(), // Alt+drag selects a column
+        crosshairCursor(),
         search({ top: true }),
         syntaxHighlighting(mdHighlight),
         baseTheme,
@@ -396,6 +400,11 @@ export function createSource(parent: HTMLElement, o: SourceOptions) {
           ...[1, 2, 3, 4, 5, 6].map((level) => ({ key: `Mod-Alt-${level}`, run: fmt({ type: 'heading', level }) })),
           { key: 'Mod-Alt-0', run: fmt({ type: 'paragraph' }) },
           { key: 'Mod-Shift-t', run: fmt({ type: 'formatTable' }) },
+          { key: 'Mod-Alt-ArrowUp', run: (v) => runSourceCommand(v, 'cursorAbove') },
+          { key: 'Mod-Alt-ArrowDown', run: (v) => runSourceCommand(v, 'cursorBelow') },
+          { key: 'Mod-Shift-d', run: (v) => runSourceCommand(v, 'duplicateLine') },
+          { key: 'Mod-Shift-k', run: (v) => runSourceCommand(v, 'deleteLine') },
+          { key: 'Mod-l', run: (v) => runSourceCommand(v, 'selectLine') },
           ...closeBracketsKeymap,
           ...searchKeymap,
           ...historyKeymap,

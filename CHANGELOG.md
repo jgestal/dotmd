@@ -3,7 +3,7 @@
 ## 0.2.0
 
 - **Open any text file**: Markdown, plain text, logs, CSV/TSV (as a table), JSON, YAML, source code highlighted by language; UTF-8, UTF-16 and Latin-1; Windows line endings preserved.
-- **Page view** (⌘⇧L): the document on A4/Letter sheets with the PDF margins and page numbers; manual page breaks.
+- **Page view** (⌘⌥P): the document on A4/Letter sheets with the PDF margins and page numbers; manual page breaks.
 - **Focus writing** (⌘⌥F): full screen, only the line being typed lit, caret centered.
 - **Continuous paper theme** (green-bar tractor-feed paper, dot-matrix font) and **real typewriter sounds** with a margin bell.
 - **Tabs**, back/forward, **quick open** (⌘P), **command palette** (⌘⇧P), **folder search** (⌘⇧F), native menu bar with Open Recent.

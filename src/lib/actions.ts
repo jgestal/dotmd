@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import { open, save, ask, message } from '@tauri-apps/plugin-dialog';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { app, isDirty, session, settings, setContent, pushRecent, toast, getEditorApi, type Tab } from './state.svelte';
+import { app, isDirty, session, settings, setContent, pushRecent, pushRecentFolder, toast, getEditorApi, type Tab } from './state.svelte';
 import { askFields } from './prompt.svelte';
 import { preloadSounds } from './sound';
 import { t } from './i18n';
@@ -100,6 +100,20 @@ export async function closeTab(i = app.activeTab): Promise<boolean> {
   rewatch();
   return true;
 }
+
+/** Closes every tab for which `which(index)` is true, asking about unsaved ones; stops if one stays open. */
+async function closeTabsWhere(which: (i: number, keepId: number) => boolean, anchor: number) {
+  const keepId = app.tabs[anchor]?.id;
+  if (keepId === undefined) return;
+  for (let j = app.tabs.length - 1; j >= 0; j--) {
+    const here = app.tabs.findIndex((x) => x.id === keepId);
+    if (j !== here && which(j < here ? -1 : 1, keepId) && !(await closeTab(j))) return;
+  }
+  activateTab(app.tabs.findIndex((x) => x.id === keepId));
+}
+export const closeOtherTabs = (i = app.activeTab) => closeTabsWhere(() => true, i);
+export const closeTabsToRight = (i = app.activeTab) => closeTabsWhere((side) => side > 0, i);
+export const closeTabsToLeft = (i = app.activeTab) => closeTabsWhere((side) => side < 0, i);
 
 export function cycleTab(delta: number) {
   if (app.tabs.length < 2) return;
@@ -201,6 +215,7 @@ export async function openFolder(path?: string) {
   app.sidebar = true;
   app.sidebarTab = 'files';
   session.lastFolder = dir;
+  pushRecentFolder(dir);
   app.treeVersion++;
 }
 
@@ -322,6 +337,16 @@ export function toggleTypewriterMode() {
   void preloadSounds();
 }
 
+/** Focus highlight on/off in any mode (not only zen), keeping the chosen focus style. */
+export function toggleFocusHighlight() {
+  const on = settings.focusMode !== 'off' && !settings.focusOnlyZen;
+  if (on) settings.focusOnlyZen = true;
+  else {
+    if (settings.focusMode === 'off') settings.focusMode = 'line';
+    settings.focusOnlyZen = false;
+  }
+}
+
 export async function toggleZen() {
   app.zen = !app.zen;
   if (!app.zen) app.focusWriting = false;
@@ -368,6 +393,13 @@ export function insertFileLink(path: string) {
   const src = app.path ? relative(dirname(app.path), path) : path;
   if (isImagePath(path)) api.exec({ type: 'image', src, alt: stem(path) });
   else api.exec({ type: 'link', url: encodeURI(src), text: stem(path) });
+}
+
+/** Inserts a table of contents at the top, or refreshes the existing one. */
+export async function updateToc() {
+  const { applyToc } = await import('./toc');
+  const next = applyToc(app.content);
+  if (next !== app.content) setContent(next, false);
 }
 
 export async function insertLink() {

@@ -18,8 +18,9 @@
   import QuickOpen from '$lib/components/QuickOpen.svelte';
   import { handleShortcut, setMode } from '$lib/commands';
   import { installMenu } from '$lib/menu';
-  import { app, settings, session, isDirty, type Mode } from '$lib/state.svelte';
-  import { startAppearance } from '$lib/appearance.svelte';
+  import { app, settings, session, isDirty, focusActive, type Mode } from '$lib/state.svelte';
+  import { startAppearance, currentTheme, toggleAppearance } from '$lib/appearance.svelte';
+  import { toggleFocusHighlight } from '$lib/actions';
   import { preloadSounds } from '$lib/sound';
   import { forwardConsole } from '$lib/log';
   import { runCliExport } from '$lib/cli';
@@ -69,6 +70,7 @@
   $effect(() => {
     settings.lang;
     session.recent.join('\n'); // rebuild "Open Recent"
+    (session.recentFolders ?? []).join('\n');
     installMenu().catch((err) => console.warn('menu', err));
   });
 
@@ -153,11 +155,13 @@
           {/each}
         </div>
         {#if app.mode === 'preview' || app.mode === 'split'}
-          <button class="tb" class:on={settings.pageView} onclick={() => (settings.pageView = !settings.pageView)} title="{t('cmd.pages')}  {modKey}⇧L"><Icon name="pages" /></button>
+          <button class="tb" class:on={settings.pageView} onclick={() => (settings.pageView = !settings.pageView)} title="{t('cmd.pages')}  {modKey}⌥P"><Icon name="pages" /></button>
         {/if}
         <button class="tb" onclick={() => saveDoc()} title="{t('top.save')}  {modKey}S" disabled={!isDirty()}><Icon name="save" /></button>
+        <button class="tb" class:on={focusActive() && !app.zen} onclick={toggleFocusHighlight} title="{t('cmd.toggleFocus')}  {modKey}⌥L"><Icon name="focus" /></button>
         <button class="tb" onclick={toggleZen} title="{t('top.zen')}  {modKey}⇧↩"><Icon name="zen" /></button>
       {/if}
+      <button class="tb" onclick={toggleAppearance} title="{t('cmd.toggleAppearance')}  {modKey}⌥D"><Icon name={currentTheme().dark ? 'sun' : 'moon'} /></button>
       <button class="tb" onclick={() => (app.exportOpen = true)} title="{t('top.export')}  {modKey}⇧E"><Icon name="export" /></button>
       <button class="tb" onclick={() => (app.settingsOpen = true)} title="{t('top.settings')}  {modKey},"><Icon name="settings" /></button>
     </header>

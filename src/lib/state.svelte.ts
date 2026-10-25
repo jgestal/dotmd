@@ -19,6 +19,8 @@ export type StatKey =
 export interface Settings {
   lang: 'en' | 'es';
   theme: string;
+  /** Light/dark for the "Automatic" theme: follow the OS or force one. */
+  appearance: 'system' | 'light' | 'dark';
   accent: string;
   docFont: string;
   headingFont: string;
@@ -81,6 +83,7 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   lang: 'en',
   theme: 'auto',
+  appearance: 'system',
   accent: '',
   docFont: 'theme',
   headingFont: 'theme',
@@ -155,7 +158,7 @@ function initialLang(): 'en' | 'es' {
 export const settings: Settings = $state(load('dotmd.settings', { ...DEFAULT_SETTINGS, lang: initialLang() }));
 
 export const session = $state(
-  load('dotmd.session', { lastFolder: null as string | null, lastFile: null as string | null, recent: [] as string[], expanded: [] as string[], tabs: [] as string[] }),
+  load('dotmd.session', { lastFolder: null as string | null, lastFile: null as string | null, recent: [] as string[], recentFolders: [] as string[], expanded: [] as string[], tabs: [] as string[] }),
 );
 
 export const app = $state({
@@ -217,6 +220,8 @@ export interface EditorApi {
   exec(action: FormatAction): void;
   focus(): void;
   revealLine?(line: number): void;
+  /** Source-editor commands (search, multi-cursor, line operations); absent in the visual editor. */
+  run?(cmd: import('./editor/commands').SourceCommand): void;
 }
 let editorApi: EditorApi | null = null;
 export const setEditorApi = (api: EditorApi | null) => (editorApi = api);
@@ -233,6 +238,16 @@ export function setContent(text: string, saved = true) {
   app.content = text;
   if (saved) app.saved = text;
   app.extVersion++;
+}
+
+export function pushRecentFolder(path: string) {
+  session.recentFolders = [path, ...(session.recentFolders ?? []).filter((p) => p !== path)].slice(0, 10);
+}
+
+/** Forgets recently opened files and folders (File > Open Recent > Clear, Welcome screen). */
+export function clearHistory() {
+  session.recent = [];
+  session.recentFolders = [];
 }
 
 export function pushRecent(path: string) {

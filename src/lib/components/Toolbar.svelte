@@ -3,7 +3,7 @@
   import Popover from './Popover.svelte';
   import { t, type Key } from '../i18n';
   import { getEditorApi } from '../state.svelte';
-  import { insertLink as link, insertImage as image } from '../actions';
+  import { insertLink as link, insertImage as image, updateToc } from '../actions';
   import { ALERT_KINDS, CODE_LANGS, MERMAID_TEMPLATES, type FormatAction } from '../snippets';
   import { modKey } from '../path';
 
@@ -113,6 +113,7 @@
     </Popover>
 
     <button class="tb" onclick={() => exec({ type: 'math' })} title={t('tb.math')}><Icon name="math" /></button>
+    <button class="tb" onclick={updateToc} title="{t('tb.toc')}  {modKey}⌥T"><Icon name="outline" /></button>
   </div>
 
   <div class="group">

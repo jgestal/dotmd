@@ -4,6 +4,7 @@
   import { t, LANGUAGES, type Key } from '../i18n';
   import { THEMES, FONTS } from '../themes';
   import { keySound, bellSound } from '../sound';
+  import { getVersion } from '@tauri-apps/api/app';
   import { openUrl } from '@tauri-apps/plugin-opener';
   import { toggleTypewriterMode, typewriterModeOn } from '../actions';
 
@@ -13,7 +14,7 @@
     ['knufds', 'https://freesound.org/people/knufds/sounds/345955/'],
   ];
 
-  type Section = 'appearance' | 'typography' | 'editor' | 'zen' | 'stats' | 'export' | 'advanced';
+  type Section = 'appearance' | 'typography' | 'editor' | 'zen' | 'stats' | 'export' | 'advanced' | 'about';
   let section = $state<Section>('appearance');
   const sections: [Section, Key, string][] = [
     ['appearance', 'set.appearance', 'highlight'],
@@ -23,7 +24,10 @@
     ['stats', 'set.stats', 'target'],
     ['export', 'set.export', 'export'],
     ['advanced', 'set.advanced', 'code'],
+    ['about', 'set.about', 'info'],
   ];
+  let version = $state('');
+  getVersion().then((v) => (version = v)).catch(() => {});
   const ACCENTS = ['', '#0a84ff', '#5e5ce6', '#bf5af2', '#ff375f', '#ff453a', '#ff9f0a', '#ffd60a', '#30d158', '#64d2ff', '#8e8e93'];
   const STAT_KEYS: [StatKey, Key][] = [
     ['words', 'stats.words'], ['chars', 'stats.chars'], ['charsNoSpaces', 'stats.charsNoSpaces'], ['letters', 'stats.letters'],
@@ -57,6 +61,14 @@
           <select bind:value={settings.lang}>
             {#each LANGUAGES as l}<option value={l.id}>{l.label}</option>{/each}
           </select>
+        </div>
+        <div class="row">
+          <span>{t('set.appearanceMode')}</span>
+          <div class="seg">
+            {#each [['system', 'set.system'], ['light', 'set.light'], ['dark', 'set.dark']] as [v, l]}
+              <button class:on={settings.appearance === v} onclick={() => (settings.appearance = v as any)}>{t(l as Key)}</button>
+            {/each}
+          </div>
         </div>
         <h3>{t('set.theme')}</h3>
         <div class="themes">
@@ -207,18 +219,33 @@
         <label class="check"><input type="checkbox" bind:checked={settings.exportEmbedFonts} /> {t('export.embedFonts')}</label>
         <div class="row"><span>{t('export.margin')} <b>{settings.pdfMargin}</b></span><input type="range" min="0" max="40" bind:value={settings.pdfMargin} /></div>
 
+      {:else if section === 'about'}
+        <div class="about">
+          <img src="/favicon.png" alt="" width="96" height="96" />
+          <h2>DotMD <small>{version}</small></h2>
+          <p class="tagline">{t('about.tagline')}</p>
+          <p>{t('about.author')} <b>Juan Gestal</b></p>
+          <p>
+            <button class="linkish" onclick={() => openUrl('mailto:juan@gestal.es')}>juan@gestal.es</button> ·
+            <button class="linkish" onclick={() => openUrl('https://gestal.es')}>gestal.es</button> ·
+            <button class="linkish" onclick={() => openUrl('https://github.com/jgestal/dotmd')}>GitHub</button>
+          </p>
+          <p class="hint">© 2026 Juan Gestal · {t('about.license')}</p>
+          <h3>{t('set.credits')}</h3>
+          <p class="hint">{t('about.libs')}</p>
+          <p class="hint">{t('about.fonts')}</p>
+          <p class="hint">
+            {t('set.creditsSounds')}
+            {#each SOUND_CREDITS as [name, url], i}
+              <button class="linkish" onclick={() => openUrl(url)}>{name}</button>{i < SOUND_CREDITS.length - 1 ? ', ' : '.'}
+            {/each}
+          </p>
+        </div>
       {:else}
         <h3>{t('set.customCss')}</h3>
         <p class="hint">{t('set.customCssHint')}</p>
         <textarea bind:value={settings.customCss} rows="12" spellcheck="false" placeholder=".markdown-body h1 {'{'} color: tomato {'}'}"></textarea>
         <button class="btn danger" onclick={resetAll}>{t('set.resetAll')}</button>
-        <h3>{t('set.credits')}</h3>
-        <p class="hint">
-          {t('set.creditsSounds')}
-          {#each SOUND_CREDITS as [name, url], i}
-            <button class="linkish" onclick={() => openUrl(url)}>{name}</button>{i < SOUND_CREDITS.length - 1 ? ', ' : '.'}
-          {/each}
-        </p>
       {/if}
     </section>
   </div>
@@ -271,6 +298,13 @@
   .inline { display: flex; align-items: center; gap: 8px; }
   .inline input[type=range] { width: 160px; }
   .linkish { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; cursor: pointer; }
+  .about { text-align: center; }
+  .about img { margin: 4px auto 6px; display: block; }
+  .about h2 { margin: 0; font-size: 22px; }
+  .about h2 small { font-size: 12px; color: var(--fg-muted); font-weight: 500; }
+  .about .tagline { color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; font-size: 11px; font-weight: 600; margin: 2px 0 14px; }
+  .about h3 { text-align: left; }
+  .about .hint { text-align: left; }
   .tw-card {
     display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; margin-bottom: 14px;
     padding: 14px 16px; border-radius: 12px; border: 1px solid var(--border); cursor: default;

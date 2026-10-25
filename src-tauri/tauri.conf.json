@@ -64,7 +64,9 @@
     "macOS": {
       "signingIdentity": "-",
       "minimumSystemVersion": "11.0"
-    }
+    },
+    "publisher": "Juan Gestal",
+    "homepage": "https://gestal.es"
   },
   "plugins": {
     "updater": {

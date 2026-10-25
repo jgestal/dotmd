@@ -3,10 +3,10 @@
   "settings": { "theme": "modern" },
   "actions": [
     { "waitFor": "document.querySelector('.markdown-body h1')" },
-    { "chord": ["Mod", "Shift", "KeyL"], "waitFor": "document.querySelectorAll('.page').length >= 3", "wait": 600 },
+    { "chord": ["Mod", "Alt", "KeyP"], "waitFor": "document.querySelectorAll('.page').length >= 3", "wait": 600 },
     { "assert": "[...document.querySelectorAll('.page-inner')].every(p => p.children.length === 1 || p.scrollHeight <= p.clientHeight + 1)" },
     { "assert": "document.querySelector('.page').getAttribute('data-page').startsWith('1 / ')" },
     { "assert": "document.querySelector('.statusbar').textContent.includes('pages')", "shot": "sheets" },
-    { "chord": ["Mod", "Shift", "KeyL"], "wait": 600, "assert": "!document.querySelector('.page')" }
+    { "chord": ["Mod", "Alt", "KeyP"], "wait": 600, "assert": "!document.querySelector('.page')" }
   ]
 }

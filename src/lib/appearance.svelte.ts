@@ -1,8 +1,30 @@
 import { app, settings } from './state.svelte';
-import { FONTS, resolveTheme, type Theme } from './themes';
+import { FONTS, THEMES, resolveTheme, type Theme } from './themes';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+
+export function isDarkPreferred(): boolean {
+  return settings.appearance === 'system' ? app.systemDark : settings.appearance === 'dark';
+}
 
 export function currentTheme(): Theme {
-  return resolveTheme(settings.theme, app.systemDark);
+  return resolveTheme(settings.theme, isDarkPreferred());
+}
+
+/**
+ * Light/dark toggle (top bar, View menu): switches to the theme's light/dark twin when it has one,
+ * otherwise flips the "Automatic" theme between light and dark (back to "follow the OS" when that
+ * matches the system).
+ */
+export function toggleAppearance() {
+  const th = currentTheme();
+  const wantDark = !th.dark;
+  const twin = th.pair ? THEMES.find((x) => x.id === th.pair) : undefined;
+  if (settings.theme !== 'auto' && twin && twin.dark === wantDark) {
+    settings.theme = twin.id;
+    return;
+  }
+  settings.theme = 'auto';
+  settings.appearance = wantDark === app.systemDark ? 'system' : wantDark ? 'dark' : 'light';
 }
 
 /** Theme fonts with the user's overrides applied. */
@@ -75,6 +97,8 @@ export function startAppearance() {
       c.toggle('ink', theme.kind === 'typewriter' && settings.inkVariation);
       c.toggle('zen', app.zen);
       document.documentElement.lang = settings.lang;
+      // Native title bar, menus and scroll bars follow the theme too.
+      void getCurrentWindow().setTheme(theme.dark ? 'dark' : 'light').catch(() => {});
     });
     $effect(() => {
       customStyle!.textContent = settings.customCss;

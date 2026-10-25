@@ -2,7 +2,10 @@
 name = "dotmd"
 version = "0.2.0"
 description = "Fast, native-feeling Markdown viewer and editor"
-authors = ["Juan Gestal"]
+authors = ["Juan Gestal <juan@gestal.es>"]
+homepage = "https://gestal.es"
+repository = "https://github.com/jgestal/dotmd"
+license = "MIT"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

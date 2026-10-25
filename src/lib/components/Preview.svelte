@@ -149,6 +149,31 @@
     }
   });
 
+  /** Native context menu on the rendered document: copy, export and view options. */
+  async function onContextMenu(e: MouseEvent) {
+    e.preventDefault();
+    const { Menu } = await import('@tauri-apps/api/menu');
+    const { exportRequest } = await import('../exportRequest.svelte');
+    const { copyRichText } = await import('../actions');
+    const selection = window.getSelection()?.toString() ?? '';
+    const menu = await Menu.new({
+      items: [
+        { id: 'copy', text: t('ctx.copy'), enabled: !!selection, action: () => void navigator.clipboard.writeText(selection) },
+        { id: 'all', text: t('ctx.selectAll'), action: () => { const r = document.createRange(); r.selectNodeContents(body); const s = window.getSelection(); s?.removeAllRanges(); s?.addRange(r); } },
+        { id: 'rich', text: t('cmd.copyRich'), action: () => void copyRichText() },
+        { item: 'Separator' },
+        { id: 'pdf', text: t('cmd.exportPdf'), action: () => void exportRequest.quick(app.path, 'pdf') },
+        { id: 'html', text: t('cmd.exportHtml'), action: () => void exportRequest.quick(app.path, 'html') },
+        { id: 'export', text: t('cmd.export'), action: () => (app.exportOpen = true) },
+        { id: 'print', text: t('cmd.print'), action: () => window.print() },
+        { item: 'Separator' },
+        { id: 'pages', text: t('cmd.pages'), checked: settings.pageView, action: () => (settings.pageView = !settings.pageView) },
+        { id: 'edit', text: t('ctx.editSource'), action: () => (app.mode = app.mode === 'split' ? 'source' : 'split') },
+      ] as any,
+    });
+    await menu.popup();
+  }
+
   async function onClick(e: MouseEvent) {
     const target = e.target as HTMLElement;
     const copy = target.closest<HTMLButtonElement>('button.copy-code');
@@ -191,6 +216,7 @@
     class:hyphenate={settings.hyphenate}
     bind:this={body}
     onclick={onClick}
+    oncontextmenu={onContextMenu}
     role="presentation"
   ></article>
 </div>

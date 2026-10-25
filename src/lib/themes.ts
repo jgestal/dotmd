@@ -9,6 +9,8 @@ export interface Theme {
   kind: ThemeKind;
   fonts: { ui: string; doc: string; heading: string; code: string };
   vars: Record<string, string>;
+  /** The same theme in the other appearance (light ↔ dark), used by the appearance toggle. */
+  pair?: string;
 }
 
 export const FONTS: Record<string, { label: string; stack: string }> = {
@@ -87,12 +89,12 @@ function dark(overrides: Record<string, string> = {}): Record<string, string> {
 
 export const THEMES: Theme[] = [
   {
-    id: 'modern', name: 'Modern', dark: false, kind: 'normal',
+    id: 'modern', name: 'Modern', dark: false, kind: 'normal', pair: 'modern-dark',
     fonts: { ui: F('system'), doc: F('inter'), heading: F('inter'), code: F('mono') },
     vars: light(),
   },
   {
-    id: 'modern-dark', name: 'Modern Dark', dark: true, kind: 'normal',
+    id: 'modern-dark', name: 'Modern Dark', dark: true, kind: 'normal', pair: 'modern',
     fonts: { ui: F('system'), doc: F('inter'), heading: F('inter'), code: F('mono') },
     vars: dark(),
   },
@@ -117,7 +119,7 @@ export const THEMES: Theme[] = [
     vars: light({ '--bg': '#e4e6df', '--bg-elev': '#dcdfd6', '--bg-hover': 'rgba(40,60,40,.07)', '--bg-active': 'rgba(40,60,40,.12)', '--paper': '#fbfcf7', '--band': 'rgba(150, 196, 156, .30)', '--perf': '#bfc6b4', '--fg': '#2a2e35', '--fg-muted': '#6a7068', '--fg-dim': 'rgba(42,46,53,.25)', '--border': '#cdd2c5', '--accent': '#2f7d4f', '--link': '#2b5c99', '--code-bg': 'rgba(60,80,60,.07)', '--code-fg': '#2a2e35', '--quote': '#b9c4b0', '--sel': 'rgba(47,125,79,.2)', '--mark': '#f2e58f', '--syn-keyword': '#2f7d4f', '--syn-string': '#8a4b2a', '--syn-number': '#2b5c99', '--syn-comment': '#8b9186', '--syn-func': '#2a2e35', '--syn-type': '#5b4a8a' }),
   },
   {
-    id: 'crt-green', name: 'CRT Phosphor', dark: true, kind: 'crt',
+    id: 'crt-green', name: 'CRT Phosphor', dark: true, kind: 'crt', pair: 'typewriter',
     fonts: { ui: F('vt323'), doc: F('vt323'), heading: F('vt323'), code: F('vt323') },
     vars: dark({ '--bg': '#040b05', '--bg-elev': '#071209', '--bg-hover': 'rgba(51,255,102,.08)', '--bg-active': 'rgba(51,255,102,.16)', '--fg': '#3dff73', '--fg-muted': '#22a849', '--fg-dim': 'rgba(61,255,115,.25)', '--border': '#0f3a19', '--accent': '#3dff73', '--accent-fg': '#021004', '--link': '#a6ffbf', '--code-bg': '#08200d', '--code-fg': '#a6ffbf', '--quote': '#1b6b30', '--sel': 'rgba(61,255,115,.25)', '--mark': '#1d6b33', '--glow': 'rgba(61,255,115,.55)', '--syn-keyword': '#a6ffbf', '--syn-string': '#7dffa0', '--syn-number': '#d4ffe0', '--syn-comment': '#1f8a3e', '--syn-func': '#5cff8a', '--syn-type': '#c3ffd4' }),
   },
@@ -132,7 +134,7 @@ export const THEMES: Theme[] = [
     vars: dark({ '--bg': '#2e3440', '--bg-elev': '#3b4252', '--fg': '#e5e9f0', '--fg-muted': '#a3abba', '--fg-dim': 'rgba(229,233,240,.25)', '--border': '#434c5e', '--accent': '#88c0d0', '--accent-fg': '#2e3440', '--link': '#88c0d0', '--code-bg': '#3b4252', '--code-fg': '#ebcb8b', '--quote': '#4c566a', '--sel': 'rgba(136,192,208,.3)', '--syn-keyword': '#81a1c1', '--syn-string': '#a3be8c', '--syn-number': '#b48ead', '--syn-comment': '#616e88', '--syn-func': '#88c0d0', '--syn-type': '#8fbcbb' }),
   },
   {
-    id: 'solarized', name: 'Solarized Light', dark: false, kind: 'normal',
+    id: 'solarized', name: 'Solarized Light', dark: false, kind: 'normal', pair: 'nord',
     fonts: { ui: F('system'), doc: F('plexSerif'), heading: F('plexSerif'), code: F('plexMono') },
     vars: light({ '--bg': '#fdf6e3', '--bg-elev': '#eee8d5', '--fg': '#3c4a50', '--fg-muted': '#839496', '--fg-dim': 'rgba(60,74,80,.28)', '--border': '#e4dcc4', '--accent': '#268bd2', '--link': '#268bd2', '--code-bg': '#eee8d5', '--code-fg': '#d33682', '--quote': '#d9cfb0', '--syn-keyword': '#859900', '--syn-string': '#2aa198', '--syn-number': '#d33682', '--syn-comment': '#93a1a1', '--syn-func': '#268bd2', '--syn-type': '#b58900' }),
   },

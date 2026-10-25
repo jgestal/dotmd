@@ -10,7 +10,7 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
 ## Features
 
 - **Four modes**: *Read*, *Source* (raw Markdown or plain text), *Split* (source and preview, with synced scrolling) and *Visual* (WYSIWYG, edit on the formatted document). Switch with ⌘1–4.
-- **Page view** (⌘⇧L): the preview laid out on A4/Letter sheets with the export margins and page numbers, so you see the PDF before exporting. Manual page breaks.
+- **Page view** (⌘⌥P): the preview laid out on A4/Letter sheets with the export margins and page numbers, so you see the PDF before exporting. Manual page breaks.
 - **Any text file**: Markdown, plain text, logs, CSV/TSV (shown as a table), JSON, YAML, source code (highlighted by language), README/LICENSE… UTF-8, UTF-16 and Latin-1, Windows line endings preserved.
 - **Folder sidebar** you can hide (⌘\\), resize or move to the right, with a filter, an outline tab, folder-wide search (⌘⇧F) and a native context menu (new, rename, move by dragging, Move to Trash).
 - **Tabs**, back/forward history (⌘[ / ⌘]), **quick open** (⌘P) and a **command palette** (⌘⇧P), plus a full native menu bar.
@@ -62,6 +62,10 @@ UI tests (`npm run test:ui`) drive the frontend in headless Chrome with a fake T
 ## Roadmap
 
 See [PLAN.md](PLAN.md) and the [issues](https://github.com/jgestal/dotmd/issues), grouped by milestone.
+
+## Credits
+
+Created by **Juan Gestal** — [juan@gestal.es](mailto:juan@gestal.es) · [gestal.es](https://gestal.es)
 
 ## License
 

@@ -1,11 +1,12 @@
 // Native menu bar built from the command registry.
 import { Menu, MenuItem, PredefinedMenuItem, Submenu } from '@tauri-apps/api/menu';
+import { getVersion } from '@tauri-apps/api/app';
 import { t } from './i18n';
 import { isMac } from './path';
 import { allCommands, runCommand, type MenuId } from './commands';
-import { session } from './state.svelte';
+import { session, clearHistory } from './state.svelte';
 import { basename, dirname } from './path';
-import { openPath } from './actions';
+import { openFolder, openPath } from './actions';
 
 const sep = () => PredefinedMenuItem.new({ item: 'Separator' });
 
@@ -31,8 +32,16 @@ async function recentMenu() {
   for (const [i, p] of session.recent.slice(0, 12).entries()) {
     items.push(await MenuItem.new({ id: `recent.${i}`, text: `${basename(p)} — ${dirname(p)}`, action: () => void openPath(p) }));
   }
-  if (items.length) items.push(await sep());
-  items.push(await MenuItem.new({ id: 'recent.clear', text: t('menu.clearRecent'), enabled: items.length > 0, action: () => (session.recent = []) }));
+  const folders = (session.recentFolders ?? []).slice(0, 8);
+  if (folders.length) {
+    if (items.length) items.push(await sep());
+    for (const [i, p] of folders.entries()) {
+      items.push(await MenuItem.new({ id: `recentdir.${i}`, text: `📁 ${basename(p)} — ${dirname(p)}`, action: () => void openFolder(p) }));
+    }
+  }
+  const any = items.length > 0;
+  if (any) items.push(await sep());
+  items.push(await MenuItem.new({ id: 'recent.clear', text: t('menu.clearRecent'), enabled: any, action: () => clearHistory() }));
   return Submenu.new({ text: t('menu.recent'), items });
 }
 
@@ -44,7 +53,19 @@ export async function installMenu() {
       await Submenu.new({
         text: 'DotMD',
         items: [
-          await PredefinedMenuItem.new({ item: { About: null } }),
+          await PredefinedMenuItem.new({
+            item: {
+              About: {
+                name: 'DotMD',
+                version: await getVersion(),
+                authors: ['Juan Gestal <juan@gestal.es>'],
+                website: 'https://gestal.es',
+                websiteLabel: 'gestal.es',
+                copyright: '© 2026 Juan Gestal · MIT License',
+                comments: 'Markdown Viewer & Editor',
+              },
+            },
+          }),
           await sep(),
           await MenuItem.new({ id: 'app.settings', text: t('top.settings') + '…', accelerator: 'CmdOrCtrl+,', action: () => runCommand(allCommands().find((c) => c.id === 'app.settings')!) }),
           await sep(),

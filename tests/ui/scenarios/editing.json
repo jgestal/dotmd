@@ -1,0 +1,22 @@
+{
+  "open": "$FIX/long.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1')" },
+    { "chord": ["Mod", "Alt", "KeyT"], "wait": 800 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => m.app.content.includes('<!-- toc -->\\n- [Chapter 1](#chapter-1)') && m.app.content.split('<!-- toc -->').length === 2)" },
+    { "assert": "!document.querySelector('.markdown-body').textContent.includes('tocstop') && !!document.querySelector('.markdown-body a[href=\"#chapter-2\"]')" },
+    { "eval": "{ document.querySelector('.markdown-body a[href=\"#chapter-4\"]').click() }", "wait": 800, "assert": "document.querySelector('.preview-scroll').scrollTop > 500" },
+    { "chord": ["Mod", "Alt", "KeyT"], "wait": 500, "assert": "import('/src/lib/state.svelte.ts').then(m => m.app.content.split('<!-- toc -->').length === 2)" },
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')" },
+    { "eval": "{ document.querySelector('.cm-content').focus() }" },
+    { "chord": ["Mod", "Home"] },
+    { "chord": ["Mod", "Alt", "ArrowDown"] }, { "chord": ["Mod", "Alt", "ArrowDown"], "wait": 200 },
+    { "assert": "document.querySelectorAll('.cm-cursor').length >= 3 || document.querySelectorAll('.cm-cursor').length" },
+    { "type": "X", "wait": 300 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => m.app.content.startsWith('X# A long document\\nX\\nX'))" },
+    { "keys": "Escape" },
+    { "eval": "{ import('/src/lib/state.svelte.ts').then(m => m.getEditorApi().run('find')) }", "waitFor": "document.querySelector('.cm-search input[name=search]')", "shot": "find" },
+    { "eval": "{ import('/src/lib/state.svelte.ts').then(m => m.getEditorApi().run('upper')) }", "wait": 300 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => /^X# A LONG DOCUMENT|^X# A long document/.test(m.app.content))" }
+  ]
+}

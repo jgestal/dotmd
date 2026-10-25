@@ -55,7 +55,7 @@ Ya funciona (verificado con capturas automáticas en un navegador sin interfaz +
 
 - [x] Nombre de producto: **DotMD — Markdown Viewer & Editor** (título de ventana, metadatos e icono propio).
 - [x] Cualquier archivo de texto: Markdown, texto plano, logs, CSV/TSV (como tabla), JSON, YAML, código coloreado por lenguaje, README/LICENSE…; UTF-8, UTF-16 y Latin-1; se conservan los finales de línea de Windows.
-- [x] **Vista de páginas** (⌘⇧L): hojas A4/Carta con los márgenes del PDF, número de página, zoom automático y saltos de página manuales.
+- [x] **Vista de páginas** (⌘⌥P): hojas A4/Carta con los márgenes del PDF, número de página, zoom automático y saltos de página manuales.
 - [x] **Tema papel continuo**: papel de impresora matricial con bandas verdes, agujeros de arrastre, perforaciones y fuente de puntos.
 - [x] **Escritura enfocada** (⌘⌥F): pantalla completa, solo la línea que escribes iluminada (la línea visual, no el párrafo entero) y el cursor centrado.
 - [x] Sonidos reales de máquina de escribir, pestañas, apertura rápida, búsqueda en carpeta, paleta de comandos, menú nativo, pegar imágenes, mover y enviar a la papelera, PDF nativo en macOS y Linux, exportación por línea de comandos.

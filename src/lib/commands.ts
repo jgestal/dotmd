@@ -6,10 +6,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { t, type Key } from './i18n';
 import { isMac, isPlainText } from './path';
 import { THEMES } from './themes';
+import { toggleAppearance } from './appearance.svelte';
 import type { FormatAction } from './snippets';
 import {
   newDoc, openFileDialog, openFolder, saveDoc, toggleZen, toggleTypewriterMode, insertLink, insertImage,
-  closeTab, cycleTab, goBack, goForward, canGoBack, canGoForward, toggleFocusWriting, copyRichText,
+  toggleFocusHighlight, updateToc, closeTab, closeOtherTabs, closeTabsToLeft, closeTabsToRight, cycleTab, goBack, goForward, canGoBack, canGoForward, toggleFocusWriting, copyRichText,
 } from './actions';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { exportRequest } from './exportRequest.svelte';
@@ -61,6 +62,9 @@ function base(): Command[] {
     { id: 'file.quickOpen', label: L('cmd.quickOpen'), shortcut: 'CmdOrCtrl+P', menu: 'file', run: () => (app.quickOpen = true) },
     { id: 'file.openFolder', label: L('cmd.openFolder'), shortcut: 'CmdOrCtrl+Shift+O', menu: 'file', run: () => openFolder() },
     { id: 'tab.close', label: L('tabs.close'), shortcut: 'CmdOrCtrl+W', menu: 'file', separator: true, enabled: hasDoc, run: () => closeTab() },
+    { id: 'tab.closeOthers', label: L('tabs.closeOthers'), menu: 'file', enabled: () => app.tabs.length > 1, run: () => closeOtherTabs() },
+    { id: 'tab.closeRight', label: L('tabs.closeRight'), menu: 'file', enabled: () => app.activeTab < app.tabs.length - 1, run: () => closeTabsToRight() },
+    { id: 'tab.closeLeft', label: L('tabs.closeLeft'), menu: 'file', enabled: () => app.activeTab > 0, run: () => closeTabsToLeft() },
     { id: 'window.close', label: L('cmd.closeWindow'), shortcut: 'CmdOrCtrl+Shift+W', menu: 'file', run: () => getCurrentWindow().close() },
     { id: 'file.save', label: L('cmd.save'), shortcut: 'CmdOrCtrl+S', menu: 'file', separator: true, enabled: hasDoc, run: () => saveDoc() },
     { id: 'file.saveAs', label: L('cmd.saveAs'), shortcut: 'CmdOrCtrl+Shift+S', menu: 'file', enabled: hasDoc, run: () => saveDoc(true) },
@@ -70,6 +74,20 @@ function base(): Command[] {
     { id: 'file.print', label: L('cmd.print'), menu: 'file', enabled: hasDoc, run: () => window.print() },
 
     // Edit
+    ...([
+      ['find', 'CmdOrCtrl+F', true], ['replace', 'CmdOrCtrl+Alt+R', false], ['gotoLine', 'CmdOrCtrl+Alt+G', true],
+      ['selectNext', 'CmdOrCtrl+D', true], ['selectAllMatches', 'CmdOrCtrl+Shift+L', true],
+      ['cursorAbove', 'CmdOrCtrl+Alt+Up', true], ['cursorBelow', 'CmdOrCtrl+Alt+Down', true], ['selectLine', 'CmdOrCtrl+L', true],
+      ['duplicateLine', 'CmdOrCtrl+Shift+D', true], ['deleteLine', 'CmdOrCtrl+Shift+K', true],
+      ['moveLineUp', 'Alt+Up', true], ['moveLineDown', 'Alt+Down', true],
+      ['upper', undefined, false], ['lower', undefined, false], ['title', undefined, false],
+      ['sortLines', undefined, false], ['sortLinesDesc', undefined, false], ['uniqueLines', undefined, false],
+      ['trimTrailing', undefined, false], ['joinLines', undefined, false],
+    ] as const).map(([cmd, shortcut, editorKey], i) => ({
+      id: `edit.${cmd}`, label: L(`edit.${cmd}` as Key), shortcut, editorKey: editorKey || undefined, menu: 'edit' as const,
+      separator: ['find', 'selectNext', 'duplicateLine', 'upper', 'sortLines'].includes(cmd) || undefined,
+      enabled: () => !!getEditorApi()?.run, run: () => getEditorApi()?.run?.(cmd),
+    })),
     { id: 'edit.copyRich', label: L('cmd.copyRich'), shortcut: 'CmdOrCtrl+Alt+C', menu: 'edit', enabled: hasDoc, run: copyRichText },
 
     // Format
@@ -103,7 +121,9 @@ function base(): Command[] {
       id: `view.${m}`, label: L(`mode.${m}` as Key), shortcut: `CmdOrCtrl+${i + 1}`, menu: 'view' as const,
       enabled: () => hasDoc() && !(m === 'visual' && isPlainText(app.path)), run: () => setMode(m),
     })),
-    { id: 'view.pages', label: L('cmd.pages'), shortcut: 'CmdOrCtrl+Shift+L', menu: 'view', run: () => (settings.pageView = !settings.pageView) },
+    { id: 'view.pages', label: L('cmd.pages'), shortcut: 'CmdOrCtrl+Alt+P', menu: 'view', run: () => (settings.pageView = !settings.pageView) },
+    { id: 'fmt.toc', label: L('tb.toc'), shortcut: 'CmdOrCtrl+Alt+T', menu: 'format', enabled: () => hasDoc() && !isPlainText(app.path), run: updateToc },
+    { id: 'view.wrap', label: L('cmd.toggleWrap'), shortcut: 'Alt+Z', menu: 'view', run: () => (settings.lineWrap = !settings.lineWrap) },
     { id: 'fmt.pagebreak', label: L('tb.pagebreak'), menu: 'format', enabled: editing, run: fmt({ type: 'pagebreak' }) },
     { id: 'view.toggleEdit', label: L('cmd.toggleEdit'), shortcut: 'CmdOrCtrl+E', menu: 'view', enabled: hasDoc, run: () => setMode(app.mode === 'preview' ? lastEditMode : 'preview') },
     { id: 'view.sidebar', label: L('sidebar.toggle'), shortcut: 'CmdOrCtrl+\\', menu: 'view', separator: true, run: () => (app.sidebar = !app.sidebar) },
@@ -111,6 +131,8 @@ function base(): Command[] {
     { id: 'view.search', label: L('cmd.search'), shortcut: 'CmdOrCtrl+Shift+F', menu: 'view', run: () => { app.sidebar = true; app.sidebarTab = 'search'; app.searchFocus++; } },
     { id: 'view.zen', label: L('top.zen'), shortcut: 'CmdOrCtrl+Shift+Enter', menu: 'view', separator: true, run: toggleZen },
     { id: 'view.focusWriting', label: L('cmd.focusWriting'), shortcut: 'CmdOrCtrl+Alt+F', menu: 'view', run: toggleFocusWriting },
+    { id: 'view.focusToggle', label: L('cmd.toggleFocus'), shortcut: 'CmdOrCtrl+Alt+L', menu: 'view', run: toggleFocusHighlight },
+    { id: 'view.appearance', label: L('cmd.toggleAppearance'), shortcut: 'CmdOrCtrl+Alt+D', menu: 'view', run: toggleAppearance },
     { id: 'view.typewriter', label: L('set.twMode'), menu: 'view', run: toggleTypewriterMode },
     { id: 'view.zoomIn', label: L('cmd.zoomIn'), shortcut: 'CmdOrCtrl+=', menu: 'view', separator: true, run: () => (settings.fontSize = Math.min(32, settings.fontSize + 1)) },
     { id: 'view.zoomOut', label: L('cmd.zoomOut'), shortcut: 'CmdOrCtrl+-', menu: 'view', run: () => (settings.fontSize = Math.max(10, settings.fontSize - 1)) },
@@ -187,7 +209,7 @@ function matches(acc: string, e: KeyboardEvent): boolean {
   if (/^[A-Z]$/i.test(key)) return code === `Key${key.toUpperCase()}`;
   const special: Record<string, string[]> = {
     Enter: ['Enter', 'NumpadEnter'], '\\': ['Backslash', 'IntlBackslash'], '[': ['BracketLeft'], ']': ['BracketRight'],
-    '=': ['Equal', 'NumpadAdd'], '-': ['Minus', 'NumpadSubtract'], ',': ['Comma'], Tab: ['Tab'], Left: ['ArrowLeft'], Right: ['ArrowRight'],
+    '=': ['Equal', 'NumpadAdd'], '-': ['Minus', 'NumpadSubtract'], ',': ['Comma'], Tab: ['Tab'], Left: ['ArrowLeft'], Right: ['ArrowRight'], Up: ['ArrowUp'], Down: ['ArrowDown'],
   };
   return (special[key] ?? [key]).includes(code);
 }

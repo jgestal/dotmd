@@ -11,6 +11,7 @@
     "core:window:allow-is-fullscreen",
     "core:window:allow-start-dragging",
     "core:window:allow-set-title",
+    "core:window:allow-set-theme",
     "core:webview:allow-print",
     "opener:default",
     "opener:allow-reveal-item-in-dir",
