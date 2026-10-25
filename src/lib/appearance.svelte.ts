@@ -53,6 +53,7 @@ export function cssVars(theme: Theme): Record<string, string> {
     '--doc-width': `${settings.docWidth}px`,
     '--fx': String(settings.effectStrength / 100),
   };
+  if (theme.writingFont && settings.docFont === 'theme') vars['--font-writing'] = theme.writingFont;
   if (settings.accent) {
     vars['--accent'] = settings.accent;
     vars['--link'] = settings.accent;
@@ -93,6 +94,7 @@ export function startAppearance() {
       const on = activeEffects(theme, settings);
       for (const e of Object.keys(EFFECT_SETTING) as ThemeEffect[]) c.toggle(e, on.includes(e));
       c.toggle('zen', app.zen);
+      c.toggle('writing-font', !!theme.writingFont && settings.docFont === 'theme');
       document.documentElement.lang = settings.lang;
       // Native title bar, menus and scroll bars follow the theme too.
       void getCurrentWindow().setTheme(theme.dark ? 'dark' : 'light').catch(() => {});

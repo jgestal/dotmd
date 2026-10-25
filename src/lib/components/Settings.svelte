@@ -2,7 +2,7 @@
   import Icon from './Icon.svelte';
   import { app, settings, DEFAULT_SETTINGS, type StatKey, type Settings } from '../state.svelte';
   import { t, LANGUAGES, type Key } from '../i18n';
-  import { THEMES, FONTS, EFFECT_SETTING, type ThemeEffect } from '../themes';
+  import { THEMES, THEME_GROUPS, FONTS, EFFECT_SETTING, type ThemeEffect } from '../themes';
   import { keySound, bellSound, effectiveSound } from '../sound';
   import { currentTheme } from '../appearance.svelte';
   import { preferences } from '../container';
@@ -81,23 +81,29 @@
           </div>
         </div>
         <h3>{t('set.theme')}</h3>
-        <div class="themes">
+        {#each THEME_GROUPS as g, gi}
+        <h4 class="group">{t(`theme.group.${g}` as Key)}</h4>
+        <div class="themes" data-group={g}>
+          {#if gi === 0}
           <button class="theme-card auto" class:on={settings.theme === 'auto'} onclick={() => (settings.theme = 'auto')}>
             <span class="swatch split"><span style="background:#fff"></span><span style="background:#1c1c1e"></span></span>
             <span>{t('set.themeAuto')}</span>
           </button>
-          {#each THEMES as th}
+          {/if}
+          {#each THEMES.filter((x) => x.group === g) as th}
             <button class="theme-card" class:on={settings.theme === th.id} onclick={() => (settings.theme = th.id)}>
               <span class="swatch" style="background:{th.vars['--bg']};color:{th.vars['--fg']};font-family:{th.fonts.doc};border-color:{th.vars['--border']}">
                 <b style="font-family:{th.fonts.heading}">Aa</b>
                 <i style="background:{th.vars['--accent']}"></i>
                 {#if th.kind === 'crt'}<em class="scan"></em>{/if}
-                {#if th.kind === 'tractor'}<em class="bands" style="--b:{th.vars['--band']};--p:{th.vars['--paper']};--h:{th.vars['--bg']}"></em>{/if}
+                {#if th.kind === 'tractor'}<em class="bands" style="--p:{th.vars['--paper']};--h:{th.vars['--bg']};--f:{th.vars['--perf']}"></em>{/if}
               </span>
               <span>{th.name}</span>
             </button>
           {/each}
         </div>
+        {/each}
+        {#if theme.group === 'paper'}<p class="hint">{t('theme.paperHint')}</p>{/if}
         <h3>{t('set.accent')}</h3>
         <div class="accents">
           {#each ACCENTS as a}
@@ -223,7 +229,7 @@
           <span>{t('export.theme')}</span>
           <select bind:value={settings.exportTheme}>
             <option value="current">{t('export.themeCurrent')}</option>
-            {#each THEMES as th}<option value={th.id}>{th.name}</option>{/each}
+            {#each THEME_GROUPS as g}<optgroup label={t(`theme.group.${g}` as Key)}>{#each THEMES.filter((x) => x.group === g) as th}<option value={th.id}>{th.name}</option>{/each}</optgroup>{/each}
           </select>
         </div>
         <div class="row">
@@ -292,6 +298,7 @@
   .row b { color: var(--fg-muted); font-weight: 500; margin-left: 6px; font-variant-numeric: tabular-nums; }
   .check { display: flex; align-items: center; gap: 8px; min-height: 28px; }
   .check.indent { padding-left: 24px; color: var(--fg-muted); }
+  .group { margin: 14px 0 8px; font: 600 11px var(--font-ui); color: var(--fg-muted); }
   .themes { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 10px; }
   .theme-card { display: grid; gap: 6px; border: 0; background: none; color: var(--fg); font: 12px var(--font-ui); padding: 0; text-align: center; cursor: default; }
   .swatch { position: relative; display: flex; align-items: center; justify-content: center; height: 62px; border-radius: 9px; border: 1px solid var(--border); overflow: hidden; font-size: 20px; }
@@ -299,9 +306,9 @@
   .swatch .bands {
     position: absolute; inset: 0; z-index: 0;
     background:
-      radial-gradient(circle, var(--h) 0 2.5px, transparent 3px) left top / 12px 12px repeat-y,
-      radial-gradient(circle, var(--h) 0 2.5px, transparent 3px) right top / 12px 12px repeat-y,
-      repeating-linear-gradient(to bottom, var(--b) 0 8px, var(--p) 8px 16px);
+      radial-gradient(circle, var(--h) 0 2.5px, var(--f) 3px, transparent 3.5px) left top / 12px 12px repeat-y,
+      radial-gradient(circle, var(--h) 0 2.5px, var(--f) 3px, transparent 3.5px) right top / 12px 12px repeat-y,
+      var(--p);
   }
   .swatch b, .swatch i { position: relative; z-index: 1; }
   .swatch .scan { position: absolute; inset: 0; background: repeating-linear-gradient(transparent 0 2px, rgba(0,0,0,.35) 2px 3px); }

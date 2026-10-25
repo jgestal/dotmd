@@ -262,7 +262,7 @@ const en = {
   'fav.add': 'Add to favorites',
   'fav.removeShort': 'Remove from favorites',
   'fav.toggle': 'Toggle favorite',
-  'fav.empty': 'Star a document to keep it here.',
+  'fav.empty': 'Star a document, or right-click a folder ▸ Add to favorites, to keep it here.',
   'fav.missingToast': '{n} favorite(s) or folder(s) could not be found',
   'fav.missingTitle': 'Not found',
   'fav.missingBody': '“{name}” is no longer at {path}. Locate it, or remove it from favorites?',
@@ -362,6 +362,10 @@ const en = {
   'slides.empty': 'This document has no slides yet. Separate them with a line containing only ---.',
   'slides.noNotes': 'No speaker notes for this slide. Start a paragraph with “Note:” to add them.',
   'slides.help': '← → move · N notes · Esc exit',
+  'theme.group.writing': 'For writing',
+  'theme.group.retro': 'Retro',
+  'theme.group.paper': 'Paper and print',
+  'theme.paperHint': 'Paper themes are meant for reading and exporting: the editor stays a plain writing surface and the paper shows in Read mode, page view and exports.',
 };
 
 export default en;

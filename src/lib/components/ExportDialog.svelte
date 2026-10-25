@@ -3,7 +3,8 @@
   import { open } from '@tauri-apps/plugin-dialog';
   import Icon from './Icon.svelte';
   import { app, settings } from '../state.svelte';
-  import { t } from '../i18n';
+  import { t, type Key } from '../i18n';
+  import { THEMES, THEME_GROUPS } from '../themes';
   import { basename, relative } from '../path';
   import { folderOf, workspaceFolders } from '../workspace.svelte';
   import { exportRequest, type Format } from '../exportRequest.svelte';
@@ -108,8 +109,7 @@
           <span>{t('export.theme')}</span>
           <select bind:value={settings.exportTheme}>
             <option value="current">{t('export.themeCurrent')}</option>
-            <option value="modern">Modern</option><option value="github">GitHub</option>
-            <option value="paper">Paper</option><option value="typewriter">Typewriter</option><option value="tractor">Continuous Paper</option>
+            {#each THEME_GROUPS as g}<optgroup label={t(`theme.group.${g}` as Key)}>{#each THEMES.filter((x) => x.group === g) as th}<option value={th.id}>{th.name}</option>{/each}</optgroup>{/each}
           </select>
         </div>
         <p class="engine muted">{t('export.engine')}: {engine === undefined ? '…' : engine ? engine.split(/[\\/]/).pop() : t('export.noEngine')}</p>

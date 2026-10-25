@@ -30,7 +30,7 @@ export async function treeContextMenu(entry: Entry) {
       : [{ id: 'open', text: t('ctx.open'), action: () => openPath(entry.path) }]),
     { id: 'new', text: t('ctx.newFile'), action: () => newFileIn(dir) },
     { id: 'rename', text: t('ctx.rename'), action: () => rename(entry) },
-    ...(!entry.is_dir ? [{ id: 'fav', text: isFavorite(entry.path) ? t('fav.removeShort') : t('fav.add'), action: () => toggleFavorite(entry.path) }] : []),
+    { id: 'fav', text: isFavorite(entry.path) ? t('fav.removeShort') : t('fav.add'), action: () => toggleFavorite(entry.path, entry.is_dir) },
     ...(entry.is_dir && workspaceFolders().includes(entry.path) ? [{ id: 'close', text: t('ws.close'), action: () => removeFolder(entry.path) }] : []),
     { id: 'sep1', item: 'Separator' as const },
     ...(!entry.is_dir

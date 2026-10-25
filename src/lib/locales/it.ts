@@ -263,7 +263,7 @@ const it: Record<Key, string> = {
   'fav.add': 'Aggiungi ai preferiti',
   'fav.removeShort': 'Rimuovi dai preferiti',
   'fav.toggle': 'Aggiungi/rimuovi dai preferiti',
-  'fav.empty': 'Contrassegna un documento con una stella per tenerlo qui.',
+  'fav.empty': 'Contrassegna un documento con una stella, o fai clic destro su una cartella ▸ Aggiungi ai preferiti, per tenerlo qui.',
   'fav.missingToast': '{n} preferiti o cartelle non trovati',
   'fav.missingTitle': 'Non trovato',
   'fav.missingBody': '«{name}» non si trova più in {path}. Cercarlo o rimuoverlo dai preferiti?',
@@ -363,6 +363,10 @@ const it: Record<Key, string> = {
   'slides.empty': 'Questo documento non ha ancora diapositive. Separale con una riga che contiene solo ---.',
   'slides.noNotes': 'Nessuna nota per questa diapositiva. Inizia un paragrafo con «Note:» per aggiungerne.',
   'slides.help': '← → scorri · N note · Esc esci',
+  'theme.group.writing': 'Per scrivere',
+  'theme.group.retro': 'Retrò',
+  'theme.group.paper': 'Carta e stampa',
+  'theme.paperHint': 'I temi carta servono per leggere ed esportare: l’editor resta una superficie di scrittura pulita e la carta si vede in lettura, nella vista a pagine e nelle esportazioni.',
 };
 
 export default it;

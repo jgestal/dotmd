@@ -191,6 +191,25 @@ describe('workspace', () => {
     expect(w.missing).toEqual({});
   });
 
+  it('keeps folders as favourites: opens them in the sidebar, flags and relocates them', async () => {
+    const w = setup({ '/p/docs/a.md': 'x' });
+    w.workspace.toggleFavorite('/p/docs', true);
+    w.workspace.toggleFavorite('/p/gone', true);
+    expect(w.workspace.isFavoriteDir('/p/docs')).toBe(true);
+    expect(await w.workspace.checkMissing()).toBe(1);
+    expect(w.missing).toEqual({ '/p/gone': true });
+    w.workspace.openFavoriteFolder('/p/docs');
+    expect(w.session.folders).toEqual(['/p/docs']);
+    expect(w.state.root).toBe('/p/docs');
+    w.services.dialogs.confirms.push(true); // Locate… asks for a folder, not a file
+    w.services.dialogs.folders.push('/p/new');
+    await w.workspace.resolveMissing('/p/gone', false);
+    expect(w.session.favorites).toEqual(['/p/docs', '/p/new']);
+    expect(w.workspace.isFavoriteDir('/p/new')).toBe(true);
+    w.workspace.toggleFavorite('/p/docs');
+    expect(w.workspace.isFavoriteDir('/p/docs')).toBe(false);
+  });
+
   it('picks the deepest folder that contains a file', () => {
     const w = setup();
     w.workspace.addFolder('/a');

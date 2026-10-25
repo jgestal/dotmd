@@ -172,6 +172,7 @@ export const session = $state(
     folders: [] as string[],
     /** Favourite documents, pinned below the folders. */
     favorites: [] as string[],
+    favoriteDirs: [] as string[],
     /** Sidebar sections the user collapsed (folder paths or "favorites"). */
     collapsed: [] as string[],
     /** Relative heights of the folder sections (dragging the bars between them). */

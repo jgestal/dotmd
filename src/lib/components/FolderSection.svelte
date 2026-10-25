@@ -56,7 +56,7 @@
 </section>
 
 <style>
-  .ws-section { display: flex; flex-direction: column; min-height: 0; flex: 1 1 0; }
+  .ws-section { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
   .ws-section.collapsed { flex: 0 0 auto; }
   .ws-head { display: flex; align-items: center; gap: 1px; padding: 4px 6px 2px 4px; }
   .ws-title {

@@ -119,6 +119,11 @@ html.flicker .app { animation: crt-flicker 6s infinite; }
 }
 @media (prefers-reduced-motion: reduce) { html.flicker .app { animation: none; } }
 
+/* ---- Decorative paper themes: the editors use the theme's writing font, the preview the paper ---- */
+html.writing-font .source.md, html.writing-font .source { --font-editor: var(--font-writing); --font-heading: var(--font-writing); --font-code: var(--font-writing); }
+html.writing-font .source, html.writing-font .visual { --font-heading: var(--font-writing); --font-code: var(--font-writing); background: var(--paper, var(--bg)); }
+html.writing-font .visual .ProseMirror, html.writing-font .visual .ProseMirror :is(h1, h2, h3, h4, h5, h6, p, li, blockquote) { font-family: var(--font-writing); }
+
 /* ---- Calm: quiet chrome, nothing competes with the text (iA Writer-like) ---- */
 html.theme-calm .toolbar, html.theme-calm .statusbar, html.theme-calm .tabbar { border-color: transparent !important; }
 html.theme-calm .toolbar .tb { opacity: 0.55; transition: opacity 0.15s; }

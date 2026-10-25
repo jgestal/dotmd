@@ -3,7 +3,14 @@
   "settings": { "theme": "tractor" },
   "actions": [
     { "waitFor": "document.querySelector('.markdown-body .mermaid-diagram svg')", "wait": 600 },
-    { "assert": "getComputedStyle(document.querySelector('.preview')).backgroundImage.includes('repeating-linear-gradient')", "shot": "read" },
-    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')", "wait": 600, "shot": "source" }
+    { "assert": "(() => { const bg = getComputedStyle(document.querySelector('.preview')).backgroundImage; return bg.includes('radial-gradient') && !bg.includes('rgba(150, 196, 156') ; })()", "shot": "read" },
+    { "assert": "(() => { const p = document.querySelector('.preview').getBoundingClientRect(); const h = document.querySelector('.preview h1').getBoundingClientRect(); return h.left - p.left > 48 + 40 && p.right - h.right > 48 + 40; })()" },
+    { "chord": ["Mod", "Digit2"], "waitFor": "document.querySelector('.cm-content')", "wait": 600, "shot": "source" },
+    { "assert": "getComputedStyle(document.querySelector('.cm-content')).backgroundImage === 'none' && getComputedStyle(document.querySelector('.cm-scroller')).fontFamily.includes('IBM Plex Mono')" },
+    { "chord": ["Mod", "Digit1"], "wait": 300 },
+    { "eval": "{ import('/src/lib/actions.ts').then(m => m.openPath(window.__FIX + '/long.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'long.md'", "wait": 400 },
+    { "chord": ["Mod", "Alt", "KeyP"], "waitFor": "document.querySelectorAll('.page').length >= 3", "wait": 800 },
+    { "eval": "{ document.querySelector('.preview-scroll').scrollTop = document.querySelectorAll('.page')[1].offsetTop - 200 }", "wait": 400, "shot": "pages" },
+    { "assert": "(() => { const [a, b] = document.querySelectorAll('.page'); return Math.abs(b.getBoundingClientRect().top - a.getBoundingClientRect().bottom) < 1 && getComputedStyle(b, '::before').borderTopStyle === 'dashed'; })()" }
   ]
 }

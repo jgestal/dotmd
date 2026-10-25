@@ -6,6 +6,8 @@ import { owningFolder, pushRecent, replaced, retargetAll, toggled, withFolder, w
 export interface WorkspaceSession {
   folders: string[];
   favorites: string[];
+  /** Favourites that are folders (the rest are files); kept even while a folder is missing. */
+  favoriteDirs?: string[];
   recentFolders: string[];
   lastFolder: string | null;
 }
@@ -29,6 +31,8 @@ export function createWorkspace(d: WorkspaceDeps) {
   const { services: s, session, state, missing } = d;
   const folders = () => session.folders ?? [];
   const favorites = () => session.favorites ?? [];
+  const favoriteDirs = () => session.favoriteDirs ?? [];
+  const isFavoriteDir = (path: string) => favoriteDirs().includes(path);
 
   function addFolder(dir: string) {
     session.folders = withFolder(folders(), dir);
@@ -47,12 +51,13 @@ export function createWorkspace(d: WorkspaceDeps) {
 
   function removeFavorite(path: string) {
     session.favorites = favorites().filter((f) => f !== path);
+    session.favoriteDirs = favoriteDirs().filter((f) => f !== path);
     delete missing[path];
   }
 
   /** Re-checks every folder and favourite; returns how many are missing. */
   async function checkMissing(): Promise<number> {
-    const items = [...folders().map((p) => [p, 'dir'] as const), ...favorites().map((p) => [p, 'file'] as const)];
+    const items = [...folders().map((p) => [p, 'dir'] as const), ...favorites().map((p) => [p, isFavoriteDir(p) ? 'dir' : 'file'] as const)];
     const kinds = await Promise.all(items.map(([p]) => s.fs.kind(p)));
     let count = 0;
     items.forEach(([p, want], i) => {
@@ -70,10 +75,19 @@ export function createWorkspace(d: WorkspaceDeps) {
     checkMissing,
     folderOf: (path: string) => owningFolder(folders(), path),
     isFavorite: (path: string | null) => !!path && favorites().includes(path),
-    toggleFavorite(path: string | null) {
+    isFavoriteDir,
+    /** Files and folders can both be favourites; `isDir` says which this one is. */
+    toggleFavorite(path: string | null, isDir = false) {
       if (!path) return;
+      const adding = !favorites().includes(path);
       session.favorites = toggled(favorites(), path);
+      session.favoriteDirs = adding && isDir ? [...favoriteDirs(), path] : favoriteDirs().filter((f) => f !== path);
       delete missing[path];
+    },
+    /** A favourite folder opens in the sidebar (or becomes the active one if it is already there). */
+    openFavoriteFolder(path: string) {
+      if (folders().includes(path)) { state.root = path; session.lastFolder = path; }
+      else addFolder(path);
     },
     /** Opening a file makes its folder active; a lone file opens its folder. */
     revealFolderOf(path: string) {
@@ -89,6 +103,7 @@ export function createWorkspace(d: WorkspaceDeps) {
     /** Keeps favourites and folders pointing at items moved or renamed inside DotMD. */
     retarget(from: string, to: string) {
       session.favorites = retargetAll(favorites(), from, to);
+      session.favoriteDirs = retargetAll(favoriteDirs(), from, to);
       session.folders = retargetAll(folders(), from, to);
     },
     isUnderWorkspace: (p: string) => folders().some((f) => isUnder(p, f)),
@@ -105,12 +120,16 @@ export function createWorkspace(d: WorkspaceDeps) {
         ok: s.t('fav.locate'), cancel: s.t('fav.remove'),
       });
       if (!locate) return isFolder ? removeFolder(path) : removeFavorite(path);
-      const found = isFolder
+      const dirFavorite = !isFolder && isFavoriteDir(path);
+      const found = isFolder || dirFavorite
         ? await s.dialogs.pickFolder({ defaultPath: d.dirname(path) })
         : (await s.dialogs.pickFiles({ defaultPath: d.dirname(path) }))[0] ?? null;
       if (!found) return;
       if (isFolder) session.folders = replaced(folders(), path, found);
-      else session.favorites = replaced(favorites(), path, found);
+      else {
+        session.favorites = replaced(favorites(), path, found);
+        if (dirFavorite) session.favoriteDirs = replaced(favoriteDirs(), path, found);
+      }
       delete missing[path];
       state.treeVersion++;
     },

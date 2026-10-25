@@ -203,39 +203,47 @@
 .theme-screenplay .markdown-body hr::after, .markdown-body.theme-screenplay hr::after { content: '* * *'; }
 .theme-screenplay .preview:not(.paged), main.markdown-body.theme-screenplay { background: var(--paper); }
 
-/* Continuous (tractor-feed) paper: green-bar bands, sprocket holes, perforations and the
-   tear line of each 11-inch sheet. Also applied to exported HTML/PDF via main.theme-tractor. */
-.theme-tractor .preview:not(.paged), .theme-tractor .cm-content, .theme-tractor .visual .ProseMirror, main.markdown-body.theme-tractor {
-  --band-h: calc(var(--doc-size, 16px) * var(--line-height, 1.65) * 2);
+/* Continuous (tractor-feed) paper, for reading and output only (the editors stay a plain writing
+   surface): plain paper with the two sprocket strips as an ornament outside the text, which keeps
+   generous margins inside them. In page view the sheets are joined and only the perforated tear
+   line between them shows. Also used by exported HTML/PDF via main.theme-tractor. */
+.theme-tractor {
+  --strip: 0.5in;
   --hole: radial-gradient(circle at 50% 50%, var(--bg) 0 4.5px, var(--perf) 5px, transparent 6px);
-  background-color: var(--paper);
-  background-image:
-    var(--hole), var(--hole),
-    linear-gradient(var(--paper), var(--paper)), linear-gradient(var(--paper), var(--paper)),
-    repeating-linear-gradient(to bottom, var(--perf) 0 3px, transparent 3px 7px),
-    repeating-linear-gradient(to bottom, var(--perf) 0 3px, transparent 3px 7px),
-    repeating-linear-gradient(to bottom, transparent 0 calc(11in - 1px), var(--perf) calc(11in - 1px) 11in),
-    repeating-linear-gradient(to bottom, var(--band) 0 var(--band-h), transparent var(--band-h) calc(var(--band-h) * 2));
-  background-size: 0.5in 0.5in, 0.5in 0.5in, 0.5in 100%, 0.5in 100%, 1px 100%, 1px 100%, 100% 100%, 100% 100%;
-  background-repeat: repeat-y, repeat-y, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-  background-position: left top, right top, left top, right top, 0.5in 0, calc(100% - 0.5in) 0, 0 0, 0 0;
-  padding-left: calc(0.5in + 36px) !important;
-  padding-right: calc(0.5in + 36px) !important;
+  --strips:
+    var(--hole) left top / var(--strip) var(--strip) repeat-y,
+    var(--hole) right top / var(--strip) var(--strip) repeat-y,
+    repeating-linear-gradient(to bottom, var(--perf) 0 3px, transparent 3px 7px) var(--strip) 0 / 1px 100% no-repeat,
+    repeating-linear-gradient(to bottom, var(--perf) 0 3px, transparent 3px 7px) calc(100% - var(--strip)) 0 / 1px 100% no-repeat;
+}
+.theme-tractor .preview:not(.paged), main.markdown-body.theme-tractor:not(.paged) {
+  background: var(--strips), var(--paper);
+  padding-left: calc(var(--strip) + 0.6in) !important;
+  padding-right: calc(var(--strip) + 0.6in) !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
-.theme-tractor .markdown-body, .theme-tractor .cm-content, .markdown-body.theme-tractor {
+main.markdown-body.theme-tractor:not(.paged) { padding-top: 0.6in; padding-bottom: 0.6in; }
+/* Joined sheets: no gap, no shadow between them, a dashed tear line where they meet. */
+.theme-tractor .paged .page, .theme-tractor.paged .page {
+  background: var(--strips), var(--paper);
+  padding-left: calc(var(--strip) + var(--page-m)); padding-right: calc(var(--strip) + var(--page-m));
+  margin-bottom: 0; border-radius: 0; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+.theme-tractor .paged .page + .page::before, .theme-tractor.paged .page + .page::before {
+  content: ''; position: absolute; left: var(--strip); right: var(--strip); top: 0;
+  border-top: 1px dashed var(--perf);
+}
+@media print { .theme-tractor .paged .page, .theme-tractor.paged .page { box-shadow: none; } }
+.theme-tractor .markdown-body, .markdown-body.theme-tractor {
   font-weight: 600;
   color: color-mix(in srgb, var(--fg) 92%, transparent);
   text-shadow: 0.3px 0.3px 0 color-mix(in srgb, var(--fg) 30%, transparent);
 }
 .theme-tractor .markdown-body h1, .theme-tractor .markdown-body h2, .markdown-body.theme-tractor h1, .markdown-body.theme-tractor h2 {
-  font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em;
+  font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; overflow-wrap: anywhere;
 }
 .theme-tractor .markdown-body h2, .markdown-body.theme-tractor h2 { border-bottom: 2px dotted var(--perf); }
 .theme-tractor .markdown-body pre, .theme-tractor .markdown-body code { background: transparent; }
-.theme-tractor .cm-cursor { border-left: 0.6em solid var(--accent) !important; opacity: 0.45; }
-main.markdown-body.theme-tractor { padding-top: 0.5in; padding-bottom: 0.5in; }
-.theme-tractor .visual .ProseMirror { min-height: calc(100vh - 140px); }
 
 /* Page sheets (page view and paginated PDF export); --page-w/-h/-m are set by the container. */
 .paged .page {

@@ -1,6 +1,6 @@
 <script lang="ts">
-  // Favourite documents, always shown below the workspace folders. Missing ones are struck through
-  // with a warning; clicking them offers to locate the file or remove the favourite.
+  // Favourite documents and folders, always shown below the workspace folders. Missing ones are
+  // struck through with a warning; clicking them offers to locate them or remove the favourite.
   import { Menu } from '@tauri-apps/api/menu';
   import { revealItemInDir } from '@tauri-apps/plugin-opener';
   import Icon from './Icon.svelte';
@@ -8,7 +8,7 @@
   import { t } from '../i18n';
   import { basename, dirname, docKind } from '../path';
   import { openPath } from '../actions';
-  import { checkMissing, missing, removeFavorite, resolveMissing } from '../workspace.svelte';
+  import { checkMissing, isFavoriteDir, missing, openFavoriteFolder, removeFavorite, resolveMissing } from '../workspace.svelte';
 
   const favorites = $derived(session.favorites ?? []);
   const collapsed = $derived((session.collapsed ?? []).includes('favorites'));
@@ -28,7 +28,7 @@
   async function menu(path: string) {
     const m = await Menu.new({
       items: [
-        { id: 'open', text: t('ctx.open'), enabled: !missing[path], action: () => void openPath(path) },
+        { id: 'open', text: t('ctx.open'), enabled: !missing[path], action: () => open(path) },
         { id: 'reveal', text: t('ctx.reveal'), enabled: !missing[path], action: () => void revealItemInDir(path) },
         { id: 'locate', text: t('fav.locate'), action: () => void resolveMissing(path, false) },
         { item: 'Separator' },
@@ -38,7 +38,12 @@
     await m.popup();
   }
 
-  const icon = (p: string) => ({ markdown: 'filetext', text: 'filetext', code: 'code', csv: 'table' } as const)[docKind(p)];
+  function open(path: string) {
+    if (isFavoriteDir(path)) openFavoriteFolder(path);
+    else void openPath(path);
+  }
+
+  const icon = (p: string) => isFavoriteDir(p) ? 'folder' as const : ({ markdown: 'filetext', text: 'filetext', code: 'code', csv: 'table' } as const)[docKind(p)];
 </script>
 
 <section class="fav-section" class:collapsed>
@@ -53,8 +58,8 @@
     <div class="list">
       {#each favorites as p (p)}
         {@const gone = !!missing[p]}
-        <button class="fav" class:gone class:active={app.path === p} title={gone ? `${t('fav.missingTip')}\n${p}` : p}
-          onclick={() => (gone ? resolveMissing(p, false) : openPath(p))}
+        <button class="fav" class:gone class:active={app.path === p || (isFavoriteDir(p) && app.root === p)} title={gone ? `${t('fav.missingTip')}\n${p}` : p}
+          onclick={() => (gone ? resolveMissing(p, false) : open(p))} data-kind={isFavoriteDir(p) ? 'dir' : 'file'}
           oncontextmenu={(e) => { e.preventDefault(); menu(p); }}>
           {#if gone}<span class="warn" aria-hidden="true">⚠</span>{:else}<Icon name={icon(p)} size={14} />{/if}
           <span class="name">{basename(p)}</span>
@@ -68,7 +73,7 @@
 </section>
 
 <style>
-  .fav-section { display: flex; flex-direction: column; flex: 0 1 auto; max-height: 45%; min-height: 0; border-top: 1px solid var(--border); }
+  .fav-section { display: flex; flex-direction: column; flex: 0 0 auto; max-height: 40%; min-height: 0; border-top: 1px solid var(--border); margin-top: 4px; }
   header { padding: 4px 6px 2px 4px; }
   .fav-title {
     display: flex; align-items: center; gap: 4px; width: 100%; border: 0; background: none; padding: 2px 4px; border-radius: 5px;

@@ -263,7 +263,7 @@ const gl: Record<Key, string> = {
   'fav.add': 'Engadir a favoritos',
   'fav.removeShort': 'Quitar de favoritos',
   'fav.toggle': 'Engadir/quitar de favoritos',
-  'fav.empty': 'Marca un documento cunha estrela para telo aquí.',
+  'fav.empty': 'Marca un documento cunha estrela, ou preme co botón dereito nun cartafol ▸ Engadir a favoritos, para telo aquí.',
   'fav.missingToast': 'Non se atoparon {n} favorito(s) ou cartafol(es)',
   'fav.missingTitle': 'Non se atopou',
   'fav.missingBody': '«{name}» xa non está en {path}. Queres localizalo ou quitalo de favoritos?',
@@ -363,6 +363,10 @@ const gl: Record<Key, string> = {
   'slides.empty': 'Este documento aínda non ten diapositivas. Sepáraas cunha liña que só conteña ---.',
   'slides.noNotes': 'Esta diapositiva non ten notas. Comeza un parágrafo con «Note:» para engadilas.',
   'slides.help': '← → moverse · N notas · Esc saír',
+  'theme.group.writing': 'Para escribir',
+  'theme.group.retro': 'Retro',
+  'theme.group.paper': 'Papel e impresión',
+  'theme.paperHint': 'Os temas de papel están pensados para ler e exportar: o editor segue sendo unha superficie de escritura limpa e o papel vese en lectura, na vista de páxinas e ao exportar.',
 };
 
 export default gl;

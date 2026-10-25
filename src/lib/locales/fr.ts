@@ -263,7 +263,7 @@ const fr: Record<Key, string> = {
   'fav.add': 'Ajouter aux favoris',
   'fav.removeShort': 'Retirer des favoris',
   'fav.toggle': 'Ajouter/retirer des favoris',
-  'fav.empty': 'Marquez un document d’une étoile pour le garder ici.',
+  'fav.empty': 'Marquez un document d’une étoile, ou faites un clic droit sur un dossier ▸ Ajouter aux favoris, pour le garder ici.',
   'fav.missingToast': '{n} favori(s) ou dossier(s) introuvable(s)',
   'fav.missingTitle': 'Introuvable',
   'fav.missingBody': '« {name} » n’est plus dans {path}. Le localiser ou le retirer des favoris ?',
@@ -363,6 +363,10 @@ const fr: Record<Key, string> = {
   'slides.empty': 'Ce document n’a pas encore de diapositives. Séparez-les par une ligne ne contenant que ---.',
   'slides.noNotes': 'Pas de notes pour cette diapositive. Commencez un paragraphe par « Note: » pour en ajouter.',
   'slides.help': '← → naviguer · N notes · Échap quitter',
+  'theme.group.writing': 'Pour écrire',
+  'theme.group.retro': 'Rétro',
+  'theme.group.paper': 'Papier et impression',
+  'theme.paperHint': 'Les thèmes papier sont faits pour lire et exporter : l’éditeur reste une surface d’écriture épurée et le papier apparaît en lecture, en vue en pages et à l’export.',
 };
 
 export default fr;

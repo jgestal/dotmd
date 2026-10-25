@@ -84,14 +84,16 @@
     <div class="sections" bind:this={sectionsEl}>
       {#each workspaceFolders() as root, i (root)}
         {#if i > 0}<div class="splitter" role="separator" aria-orientation="horizontal" onpointerdown={(e) => startSplit(e, i)}></div>{/if}
-        <div class="slot" style:flex-grow={session.sectionGrow?.[root] ?? 1}><FolderSection {root} {filter} /></div>
+        <div class="slot" class:sized={session.sectionGrow?.[root] != null} style:flex-grow={session.sectionGrow?.[root]}><FolderSection {root} {filter} /></div>
       {:else}
         <div class="empty">
           <p>{t('sidebar.noFolder')}</p>
           <button class="btn" onclick={() => openFolder()}>{t('welcome.openFolder')}</button>
         </div>
       {/each}
+      <!-- Right below the folders, not pinned to the bottom of the sidebar. -->
       <FavoritesSection />
+      <div class="rest"></div>
     </div>
   {:else if app.sidebarTab === 'search'}
     <SearchPanel />
@@ -124,8 +126,11 @@
   .files-bar { display: flex; align-items: center; gap: 2px; padding: 4px 8px 4px; }
   .filter { flex: 1; min-width: 0; height: 26px; font-size: 12px; }
   .sections { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-  .slot { flex: 1 1 0; display: flex; flex-direction: column; min-height: 0; }
+  /* Folders take the height they need (scrolling when long); dragged bars give them fixed shares. */
+  .slot { flex: 0 1 auto; display: flex; flex-direction: column; min-height: 0; }
+  .slot.sized { flex-basis: 0; }
   .slot > :global(.ws-section) { flex: 1 1 auto; }
+  .rest { flex: 1 1 0; min-height: 0; }
   .splitter { height: 5px; margin: -2px 0; cursor: row-resize; position: relative; z-index: 2; flex-shrink: 0; }
   .splitter::after { content: ''; position: absolute; left: 8px; right: 8px; top: 2px; height: 1px; background: var(--border); }
   .splitter:hover::after { background: var(--accent); height: 2px; }

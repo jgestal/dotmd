@@ -263,7 +263,7 @@ const ca: Record<Key, string> = {
   'fav.add': 'Afegeix als preferits',
   'fav.removeShort': 'Treu dels preferits',
   'fav.toggle': 'Afegeix/treu dels preferits',
-  'fav.empty': 'Marca un document amb una estrella per tenir-lo aquí.',
+  'fav.empty': 'Marca un document amb una estrella, o fes clic dret en una carpeta ▸ Afegeix als preferits, per tenir-lo aquí.',
   'fav.missingToast': 'No s’han trobat {n} preferit(s) o carpeta(es)',
   'fav.missingTitle': 'No s’ha trobat',
   'fav.missingBody': '«{name}» ja no és a {path}. Vols localitzar-lo o treure’l dels preferits?',
@@ -363,6 +363,10 @@ const ca: Record<Key, string> = {
   'slides.empty': 'Aquest document encara no té diapositives. Separa-les amb una línia que només contingui ---.',
   'slides.noNotes': 'Aquesta diapositiva no té notes. Comença un paràgraf amb «Note:» per afegir-ne.',
   'slides.help': '← → moure’s · N notes · Esc sortir',
+  'theme.group.writing': 'Per escriure',
+  'theme.group.retro': 'Retro',
+  'theme.group.paper': 'Paper i impressió',
+  'theme.paperHint': 'Els temes de paper són per llegir i exportar: l’editor continua sent una superfície d’escriptura neta i el paper es veu en mode lectura, a la vista de pàgines i en exportar.',
 };
 
 export default ca;

@@ -263,7 +263,7 @@ const de: Record<Key, string> = {
   'fav.add': 'Zu Favoriten hinzufügen',
   'fav.removeShort': 'Aus Favoriten entfernen',
   'fav.toggle': 'Favorit umschalten',
-  'fav.empty': 'Markiere ein Dokument mit einem Stern, um es hier zu behalten.',
+  'fav.empty': 'Markiere ein Dokument mit einem Stern oder klicke mit rechts auf einen Ordner ▸ Zu Favoriten hinzufügen, um es hier zu behalten.',
   'fav.missingToast': '{n} Favorit(en) oder Ordner nicht gefunden',
   'fav.missingTitle': 'Nicht gefunden',
   'fav.missingBody': '„{name}“ liegt nicht mehr unter {path}. Suchen oder aus den Favoriten entfernen?',
@@ -363,6 +363,10 @@ const de: Record<Key, string> = {
   'slides.empty': 'Dieses Dokument hat noch keine Folien. Trenne sie mit einer Zeile, die nur --- enthält.',
   'slides.noNotes': 'Keine Sprechernotizen für diese Folie. Beginne einen Absatz mit „Note:“, um welche hinzuzufügen.',
   'slides.help': '← → blättern · N Notizen · Esc beenden',
+  'theme.group.writing': 'Zum Schreiben',
+  'theme.group.retro': 'Retro',
+  'theme.group.paper': 'Papier und Druck',
+  'theme.paperHint': 'Papier-Designs sind zum Lesen und Exportieren gedacht: Der Editor bleibt eine schlichte Schreibfläche, das Papier erscheint im Lesemodus, in der Seitenansicht und beim Export.',
 };
 
 export default de;

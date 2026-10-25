@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { EFFECT_SETTING, FONTS, THEMES, activeEffects, resolveTheme } from '../themes';
+import { EFFECT_SETTING, FONTS, THEMES, THEME_GROUPS, activeEffects, resolveTheme } from '../themes';
 
 const byId = (id: string) => THEMES.find((t) => t.id === id)!;
 
@@ -38,6 +38,12 @@ describe('themes', () => {
     expect(byId('typewriter').sound).toBe('typewriter');
     expect(byId('screenplay').sound).toBe('typewriter');
     expect(byId('msdos').sound).toBe('mechanical');
+  });
+
+  it('belong to a group, and decorative paper keeps a readable writing font', () => {
+    for (const t of THEMES) expect(THEME_GROUPS, t.id).toContain(t.group);
+    expect(byId('tractor').group).toBe('paper');
+    expect(byId('tractor').writingFont).toContain('IBM Plex Mono');
   });
 
   it('resolve "auto" by the system appearance', () => {

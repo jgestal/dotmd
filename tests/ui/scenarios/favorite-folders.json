@@ -1,0 +1,11 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.fav-section')" },
+    { "assert": "(() => { const f = document.querySelector('.fav-section').getBoundingClientRect(); const last = [...document.querySelectorAll('.ws-section')].pop().getBoundingClientRect(); return f.top - last.bottom < 12 && f.top < window.innerHeight * 0.6; })()" },
+    { "eval": "{ import('/src/lib/workspace.svelte.ts').then(m => m.toggleFavorite(window.__FIX + '/notes', true)) }", "waitFor": "document.querySelector('.fav[data-kind=dir]')", "shot": "folder-favorite" },
+    { "eval": "{ document.querySelector('.fav[data-kind=dir]').click() }", "wait": 500 },
+    { "assert": "[...document.querySelectorAll('.ws-section .label')].map(e => e.textContent).includes('notes')" },
+    { "assert": "document.querySelector('.fav[data-kind=dir]').classList.contains('active')" }
+  ]
+}
