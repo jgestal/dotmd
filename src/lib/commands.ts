@@ -7,6 +7,7 @@ import { t, type Key } from './i18n';
 import { isMac, isPlainText } from './path';
 import { THEMES } from './themes';
 import { toggleAppearance } from './appearance.svelte';
+import { toggleFavorite } from './workspace.svelte';
 import type { FormatAction } from './snippets';
 import {
   newDoc, openFileDialog, openFolder, saveDoc, toggleZen, toggleTypewriterMode, insertLink, insertImage,
@@ -62,6 +63,7 @@ function base(): Command[] {
     { id: 'file.quickOpen', label: L('cmd.quickOpen'), shortcut: 'CmdOrCtrl+P', menu: 'file', run: () => (app.quickOpen = true) },
     { id: 'file.openFolder', label: L('cmd.openFolder'), shortcut: 'CmdOrCtrl+Shift+O', menu: 'file', run: () => openFolder() },
     { id: 'tab.close', label: L('tabs.close'), shortcut: 'CmdOrCtrl+W', menu: 'file', separator: true, enabled: hasDoc, run: () => closeTab() },
+    { id: 'file.favorite', label: L('fav.toggle'), shortcut: 'CmdOrCtrl+Alt+B', menu: 'file', enabled: () => !!app.path, run: () => toggleFavorite(app.path) },
     { id: 'tab.closeOthers', label: L('tabs.closeOthers'), menu: 'file', enabled: () => app.tabs.length > 1, run: () => closeOtherTabs() },
     { id: 'tab.closeRight', label: L('tabs.closeRight'), menu: 'file', enabled: () => app.activeTab < app.tabs.length - 1, run: () => closeTabsToRight() },
     { id: 'tab.closeLeft', label: L('tabs.closeLeft'), menu: 'file', enabled: () => app.activeTab > 0, run: () => closeTabsToLeft() },

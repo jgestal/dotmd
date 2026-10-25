@@ -1,0 +1,20 @@
+{
+  "open": "$FIX/README.md",
+  "actions": [
+    { "waitFor": "document.querySelector('.ws-section') && document.querySelector('.topbar .star')" },
+    { "eval": "{ document.querySelector('.topbar .star').click() }", "wait": 300 },
+    { "assert": "document.querySelector('.topbar .star.on') && [...document.querySelectorAll('.fav .name')].map(e => e.textContent).join() === 'README.md'" },
+    { "eval": "{ import('/src/lib/actions.ts').then(a => a.openPath(window.__FIX + '/long.md')) }", "waitFor": "document.querySelector('.topbar .name')?.textContent === 'long.md'" },
+    { "chord": ["Mod", "Alt", "KeyB"], "wait": 300, "assert": "document.querySelectorAll('.fav').length === 2" },
+    { "eval": "{ import('/src/lib/actions.ts').then(a => a.openFolder(window.__FIX + '/data')) }", "waitFor": "document.querySelectorAll('.ws-section').length === 2", "wait": 300 },
+    { "assert": "!!document.querySelector('.sections .splitter') && document.querySelector('.ws-section.active .label').textContent === 'data'" },
+    { "eval": "{ import('/node_modules/@tauri-apps/api/core.js').then(c => c.invoke('trash_path', { path: window.__FIX + '/long.md' })).then(() => import('/src/lib/state.svelte.ts')).then(m => m.app.treeVersion++) }", "waitFor": "document.querySelector('.fav.gone')", "wait": 300 },
+    { "assert": "document.querySelector('.fav.gone .name').textContent === 'long.md' && getComputedStyle(document.querySelector('.fav.gone .name')).textDecorationLine.includes('line-through')", "shot": "missing" },
+    { "reload": true, "waitFor": "document.querySelectorAll('.fav').length === 2 && document.querySelectorAll('.ws-section').length === 2", "wait": 800 },
+    { "assert": "!!document.querySelector('.fav.gone') && document.querySelector('.toast')?.textContent.includes('1')" },
+    { "eval": "{ import('/src/lib/workspace.svelte.ts').then(w => w.removeFavorite(window.__FIX + '/long.md')) }", "wait": 300, "assert": "document.querySelectorAll('.fav').length === 1" },
+    { "eval": "{ import('/src/lib/actions.ts').then(a => a.movePath(window.__FIX + '/README.md', window.__FIX + '/notes')) }", "wait": 600 },
+    { "assert": "import('/src/lib/state.svelte.ts').then(m => m.session.favorites[0].endsWith('/notes/README.md')) && !document.querySelector('.fav.gone')" },
+    { "eval": "{ import('/src/lib/workspace.svelte.ts').then(w => w.removeFolder(window.__FIX + '/data')) }", "wait": 300, "assert": "document.querySelectorAll('.ws-section').length === 1" }
+  ]
+}

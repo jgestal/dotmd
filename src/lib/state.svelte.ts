@@ -158,7 +158,15 @@ function initialLang(): 'en' | 'es' {
 export const settings: Settings = $state(load('dotmd.settings', { ...DEFAULT_SETTINGS, lang: initialLang() }));
 
 export const session = $state(
-  load('dotmd.session', { lastFolder: null as string | null, lastFile: null as string | null, recent: [] as string[], recentFolders: [] as string[], expanded: [] as string[], tabs: [] as string[] }),
+  load('dotmd.session', { lastFolder: null as string | null, lastFile: null as string | null, recent: [] as string[], recentFolders: [] as string[], expanded: [] as string[], tabs: [] as string[],
+    /** Folders open in the sidebar, in order. */
+    folders: [] as string[],
+    /** Favourite documents, pinned below the folders. */
+    favorites: [] as string[],
+    /** Sidebar sections the user collapsed (folder paths or "favorites"). */
+    collapsed: [] as string[],
+    /** Relative heights of the folder sections (dragging the bars between them). */
+    sectionGrow: {} as Record<string, number> }),
 );
 
 export const app = $state({

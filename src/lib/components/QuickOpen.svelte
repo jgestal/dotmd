@@ -6,6 +6,7 @@
   import { basename, dirname, relative } from '../path';
   import { fuzzyMatch, highlight } from '../fuzzy';
   import { openPath } from '../actions';
+  import { workspaceFolders } from '../workspace.svelte';
 
   interface Hit { path: string; rel: string; score: number; indices: number[] }
 
@@ -17,15 +18,18 @@
       const rel = (p: string) => (app.root && p.startsWith(app.root) ? relative(app.root, p) : basename(p));
       return recent.map((p) => ({ item: p, html: highlight(rel(p), []), detail: app.root && p.startsWith(app.root) ? '' : dirname(p) }));
     }
-    if (!app.root) {
+    const roots = workspaceFolders();
+    if (!roots.length) {
       return session.recent
         .map((p) => ({ p, m: fuzzyMatch(q, basename(p)) }))
         .filter((x) => x.m)
         .sort((a, b) => b.m!.score - a.m!.score)
         .map(({ p, m }) => ({ item: p, html: highlight(basename(p), m!.indices), detail: dirname(p) }));
     }
-    const hits = await invoke<Hit[]>('fuzzy_find', { root: app.root, query: q, limit: 60 });
-    return hits.map(label);
+    const lists = await Promise.all(roots.map((root) => invoke<Hit[]>('fuzzy_find', { root, query: q, limit: 60 }).then((hits) =>
+      // With several folders the folder name prefixes each path (its letters do not count as matches).
+      roots.length > 1 ? hits.map((h) => ({ ...h, rel: `${basename(root)}/${h.rel}`, indices: h.indices.map((i) => i + basename(root).length + 1) })) : hits)));
+    return lists.flat().sort((a, b) => b.score - a.score).slice(0, 60).map(label);
   }
 </script>
 

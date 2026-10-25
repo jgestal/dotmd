@@ -5,7 +5,7 @@
 //   node tests/ui/run.mjs                 # every scenario in tests/ui/scenarios
 //   node tests/ui/run.mjs sounds tabs     # only these
 //
-// Scenario steps: eval, click, drag ([from, to] selectors), keys, chord (["Mod","Shift","KeyP"]), type, waitFor (JS condition), wait (ms), assert (must be true), shot.
+// Scenario steps: reload, eval, click, drag ([from, to] selectors), keys, chord (["Mod","Shift","KeyP"]), type, waitFor (JS condition), wait (ms), assert (must be true), shot.
 //
 // Env: CHROME_PATH (browser binary), UI_PORT (port of a fresh Vite server, default 1425). Screenshots go to tests/ui/out.
 import http from 'node:http';
@@ -74,10 +74,11 @@ const handlers = {
       .map((rel) => ({ path: path.join(root, rel), rel, score: 1, indices: [] }));
   },
   // Returns the events; the fake bridge feeds them to the Channel (see invoke below).
-  search_folder: ({ root, query }) => {
+  search_folder: ({ roots, query }) => {
     const events = [];
     let total = 0;
-    for (const p of handlers.list_tree({ path: root })) {
+    const root = roots[0];
+    for (const p of roots.flatMap((r) => handlers.list_tree({ path: r }))) {
       const matches = fs.readFileSync(p, 'utf8').split('\n').flatMap((text, i) => {
         const at = text.toLowerCase().indexOf(query.toLowerCase());
         return at < 0 ? [] : [{ line: i + 1, text, ranges: [[at, at + query.length]] }];
@@ -203,8 +204,12 @@ async function runScenario(file, name) {
   page.on('console', (m) => m.type() === 'error' && !/Failed to load resource/.test(m.text()) && errors.push(m.text()));
   await page.evaluateOnNewDocument((fix) => { window.__FIX = fix; }, FIX.replaceAll('\\', '/'));
   await page.evaluateOnNewDocument((settings) => {
-    localStorage.clear();
-    if (settings) localStorage.setItem('dotmd.settings', JSON.stringify(settings));
+    // Fresh storage on the scenario's first load only, so a reload can test persistence.
+    if (!sessionStorage.getItem('__dotmd_init')) {
+      localStorage.clear();
+      if (settings) localStorage.setItem('dotmd.settings', JSON.stringify(settings));
+      sessionStorage.setItem('__dotmd_init', '1');
+    }
     let cb = 0;
     window.__callbacks = {};
     window.__listeners = [];
@@ -263,6 +268,7 @@ async function runScenario(file, name) {
       await page.mouse.up();
     }
     if (s.type) await page.keyboard.type(s.type, { delay: 5 });
+    if (s.reload) await page.reload({ waitUntil: 'networkidle0' });
     if (s.eval) await page.evaluate(s.eval).catch((e) => failed.push(`eval threw: ${e.message.split("\n")[0]}`));
     if (s.waitFor) {
       const ok = await page.waitForFunction(s.waitFor, { timeout: s.timeout ?? 15000 }).then(() => true, () => false);

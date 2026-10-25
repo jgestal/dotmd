@@ -25,6 +25,7 @@
   import { forwardConsole } from '$lib/log';
   import { runCliExport } from '$lib/cli';
   import { scheduleUpdateCheck } from '$lib/updates';
+  import { warnAboutMissing, isFavorite, toggleFavorite } from '$lib/workspace.svelte';
   import { t, type Key } from '$lib/i18n';
   import { isMac, isPlainText, modKey } from '$lib/path';
   import { insertImagePaths, isImagePath } from '$lib/actions';
@@ -117,8 +118,11 @@
         const pending = await invoke<string[]>('take_pending_open');
         if (pending.length) await handleDroppedPaths(pending);
         else {
-          if (session.lastFolder && (await invoke('path_kind', { path: session.lastFolder })) === 'dir') app.root = session.lastFolder;
+          // Older sessions only knew one folder.
+          if (!session.folders?.length && session.lastFolder) session.folders = [session.lastFolder];
+          app.root = session.lastFolder && session.folders.includes(session.lastFolder) ? session.lastFolder : session.folders[0] ?? null;
           await restoreTabs();
+          void warnAboutMissing();
         }
       } catch (e) {
         console.error('restoring the session failed', e);
@@ -142,6 +146,10 @@
       <div class="title" data-tauri-drag-region>
         {#if app.docOpen}
           <span class="name" data-tauri-drag-region>{docName()}</span>
+          {#if app.path}
+            <button class="star" class:on={isFavorite(app.path)} onclick={() => toggleFavorite(app.path)}
+              title="{isFavorite(app.path) ? t('fav.removeShort') : t('fav.add')}  {modKey}⌥B" aria-pressed={isFavorite(app.path)}>{isFavorite(app.path) ? '★' : '☆'}</button>
+          {/if}
           {#if isDirty()}<span class="dirty" title={t('top.unsaved')}>●</span>{/if}
         {/if}
       </div>
@@ -224,6 +232,9 @@
   .title { display: flex; align-items: center; gap: 6px; min-width: 0; padding-left: 6px; }
   .name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .dirty { color: var(--accent); font-size: 9px; }
+  .star { border: 0; background: none; padding: 0 2px; font-size: 15px; line-height: 1; color: var(--fg-muted); cursor: default; opacity: 0.5; }
+  .star:hover { opacity: 1; }
+  .star.on { color: #e5a00d; opacity: 1; }
   .spacer { flex: 1; align-self: stretch; }
   .modes { display: flex; background: var(--bg-active); border-radius: 8px; padding: 2px; margin-right: 6px; }
   .mode {

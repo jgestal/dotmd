@@ -6,6 +6,7 @@
   import { t } from '../i18n';
   import { activateTab, closeOtherTabs, closeTab, closeTabsToLeft, closeTabsToRight, docName, moveTab, newDoc } from '../actions';
   import { pointerDrag } from '../drag';
+  import { isFavorite, toggleFavorite } from '../workspace.svelte';
 
   let dropAt = $state(-1);
 
@@ -20,6 +21,7 @@
         { id: 'others', text: t('tabs.closeOthers'), enabled: app.tabs.length > 1, action: () => void closeOtherTabs(i) },
         { id: 'right', text: t('tabs.closeRight'), enabled: i < app.tabs.length - 1, action: () => void closeTabsToRight(i) },
         { id: 'left', text: t('tabs.closeLeft'), enabled: i > 0, action: () => void closeTabsToLeft(i) },
+        ...(tab.path ? [{ id: 'fav', text: isFavorite(tab.path) ? t('fav.removeShort') : t('fav.add'), action: () => toggleFavorite(tab.path) }] : []),
         ...(tab.path ? [{ id: 'reveal', text: t('ctx.reveal'), action: () => void revealItemInDir(tab.path!) }] : []),
       ],
     });

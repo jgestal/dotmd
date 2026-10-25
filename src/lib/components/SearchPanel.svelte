@@ -4,6 +4,7 @@
   import { app, settings } from '../state.svelte';
   import { t } from '../i18n';
   import { openPath } from '../actions';
+  import { workspaceFolders } from '../workspace.svelte';
   import { escapeHtml } from '../render';
 
   interface LineHit { line: number; text: string; ranges: [number, number][] }
@@ -28,17 +29,17 @@
   });
 
   $effect(() => {
-    const q = query, r = regex, c = caseSensitive, root = app.root;
+    const q = query, r = regex, c = caseSensitive, roots = workspaceFolders().slice();
     clearTimeout(timer);
-    timer = setTimeout(() => run(q, r, c, root), 220);
+    timer = setTimeout(() => run(q, r, c, roots), 220);
   });
 
-  async function run(q: string, r: boolean, c: boolean, root: string | null) {
+  async function run(q: string, r: boolean, c: boolean, roots: string[]) {
     const my = ++seq;
     results = [];
     summary = null;
     error = '';
-    if (!q.trim() || !root) { running = false; return; }
+    if (!q.trim() || !roots.length) { running = false; return; }
     running = true;
     const ch = new Channel<SearchEvent>();
     ch.onmessage = (ev) => {
@@ -47,7 +48,7 @@
       else { summary = ev; running = false; }
     };
     try {
-      await invoke('search_folder', { root, query: q, regex: r, caseSensitive: c, onEvent: ch });
+      await invoke('search_folder', { roots, query: q, regex: r, caseSensitive: c, onEvent: ch });
     } catch (e) {
       if (my === seq) { error = String(e); running = false; }
     }
@@ -76,7 +77,7 @@
     <button class="opt" class:on={caseSensitive} title={t('search.case')} onclick={() => (caseSensitive = !caseSensitive)}>Aa</button>
     <button class="opt" class:on={regex} title={t('search.regex')} onclick={() => (regex = !regex)}>.*</button>
   </div>
-  {#if !app.root}
+  {#if !workspaceFolders().length}
     <p class="muted">{t('sidebar.noFolder')}</p>
   {:else if error}
     <p class="err">{error}</p>

@@ -7,6 +7,7 @@ import { askFields } from './prompt.svelte';
 import { dirname, join } from './path';
 import { openFolder, openPath, renamePath, trashPath } from './actions';
 import { exportRequest } from './exportRequest.svelte';
+import { isFavorite, removeFolder, toggleFavorite, workspaceFolders } from './workspace.svelte';
 
 interface Entry { name: string; path: string; is_dir: boolean }
 
@@ -38,6 +39,8 @@ export async function treeContextMenu(entry: Entry) {
       : [{ id: 'open', text: t('ctx.open'), action: () => openPath(entry.path) }]),
     { id: 'new', text: t('ctx.newFile'), action: () => newFileIn(dir) },
     { id: 'rename', text: t('ctx.rename'), action: () => rename(entry) },
+    ...(!entry.is_dir ? [{ id: 'fav', text: isFavorite(entry.path) ? t('fav.removeShort') : t('fav.add'), action: () => toggleFavorite(entry.path) }] : []),
+    ...(entry.is_dir && workspaceFolders().includes(entry.path) ? [{ id: 'close', text: t('ws.close'), action: () => removeFolder(entry.path) }] : []),
     { id: 'sep1', item: 'Separator' as const },
     ...(!entry.is_dir
       ? [
@@ -47,7 +50,7 @@ export async function treeContextMenu(entry: Entry) {
         ]
       : []),
     { id: 'reveal', text: t('ctx.reveal'), action: () => revealItemInDir(entry.path) },
-    ...(entry.path !== app.root ? [{ id: 'trash', text: t('ctx.trash'), action: () => trashPath(entry.path) }] : []),
+    ...(!workspaceFolders().includes(entry.path) ? [{ id: 'trash', text: t('ctx.trash'), action: () => trashPath(entry.path) }] : []),
     {
       id: 'copy', text: t('ctx.copyPath'),
       action: async () => { await navigator.clipboard.writeText(entry.path); toast(t('toast.copied'), 1000); },

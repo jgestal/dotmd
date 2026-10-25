@@ -4,7 +4,8 @@
   import Icon from './Icon.svelte';
   import { app, settings } from '../state.svelte';
   import { t } from '../i18n';
-  import { relative } from '../path';
+  import { basename, relative } from '../path';
+  import { folderOf, workspaceFolders } from '../workspace.svelte';
   import { exportRequest, type Format } from '../exportRequest.svelte';
 
   let files = $state<string[]>([]);
@@ -17,8 +18,9 @@
 
   $effect(() => {
     invoke<string | null>('pdf_engine').then((e) => (engine = e));
-    if (app.root) {
-      invoke<string[]>('list_tree', { path: app.root }).then((list) => {
+    const roots = workspaceFolders();
+    if (roots.length) {
+      Promise.all(roots.map((path) => invoke<string[]>('list_tree', { path }))).then((lists) => lists.flat()).then((list) => {
         files = list;
         picked = Object.fromEntries(list.map((f) => [f, f === app.path]));
         if (!app.path && list.length) picked[list[0]] = true;
@@ -31,7 +33,11 @@
 
   const selected = $derived(files.filter((f) => picked[f]));
   const fmtList = $derived((Object.keys(formats) as Format[]).filter((k) => formats[k]));
-  const label = (f: string) => (app.root ? relative(app.root, f) : f);
+  const label = (f: string) => {
+    const root = folderOf(f);
+    if (!root) return f;
+    return workspaceFolders().length > 1 ? `${basename(root)}/${relative(root, f)}` : relative(root, f);
+  };
 
   async function chooseDir() {
     const d = await open({ directory: true });

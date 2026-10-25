@@ -60,7 +60,7 @@
   oncontextmenu={(e) => { e.preventDefault(); treeContextMenu(entry); }}
   onpointerdown={(e) => pointerDrag(e, {
     label: entry.name,
-    target: '.tree-row[data-dir], .root-name, .cm-content, .milkdown .ProseMirror',
+    target: '.tree-row[data-dir], .ws-title, .cm-content, .milkdown .ProseMirror',
     // Onto a folder: move. Into the editor: insert a link (or the image) to this file.
     onDrop: (el) => (el.dataset.path ? movePath(entry.path, el.dataset.path) : !entry.is_dir && insertFileLink(entry.path)),
   })}

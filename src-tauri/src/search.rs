@@ -129,7 +129,7 @@ fn preview(line: &str, byte_ranges: &[(usize, usize)]) -> (String, Vec<(usize, u
 }
 
 #[tauri::command]
-pub async fn search_folder(root: String, query: String, regex: bool, case_sensitive: bool, on_event: Channel<SearchEvent>) -> Result<(), String> {
+pub async fn search_folder(roots: Vec<String>, query: String, regex: bool, case_sensitive: bool, on_event: Channel<SearchEvent>) -> Result<(), String> {
     let generation = SEARCH_GEN.fetch_add(1, Ordering::SeqCst) + 1;
     if query.is_empty() {
         let _ = on_event.send(SearchEvent::Done { files: 0, matches: 0, truncated: false });
@@ -143,10 +143,11 @@ pub async fn search_folder(root: String, query: String, regex: bool, case_sensit
         .map_err(|e| e.to_string())?;
 
     tauri::async_runtime::spawn_blocking(move || {
-        let root = PathBuf::from(root);
+        let many = roots.len() > 1;
         let mut searcher = SearcherBuilder::new().line_number(true).build();
         let (mut files, mut total, mut truncated) = (0, 0, false);
-        for path in text_files(&root) {
+        let all = roots.iter().map(PathBuf::from).flat_map(|root| text_files(&root).into_iter().map(move |p| (root.clone(), p)));
+        'outer: for (root, path) in all {
             if SEARCH_GEN.load(Ordering::SeqCst) != generation {
                 return; // superseded by a newer search
             }
@@ -170,10 +171,12 @@ pub async fn search_folder(root: String, query: String, regex: bool, case_sensit
             }
             files += 1;
             total += hits.len();
-            let _ = on_event.send(SearchEvent::File { path: path.to_string_lossy().into_owned(), rel: rel(&root, &path), matches: hits });
+            // With several folders, prefix the folder name so results are unambiguous.
+            let shown = if many { format!("{}/{}", root.file_name().map(|n| n.to_string_lossy()).unwrap_or_default(), rel(&root, &path)) } else { rel(&root, &path) };
+            let _ = on_event.send(SearchEvent::File { path: path.to_string_lossy().into_owned(), rel: shown, matches: hits });
             if total >= MAX_MATCHES {
                 truncated = true;
-                break;
+                break 'outer;
             }
         }
         let _ = on_event.send(SearchEvent::Done { files, matches: total, truncated });

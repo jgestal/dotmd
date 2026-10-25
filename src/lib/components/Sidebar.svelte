@@ -1,28 +1,36 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/core';
   import Icon from './Icon.svelte';
-  import TreeNode from './TreeNode.svelte';
+  import FolderSection from './FolderSection.svelte';
+  import FavoritesSection from './FavoritesSection.svelte';
   import SearchPanel from './SearchPanel.svelte';
-  import { app, settings } from '../state.svelte';
+  import { app, session, settings } from '../state.svelte';
+  import { workspaceFolders } from '../workspace.svelte';
   import { t } from '../i18n';
-  import { basename, isMarkdown } from '../path';
+  import { isMarkdown } from '../path';
   import { openFolder } from '../actions';
-  import { treeContextMenu } from '../treeMenu';
-
-  interface Entry { name: string; path: string; is_dir: boolean }
 
   let filter = $state('');
-  let entries = $state<Entry[]>([]);
+  let sectionsEl = $state<HTMLElement>();
 
-  $effect(() => {
-    const root = app.root;
-    app.treeVersion;
-    const all = settings.showAllFiles;
-    if (!root) { entries = []; return; }
-    invoke<Entry[]>('list_dir', { path: root, all }).then((e) => (entries = e)).catch(() => (entries = []));
-  });
-
-  const visible = (c: Entry) => !filter || c.is_dir || c.name.toLowerCase().includes(filter.toLowerCase());
+  /** Drag the bar between two folders to share the height between them. */
+  function startSplit(e: PointerEvent, i: number) {
+    const slots = [...sectionsEl!.querySelectorAll<HTMLElement>(':scope > .slot')];
+    const [a, b] = [slots[i - 1], slots[i]];
+    const folders = workspaceFolders();
+    const [ka, kb] = [folders[i - 1], folders[i]];
+    const ha = a.getBoundingClientRect().height, hb = b.getBoundingClientRect().height;
+    const total = (session.sectionGrow?.[ka] ?? 1) + (session.sectionGrow?.[kb] ?? 1);
+    const y0 = e.clientY;
+    const move = (ev: PointerEvent) => {
+      const da = Math.max(40, Math.min(ha + hb - 40, ha + ev.clientY - y0));
+      session.sectionGrow = { ...(session.sectionGrow ?? {}), [ka]: (total * da) / (ha + hb), [kb]: (total * (ha + hb - da)) / (ha + hb) };
+    };
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); document.body.classList.remove('resizing-v'); };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    document.body.classList.add('resizing-v');
+    e.preventDefault();
+  }
 
   interface Heading { level: number; text: string; line: number }
   const headings = $derived.by(() => {
@@ -68,26 +76,23 @@
   </div>
 
   {#if app.sidebarTab === 'files'}
-    {#if app.root}
-      <div class="root-row">
-        <button class="root-name" title={app.root} data-path={app.root} oncontextmenu={(e) => { e.preventDefault(); treeContextMenu({ name: basename(app.root!), path: app.root!, is_dir: true }); }}>
-          {basename(app.root)}
-        </button>
-        <button class="tb small" title={t('sidebar.allFiles')} class:on={settings.showAllFiles} onclick={() => (settings.showAllFiles = !settings.showAllFiles)}><Icon name="file" size={14} /></button>
-        <button class="tb small" title={t('sidebar.refresh')} onclick={() => app.treeVersion++}><Icon name="refresh" size={14} /></button>
-      </div>
+    <div class="files-bar">
       <input class="filter" placeholder={t('sidebar.filter')} bind:value={filter} spellcheck="false" />
-      <div class="tree">
-        {#each entries.filter(visible) as e (e.path)}
-          <TreeNode entry={e} {filter} />
-        {/each}
-      </div>
-    {:else}
-      <div class="empty">
-        <p>{t('sidebar.noFolder')}</p>
-        <button class="btn" onclick={() => openFolder()}>{t('welcome.openFolder')}</button>
-      </div>
-    {/if}
+      <button class="tb small" title={t('sidebar.allFiles')} class:on={settings.showAllFiles} onclick={() => (settings.showAllFiles = !settings.showAllFiles)}><Icon name="file" size={14} /></button>
+      <button class="tb small" title={t('ws.add')} onclick={() => openFolder()}><Icon name="plus" size={14} /></button>
+    </div>
+    <div class="sections" bind:this={sectionsEl}>
+      {#each workspaceFolders() as root, i (root)}
+        {#if i > 0}<div class="splitter" role="separator" aria-orientation="horizontal" onpointerdown={(e) => startSplit(e, i)}></div>{/if}
+        <div class="slot" style:flex-grow={session.sectionGrow?.[root] ?? 1}><FolderSection {root} {filter} /></div>
+      {:else}
+        <div class="empty">
+          <p>{t('sidebar.noFolder')}</p>
+          <button class="btn" onclick={() => openFolder()}>{t('welcome.openFolder')}</button>
+        </div>
+      {/each}
+      <FavoritesSection />
+    </div>
   {:else if app.sidebarTab === 'search'}
     <SearchPanel />
   {:else}
@@ -116,13 +121,16 @@
   }
   .tab.on { background: var(--bg-active); color: var(--fg); }
   .tab:last-child { flex: 0 0 30px; }
-  .root-row { display: flex; align-items: center; gap: 2px; padding: 6px 8px 2px 12px; }
-  .root-name {
-    flex: 1; min-width: 0; text-align: left; border: 0; background: none; color: var(--fg-muted); padding: 0;
-    font: 600 11px var(--font-ui); text-transform: uppercase; letter-spacing: 0.05em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default;
-  }
-  .filter { margin: 4px 8px 6px; height: 26px; font-size: 12px; }
-  .tree, .outline { flex: 1; overflow: auto; padding: 0 6px 12px; min-height: 0; }
+  .files-bar { display: flex; align-items: center; gap: 2px; padding: 4px 8px 4px; }
+  .filter { flex: 1; min-width: 0; height: 26px; font-size: 12px; }
+  .sections { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  .slot { flex: 1 1 0; display: flex; flex-direction: column; min-height: 0; }
+  .slot > :global(.ws-section) { flex: 1 1 auto; }
+  .splitter { height: 5px; margin: -2px 0; cursor: row-resize; position: relative; z-index: 2; flex-shrink: 0; }
+  .splitter::after { content: ''; position: absolute; left: 8px; right: 8px; top: 2px; height: 1px; background: var(--border); }
+  .splitter:hover::after { background: var(--accent); height: 2px; }
+  :global(body.resizing-v), :global(body.resizing-v *) { cursor: row-resize !important; user-select: none; }
+  .outline { flex: 1; overflow: auto; padding: 0 6px 12px; min-height: 0; }
   .outline { padding-top: 4px; }
   .outline-item {
     display: block; width: 100%; text-align: left; border: 0; background: none; color: var(--fg-muted);

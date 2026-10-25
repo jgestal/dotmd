@@ -3,6 +3,7 @@ import { open, save, ask, message } from '@tauri-apps/plugin-dialog';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { app, isDirty, session, settings, setContent, pushRecent, pushRecentFolder, toast, getEditorApi, type Tab } from './state.svelte';
 import { askFields } from './prompt.svelte';
+import { addFolder, folderOf, retargetWorkspace, workspaceFolders } from './workspace.svelte';
 import { preloadSounds } from './sound';
 import { t } from './i18n';
 import { basename, dirname, isPlainText, isTextPath, join, relative, stem } from './path';
@@ -201,22 +202,23 @@ export async function openPath(path: string, opts: { fromHistory?: boolean; back
     const crlf = text.includes('\r\n');
     const lf = crlf ? text.replace(/\r\n/g, '\n') : text;
     addTab({ path, content: lf, saved: lf, mode, crlf }, true);
-    if (!app.root) app.root = dirname(path);
+    // Opening a file makes its workspace folder the active one; a lone file opens its folder.
+    const owner = folderOf(path);
+    if (owner) app.root = owner;
+    else if (!workspaceFolders().length) addFolder(dirname(path));
     pushRecent(path);
   } catch (e) {
     toast(String(e) === 'binary' ? t('toast.binary', { name: basename(path) }) : t('toast.error', { msg: String(e) }));
   }
 }
 
+/** Adds a folder to the sidebar workspace (several can be open at once). */
 export async function openFolder(path?: string) {
   const dir = path ?? ((await open({ directory: true, multiple: false })) as string | null);
   if (!dir) return;
-  app.root = dir;
+  addFolder(dir);
   app.sidebar = true;
   app.sidebarTab = 'files';
-  session.lastFolder = dir;
-  pushRecentFolder(dir);
-  app.treeVersion++;
 }
 
 export async function openFileDialog() {
@@ -421,6 +423,7 @@ function retarget(from: string, to: string) {
   for (const tb of app.tabs) tb.path = move(tb.path);
   app.path = move(app.path);
   session.expanded = session.expanded.map((p) => move(p)!);
+  retargetWorkspace(from, to);
   persistTabs();
   rewatch();
 }
