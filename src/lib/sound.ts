@@ -1,6 +1,13 @@
 // Typing sounds. "typewriter" plays real CC0 recordings (static/sounds/typewriter);
 // "mechanical" and "soft" are synthesized, and so is the typewriter until its samples load.
 import { settings } from './state.svelte';
+import { currentTheme } from './appearance.svelte';
+
+/** The sound that actually plays: "theme" resolves to the active theme's suggestion. */
+export function effectiveSound(): 'off' | 'typewriter' | 'mechanical' | 'soft' {
+  const s = settings.typingSound;
+  return s === 'theme' ? currentTheme().sound ?? 'soft' : s;
+}
 
 let ctx: AudioContext | null = null;
 let noise: AudioBuffer | null = null;
@@ -141,7 +148,7 @@ let lastColumn = 0;
  * margin bell like a real typewriter when the line reaches `settings.bellColumn`.
  */
 export function keySound(key: string, column = -1) {
-  const kind = settings.typingSound;
+  const kind = effectiveSound();
   if (kind === 'off') return;
 
   if (kind === 'typewriter') {

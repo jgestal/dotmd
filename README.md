@@ -29,7 +29,9 @@ Built with [Tauri 2](https://tauri.app) (Rust) and [Svelte 5](https://svelte.dev
   - Optional typing sounds, including **real typewriter recordings** (CC0) panned by key position, with a margin bell and carriage return.
   - One-click **Typewriter mode**.
 - **Focus writing** (⌘⌥F): full screen, only the line you are typing lit, caret kept centered.
-- **12 themes**, including **Typewriter** (paper texture, uneven ink), **Continuous paper** (green-bar tractor-feed paper with sprocket holes and a dot-matrix font) and **CRT** green and amber (scanlines, glow, flicker).
+- **18 themes**, including **Calm** and **Calm Night** (iA Writer fonts), **Typewriter** (paper texture, uneven ink), **Screenplay** (Hollywood format in Courier 12 pt), **Continuous paper** (green-bar tractor-feed paper with sprocket holes and a dot-matrix font), **CRT** green and amber (scanlines, glow, flicker, adjustable strength), **MS-DOS** (IBM VGA font), **Terminal** and **Mac OS X Aqua**. Settings only offer the effects and sounds the active theme supports, and any theme can be used for exports.
+- **Screenplay mapping**: `#` title, `##` scene heading, `###` character, `>` dialogue, `*(…)*` parenthetical, `####` transition.
+- Every bundled font covers Spanish completely (checked in CI by `scripts/check-fonts.py`).
   - Customize the accent color, fonts, size, line height, text width and paragraph spacing, or add your own CSS.
 - **Export** to self-contained HTML (fonts embedded) and to PDF, one file or **in batch**, with an option to merge everything into a single document and a table of contents. PDFs are printed natively on macOS and Linux.
 - **Command line**: `dotmd --export pdf notes.md notes.pdf` exports without opening a window.
@@ -66,6 +68,8 @@ See [PLAN.md](PLAN.md) and the [issues](https://github.com/jgestal/dotmd/issues)
 ## Credits
 
 Created by **Juan Gestal** — [juan@gestal.es](mailto:juan@gestal.es) · [gestal.es](https://gestal.es)
+
+Fonts: Inter, Literata, IBM Plex, Courier Prime, Special Elite, VT323, Doto, iA Writer Quattro & Mono, JetBrains Mono, Atkinson Hyperlegible Next, Lexend and Source Serif 4 (SIL Open Font License); IBM VGA 8×16 from [The Ultimate Oldschool PC Font Pack](https://int10h.org/oldschool-pc-fonts/) by VileR (CC BY-SA 4.0). Licences are next to the files in `static/fonts/`.
 
 ## License
 

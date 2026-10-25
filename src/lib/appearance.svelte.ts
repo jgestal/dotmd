@@ -1,5 +1,5 @@
 import { app, settings } from './state.svelte';
-import { FONTS, THEMES, resolveTheme, type Theme } from './themes';
+import { EFFECT_SETTING, FONTS, THEMES, activeEffects, resolveTheme, type Theme, type ThemeEffect } from './themes';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
 export function isDarkPreferred(): boolean {
@@ -51,6 +51,7 @@ export function cssVars(theme: Theme): Record<string, string> {
     '--line-height': String(settings.lineHeight),
     '--para-space': `${settings.paragraphSpacing}em`,
     '--doc-width': `${settings.docWidth}px`,
+    '--fx': String(settings.effectStrength / 100),
   };
   if (settings.accent) {
     vars['--accent'] = settings.accent;
@@ -89,12 +90,8 @@ export function startAppearance() {
       for (const cls of [...c]) if (cls.startsWith('theme-')) c.remove(cls);
       c.add(`theme-${theme.kind}`);
       c.toggle('dark', theme.dark);
-      c.toggle('scanlines', theme.kind === 'crt' && settings.crtScanlines);
-      c.toggle('glow', theme.kind === 'crt' && settings.crtGlow);
-      c.toggle('flicker', theme.kind === 'crt' && settings.crtFlicker);
-      c.toggle('curvature', theme.kind === 'crt' && settings.crtCurvature);
-      c.toggle('paper', theme.kind === 'typewriter' && settings.paperTexture);
-      c.toggle('ink', theme.kind === 'typewriter' && settings.inkVariation);
+      const on = activeEffects(theme, settings);
+      for (const e of Object.keys(EFFECT_SETTING) as ThemeEffect[]) c.toggle(e, on.includes(e));
       c.toggle('zen', app.zen);
       document.documentElement.lang = settings.lang;
       // Native title bar, menus and scroll bars follow the theme too.

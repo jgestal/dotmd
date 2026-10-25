@@ -2,8 +2,9 @@
   import Icon from './Icon.svelte';
   import { app, settings, DEFAULT_SETTINGS, type StatKey, type Settings } from '../state.svelte';
   import { t, LANGUAGES, type Key } from '../i18n';
-  import { THEMES, FONTS } from '../themes';
-  import { keySound, bellSound } from '../sound';
+  import { THEMES, FONTS, EFFECT_SETTING, type ThemeEffect } from '../themes';
+  import { keySound, bellSound, effectiveSound } from '../sound';
+  import { currentTheme } from '../appearance.svelte';
   import { getVersion } from '@tauri-apps/api/app';
   import { openUrl } from '@tauri-apps/plugin-opener';
   import { toggleTypewriterMode, typewriterModeOn } from '../actions';
@@ -34,6 +35,14 @@
     ['sentences', 'stats.sentences'], ['paragraphs', 'stats.paragraphs'], ['lines', 'stats.lines'], ['reading', 'stats.reading'],
     ['speaking', 'stats.speaking'], ['selection', 'stats.selection'], ['goal', 'stats.goal'], ['session', 'stats.session'],
   ];
+
+  const EFFECT_LABEL: Record<ThemeEffect, Key> = {
+    scanlines: 'set.crtScanlines', glow: 'set.crtGlow', flicker: 'set.crtFlicker', curvature: 'set.crtCurvature', paper: 'set.paperTexture', ink: 'set.inkVariation',
+  };
+  const theme = $derived(currentTheme());
+  // "Theme" is only offered when the active theme suggests a sound.
+  const soundChoices = $derived(([['off', 'set.soundOff'], ...(theme.sound ? [['theme', 'set.soundTheme']] : []), ['typewriter', 'set.soundTypewriter'], ['mechanical', 'set.soundMechanical'], ['soft', 'set.soundSoft']]) as [Settings['typingSound'], Key][]);
+  const typewriterSound = $derived(effectiveSound() === 'typewriter');
 
   function resetAll() {
     const lang = settings.lang;
@@ -96,13 +105,18 @@
           {/each}
           <input type="color" value={settings.accent || '#0a84ff'} oninput={(e) => (settings.accent = e.currentTarget.value)} />
         </div>
-        <h3>{t('set.effects')}</h3>
-        <label class="check"><input type="checkbox" bind:checked={settings.crtScanlines} /> {t('set.crtScanlines')}</label>
-        <label class="check"><input type="checkbox" bind:checked={settings.crtGlow} /> {t('set.crtGlow')}</label>
-        <label class="check"><input type="checkbox" bind:checked={settings.crtFlicker} /> {t('set.crtFlicker')}</label>
-        <label class="check"><input type="checkbox" bind:checked={settings.crtCurvature} /> {t('set.crtCurvature')}</label>
-        <label class="check"><input type="checkbox" bind:checked={settings.paperTexture} /> {t('set.paperTexture')}</label>
-        <label class="check"><input type="checkbox" bind:checked={settings.inkVariation} /> {t('set.inkVariation')}</label>
+        {#if theme.effects?.length}
+          <!-- Only the effects the active theme supports. -->
+          <h3>{t('set.effects')} · {theme.name}</h3>
+          <div class="effects" data-effects={theme.effects.join(' ')}>
+            {#each theme.effects as e}
+              <label class="check"><input type="checkbox" bind:checked={settings[EFFECT_SETTING[e]]} /> {t(EFFECT_LABEL[e])}</label>
+            {/each}
+          </div>
+          {#if theme.effects.some((e) => e !== 'paper' && e !== 'ink')}
+            <div class="row"><span>{t('set.effectStrength')}</span><input type="range" min="10" max="100" step="5" bind:value={settings.effectStrength} /></div>
+          {/if}
+        {/if}
         <div class="row">
           <span>{t('set.sidebarSide')}</span>
           <div class="seg">
@@ -174,20 +188,23 @@
         <label class="check"><input type="checkbox" bind:checked={settings.zenShowStats} /> {t('set.zenShowStats')}</label>
         <h3>{t('set.typingSound')}</h3>
         <div class="seg">
-          {#each [['off', 'set.soundOff'], ['typewriter', 'set.soundTypewriter'], ['mechanical', 'set.soundMechanical'], ['soft', 'set.soundSoft']] as [v, l]}
-            <button class:on={settings.typingSound === v} onclick={() => { settings.typingSound = v as any; keySound('a'); }}>{t(l as Key)}</button>
+          {#each soundChoices as [v, l]}
+            <button class:on={settings.typingSound === v} onclick={() => { settings.typingSound = v; keySound('a'); }}>{t(l as Key)}</button>
           {/each}
         </div>
         <div class="row"><span>{t('set.volume')}</span><input type="range" min="0" max="1" step="0.05" bind:value={settings.soundVolume} onchange={() => keySound('Enter')} /></div>
         <label class="check indent"><input type="checkbox" bind:checked={settings.soundOnlyZen} /> {t('set.onlyZen')}</label>
-        <label class="check"><input type="checkbox" bind:checked={settings.stereoKeys} /> {t('set.stereoKeys')}</label>
-        <div class="row">
-          <span>{t('set.bellColumn')} <b>{settings.bellColumn || t('set.bellOff')}</b></span>
-          <span class="inline">
-            <input type="range" min="0" max="120" step="1" bind:value={settings.bellColumn} />
-            <button class="btn small" onclick={bellSound}>{t('set.testBell')}</button>
-          </span>
-        </div>
+        {#if typewriterSound}
+          <!-- Stereo keys and the margin bell only exist for the recorded typewriter. -->
+          <label class="check"><input type="checkbox" bind:checked={settings.stereoKeys} /> {t('set.stereoKeys')}</label>
+          <div class="row">
+            <span>{t('set.bellColumn')} <b>{settings.bellColumn || t('set.bellOff')}</b></span>
+            <span class="inline">
+              <input type="range" min="0" max="120" step="1" bind:value={settings.bellColumn} />
+              <button class="btn small" onclick={bellSound}>{t('set.testBell')}</button>
+            </span>
+          </div>
+        {/if}
 
       {:else if section === 'stats'}
         <label class="check"><input type="checkbox" bind:checked={settings.showStats} /> {t('set.showStats')}</label>
@@ -205,11 +222,7 @@
           <span>{t('export.theme')}</span>
           <select bind:value={settings.exportTheme}>
             <option value="current">{t('export.themeCurrent')}</option>
-            <option value="modern">Modern</option>
-            <option value="github">GitHub</option>
-            <option value="paper">Paper</option>
-            <option value="typewriter">Typewriter</option>
-            <option value="tractor">Continuous Paper</option>
+            {#each THEMES as th}<option value={th.id}>{th.name}</option>{/each}
           </select>
         </div>
         <div class="row">

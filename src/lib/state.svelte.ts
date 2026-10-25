@@ -52,7 +52,8 @@ export interface Settings {
   typewriterOnlyZen: boolean;
   zenFullscreen: boolean;
   zenShowStats: boolean;
-  typingSound: 'off' | 'typewriter' | 'soft' | 'mechanical';
+  /** 'theme' plays the sound the active theme suggests. */
+  typingSound: 'off' | 'theme' | 'typewriter' | 'soft' | 'mechanical';
   soundVolume: number;
   soundOnlyZen: boolean;
   /** Ring the margin bell when the caret reaches this column (0 = never). */
@@ -67,9 +68,12 @@ export interface Settings {
   crtCurvature: boolean;
   paperTexture: boolean;
   inkVariation: boolean;
+  /** Strength of the theme effects (scanlines, glow, vignette), 0–100. */
+  effectStrength: number;
   pdfPageSize: 'A4' | 'Letter' | 'A5' | 'Legal';
   pdfMargin: number;
-  exportTheme: 'current' | 'modern' | 'github' | 'paper' | 'typewriter' | 'tractor';
+  /** 'current' or any theme id. */
+  exportTheme: string;
   /** Inline the theme's font files in exported HTML/PDF. */
   exportEmbedFonts: boolean;
   /** Read/Split preview laid out on paper sheets (export paper size and margins). */
@@ -129,6 +133,7 @@ export const DEFAULT_SETTINGS: Settings = {
   crtCurvature: true,
   paperTexture: true,
   inkVariation: true,
+  effectStrength: 55,
   pdfPageSize: 'A4',
   pdfMargin: 18,
   exportTheme: 'current',

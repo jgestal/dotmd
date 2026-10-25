@@ -1,0 +1,35 @@
+{
+  "open": "$FIX/README.md",
+  "settings": { "theme": "modern", "typingSound": "off" },
+  "actions": [
+    { "waitFor": "document.querySelector('.markdown-body h1')" },
+    { "eval": "{ window.__S = import('/src/lib/state.svelte.ts'); window.__S.then(m => { m.settings.theme = 'calm'; }) }", "wait": 500, "shot": "theme-calm" },
+    { "eval": "{ window.__S.then(m => { m.settings.theme = 'msdos'; }) }", "wait": 500, "shot": "theme-msdos" },
+    { "assert": "document.documentElement.classList.contains('theme-dos') && document.documentElement.classList.contains('scanlines') && !document.documentElement.classList.contains('paper')" },
+    { "eval": "{ window.__S.then(m => { m.settings.theme = 'terminal'; }) }", "wait": 500, "shot": "theme-terminal" },
+    { "eval": "{ window.__S.then(m => { m.settings.theme = 'aqua'; }) }", "wait": 500, "shot": "theme-aqua" },
+    { "eval": "{ window.__S.then(m => { m.settings.theme = 'screenplay'; }) }", "wait": 500, "shot": "theme-screenplay" },
+    { "eval": "{ window.__S.then(m => { m.settings.theme = 'crt-green'; m.settings.effectStrength = 40; }) }", "wait": 500, "shot": "theme-crt" },
+    { "assert": "getComputedStyle(document.documentElement).getPropertyValue('--fx').trim() === '0.4'" },
+
+    { "eval": "{ Promise.all([document.fonts.load('16px \"Px437 IBM VGA\"', 'ñ'), document.fonts.load('16px \"iA Writer Quattro S\"', 'ñ'), document.fonts.load('16px \"JetBrains Mono\"', 'ñ')]).then(() => (window.__fontsLoaded = true)) }", "waitFor": "window.__fontsLoaded" },
+    { "assert": "['Px437 IBM VGA', 'iA Writer Quattro S', 'JetBrains Mono'].every(f => document.fonts.check(`16px \"${f}\"`, 'áéíóúüñÁÉÍÓÚÜÑ¿¡'))" },
+
+    { "eval": "{ window.__S.then(m => { m.app.settingsOpen = true; }) }", "waitFor": "document.querySelector('.settings')" },
+    { "assert": "document.querySelector('.settings .effects')?.dataset.effects === 'scanlines glow flicker curvature'" },
+    { "assert": "!document.querySelector('.settings').textContent.includes('Uneven ink')" },
+    { "eval": "{ window.__S.then(m => { m.settings.theme = 'modern'; }) }", "wait": 200 },
+    { "assert": "!document.querySelector('.settings .effects')" },
+    { "eval": "{ window.__S.then(m => { m.settings.theme = 'typewriter'; }) }", "wait": 200 },
+    { "assert": "document.querySelector('.settings .effects')?.dataset.effects === 'paper ink'" },
+
+    { "eval": "{ [...document.querySelectorAll('.settings .nav-item')][3].click() }", "wait": 200 },
+    { "assert": "[...document.querySelectorAll('.settings .seg button')].some(b => b.textContent.trim() === 'Theme')" },
+    { "assert": "!document.querySelector('.settings').textContent.includes('Margin bell')" },
+    { "eval": "{ window.__S.then(m => { m.settings.typingSound = 'theme'; }) }", "wait": 200 },
+    { "assert": "document.querySelector('.settings').textContent.includes('Stereo')" },
+    { "eval": "{ window.__S.then(m => { m.settings.theme = 'modern'; }) }", "wait": 200 },
+    { "assert": "![...document.querySelectorAll('.settings .seg button')].some(b => b.textContent.trim() === 'Theme')" },
+    { "assert": "!document.querySelector('.settings').textContent.includes('Stereo')" }
+  ]
+}
